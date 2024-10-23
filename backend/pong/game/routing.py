@@ -1,6 +1,6 @@
-from django.urls import path
+from django.urls import re_path
 from . import pongConsumer
 
 websocket_urlpatterns = [
-    path('wss://pong.api.transcendence.local', pongConsumer.PongConsumer.as_asgi()),  # Route WebSocket
+    re_path(r'ws/?$', pongConsumer.PongConsumer.as_asgi()),  # Route WebSocket
 ]

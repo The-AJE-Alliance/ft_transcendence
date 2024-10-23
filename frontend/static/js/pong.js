@@ -6,7 +6,7 @@ export async function pong() {
     //creation de la websocket
     await initializeCanvas()
 
-    const socket = new WebSocket('wss://pong.api.transcendence.local');
+    const socket = new WebSocket('wss://pong.api.transcendence.local/ws/');
 
     socket.onopen = function() {
         console.log('WebSocket est connecté.');
