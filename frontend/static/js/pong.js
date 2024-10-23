@@ -34,3 +34,5 @@ async function initializeCanvas(gameState) {
     ctx.stroke();
 
 }
+
+//event listener pour 
