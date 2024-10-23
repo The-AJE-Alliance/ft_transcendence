@@ -1,8 +1,10 @@
 class Router {
   constructor(Client) {
     this.#client = Client
-    this.get('/', () => {})
-    this.get('/404', () => {})
+    this.get('/', () => {
+    })
+    this.get('/404', () => {
+    })
 
     document.addEventListener('click', (event) => {
       const target = event.target.closest('a')
@@ -56,7 +58,9 @@ class Router {
       return Object
         .keys(input)
         .filter(key => Number(key))
-        .reduce((obj, key) => { return { ...obj, [key]: input[key] } }, {})
+        .reduce((obj, key) => {
+          return { ...obj, [key]: input[key] }
+        }, {})
     }
     catch {
       this.#handleError()
@@ -141,6 +145,11 @@ class Router {
 
     this.#processURL(result, targetUrl)
     return true
+  }
+
+  navigate(path) {
+    window.history.pushState(null, null, path)
+    this.#checkPatterns(path)
   }
 }
 

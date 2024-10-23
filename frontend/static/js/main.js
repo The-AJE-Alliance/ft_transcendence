@@ -34,3 +34,4 @@ router.get('/login/42', (client) => {
 router.get('/logout', logout)
 
 router.get('/register', register)
+window.router = router
