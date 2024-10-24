@@ -32,11 +32,23 @@ class PongGame:
             }
         }
 
-    def update_player_position(self, player, new_y_normalized):
+    def update_player_position(self, player, action):
         if player == 1:
-            self.player1_position = new_y_normalized
+            if action == 'move_up':
+               new_y_position =  max(self.player1_position[1] - 0.05, 0)
+               self.player1_position[1] = min(new_y_position, 1)
+            elif action == 'move_down':
+                new_y_position = min(self.player1_position[1] + 0.05, 1)
+                self.player1_position[1] = max(new_y_position, 0)
+
         elif player == 2:
-            self.player2_position = new_y_normalized
+            if action == 'move_up':
+                new_y_position = max(self.player2_position[1] - 0.05, 0)
+                self.player2_position[1] = min(new_y_position, 1)
+            elif action == 'move_down':
+                new_y_position = min(self.player2_position[1] + 0.05, 1)
+                self.player2_position[1] = max(new_y_position, 0)
+
 
 
     def update_ball_position(self):

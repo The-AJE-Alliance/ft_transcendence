@@ -23,17 +23,10 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
+        player = data.get('player')
         action = data.get('action')
 
-        if action == 'move_player1':
-            direction = data.get('direction', 0)
-            self.pong_game.update_player_position(self, player, new_y_normalized)
-
-        elif action == 'move_player2':
-            direction = data.get('direction', 0)
-            self.pong_game.update_player_position(self, player, new_y_normalized)
-
-        self.pong_game.update_ball_position()
+        self.pong_game.update_player_position(self, player, action)
 
         await self.send_game_state()
 

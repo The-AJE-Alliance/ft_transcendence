@@ -11,6 +11,7 @@ export async function pong() {
         console.log('WebSocket est connecté.');
     };
 
+    document.addEventListener('keydown', (event) => handleKeyPress(event, socket));
     socket.onmessage = function(event) {
         const gameState = JSON.parse(event.data);
         console.log('État du jeu reçu:', gameState);
@@ -66,8 +67,29 @@ async function initializeCanvas(gameState) {
     }
 }
 
-//event listener pour 
+//event listener pour les touches
+function handleKeyPress(event, socket) {
+    const player = 2;
+    let action = '';
 
+    switch(event.key) {
+        case 'ArrowUp':
+            action = 'move_up';
+            break;
+        case 'ArrowDown':
+            action = 'move_down';
+            break;
+        default:
+            return; 
+}
+    const data = {
+        player: player,
+        action: action
+    };
+
+    // Envoyer les données via la websocket
+    socket.send(JSON.stringify(data));
+}
 //!!!!!!!!!! pour calculer les coordonnées adaptées à la taille du canvas
 // // Taille du canvas
 // let canvasWidth = canvas.width;
@@ -80,5 +102,4 @@ async function initializeCanvas(gameState) {
 // let realBallPositionX = normalizedBallPosition[0] * canvasWidth;
 // let realBallPositionY = normalizedBallPosition[1] * canvasHeight;
 
-// // Maintenant, tu peux dessiner la balle à realBallPositionX, realBallPositionY
 
