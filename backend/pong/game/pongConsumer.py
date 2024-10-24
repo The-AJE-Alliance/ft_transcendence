@@ -1,13 +1,6 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .pongGame import PongGame
-# class PongConsumer(AsyncWebsocketConsumer):
-#     async def connect(self):
-#         await self.accept()
-#         await self.send(json.dumps({
-#             'message': 'Bienvenue dans le jeu Pong!'
-#         }))
-
 
 class PongConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -16,9 +9,10 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept()
-        await self.send(json.dumps({
-            'message': 'Bienvenue dans le jeu Pong!'
-        }))
+        # await self.send(json.dumps({
+        #     'message': 'Bienvenue dans le jeu Pong!'
+        # }))
+        await self.send_game_state()
 
     async def receive(self, text_data):
         data = json.loads(text_data)

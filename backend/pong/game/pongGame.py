@@ -1,9 +1,9 @@
 class PongGame:
     def __init__(self):
-        self.ball_position = [0, 0]
-        self.ball_velocity = [1, 1]
-        self.player1_position = 0
-        self.player2_position = 0
+        self.ball_position = [0.5, 0.5]
+        self.ball_velocity = [0.01, 0.01]
+        self.player1_position = 0.5
+        self.player2_position = 0.5
         self.player1_score = 0
         self.player2_score = 0
 
