@@ -1,8 +1,10 @@
-import { createAndHandleForm, processLoginData } from './utils.js'
+import { createAndHandleForm, loadHTML, processLoginData } from './utils.js'
 
 export async function login(client) {
+  client.app.innerHTML = await loadHTML('../login.html')
+  const loginContainer = document.getElementById('login-form')
   createAndHandleForm({
-    app: client.app,
+    app: loginContainer,
     actionUrl: 'https://auth.api.transcendence.local/login/',
     method: 'POST',
     fields: [{
@@ -31,8 +33,10 @@ async function loginPostProcess(client, result, ok) {
 }
 
 export async function register(client) {
+  client.app.innerHTML = await loadHTML('../register.html')
+  const registerContainer = document.getElementById('register-form')
   await createAndHandleForm({
-    app: client.app,
+    app: registerContainer,
     actionUrl: 'https://auth.api.transcendence.local/register/',
     method: 'POST',
     fields: [
@@ -99,6 +103,17 @@ async function getUsers(client) {
     console.error('Error while trying to get users:', error)
     return null
   }
+}
+
+export async function login42(client) {
+  client.app.innerHTML = await loadHTML('../login42.html') // Charger login42.html
+  const oauthButton = document.createElement('button')
+  oauthButton.textContent = 'Log in with 42'
+  oauthButton.addEventListener('click', () => {
+    window.location.href = 'https://auth.api.transcendence.local/login/42/'
+  })
+  client.app.innerHTML = ''
+  client.app.appendChild(oauthButton)
 }
 
 export async function logout(client) {

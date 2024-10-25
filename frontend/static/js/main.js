@@ -1,4 +1,4 @@
-import { login, logout, register, users } from './auth.js'
+import { login, login42, logout, register, users } from './auth.js'
 import Client from './client.js'
 import Router from './router.js'
 import { loadHTML } from './utils.js'
@@ -7,10 +7,6 @@ const router = new Router(Client)
 
 router.get('/', async (client) => {
   client.app.innerHTML = await loadHTML('../home.html')
-})
-
-router.get('/bonjour', async (client) => {
-  client.app.innerHTML = await loadHTML('../bonjour.html')
 })
 
 router.get('/404', (client) => {
@@ -25,16 +21,7 @@ router.get('/sign-in', async (client) => {
   client.app.innerHTML = await loadHTML('../auth.html') // Charger auth.html pour la sélection
 })
 
-router.get('/login/42', async (client) => {
-  client.app.innerHTML = await loadHTML('../login42.html') // Charger login42.html
-  const oauthButton = document.createElement('button')
-  oauthButton.textContent = 'Log in with 42'
-  oauthButton.addEventListener('click', () => {
-    window.location.href = 'https://auth.api.transcendence.local/login/42/'
-  })
-  client.app.innerHTML = ''
-  client.app.appendChild(oauthButton)
-})
+router.get('/login/42', login42)
 
 router.get('/logout', logout)
 
