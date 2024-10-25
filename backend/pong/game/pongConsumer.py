@@ -26,7 +26,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         player = data.get('player')
         action = data.get('action')
 
-        self.pong_game.update_player_position(self, player, action)
+        self.pong_game.update_player_position(player, action)
 
         await self.send_game_state()
 
