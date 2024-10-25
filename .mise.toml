@@ -1,6 +1,7 @@
 [tools]
 poetry = {version='latest', pyproject='pyproject.toml'}
 python = "latest"
+pnpm = "latest"
 
 [env]
 MISE_POETRY_AUTO_INSTALL = 1
