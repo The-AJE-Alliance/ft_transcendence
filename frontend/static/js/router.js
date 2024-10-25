@@ -1,9 +1,6 @@
-import { loadHTML } from './utils.js';
-
-
 class Router {
-    constructor() {
-        //this.app = app; 
+    constructor(Client) {
+        this.#client = Client
         this.get('/', () => {})
         this.get('/404', () => {})
 
@@ -37,6 +34,7 @@ class Router {
 
     #paths = {}
     #previousPath = null
+    #client
 
     #redirect(url) {
         if (url === '/404') {
@@ -119,7 +117,7 @@ class Router {
     #processURL(pattern, url) {
         this.#previousPath = url
         const result = this.#getParams(pattern, url)
-        return this.#paths[pattern].callbacks.forEach(callback => callback(result))
+        return this.#paths[pattern].callbacks.forEach(callback => callback(this.#client, result))
     }
 
     #checkPatterns(url) {

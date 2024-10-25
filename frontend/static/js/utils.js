@@ -1,5 +1,3 @@
-
-
 // Loads a html file at the filePath and returns it as text
 export async function loadHTML(filePath) {
     try {
@@ -74,7 +72,7 @@ function createForm({ action = '', method = 'GET', fields = [], submitText = 'Su
     return form;
 }
 
-export function createAndHandleForm({ app, actionUrl, method, fields, submitText, processData }) {
+export function createAndHandleForm({ app, actionUrl, method, fields, submitText, processData, callback, client }) {
     const form = createForm({
         action: actionUrl,
         method: method,
@@ -99,7 +97,11 @@ export function createAndHandleForm({ app, actionUrl, method, fields, submitText
                 credentials: 'include',
             });
             const result = await response.json();
-            console.log(`${submitText} successful:`, result);
+            if (callback) {
+                await callback(client, result, response.ok)
+            } else {
+                console.log(`${submitText} successful:`, result);
+            }
         } catch (error) {
             console.error(`Error during ${submitText.toLowerCase()}:`, error);
         }
