@@ -20,7 +20,11 @@ build: _env
 
 up: _env _before && _after
     #!/usr/bin/env bash
-    docker --log-level ERROR compose up -d vault vault-init
+    docker --log-level ERROR compose up -d vault
+    until docker logs vault |& grep -w 'Vault server started!' &> /dev/null; do
+      true
+    done
+    docker --log-level ERROR compose up -d vault-init
     until docker logs vault-init |& grep -w 'Vault init done.' &> /dev/null; do
       true
     done

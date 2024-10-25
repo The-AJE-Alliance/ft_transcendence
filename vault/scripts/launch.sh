@@ -19,6 +19,15 @@ init_db () {
   done
 }
 
+db_isready() {
+  local APP=$1
+  docker logs "${APP}" |& grep -Pzl '(?s)init process complete.*\n.*ready to accept connections'
+  if [ $? -eq 0 ]; then
+    return 0
+  fi
+  return 1
+}
+
 IFS=' ' read -r -a apps <<< "$1"
 
 for app in "${apps[@]}"; do
@@ -27,7 +36,7 @@ done
 
 docker --log-level ERROR compose up -d auth-db pong-db
 
-until docker exec -it auth-db pg_isready &> /dev/null && docker exec -it pong-db pg_isready &> /dev/null; do
+until db_isready auth-db &> /dev/null && db_isready pong-db &>/dev/null; do
   true
 done
 
