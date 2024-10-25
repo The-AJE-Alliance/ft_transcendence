@@ -35,19 +35,19 @@ class PongGame:
     def update_player_position(self, player, action):
         if player == 1:
             if action == 'move_up':
-               new_y_position =  max(self.player1_position - 0.05, 0)
-               self.player1_position = min(new_y_position, 1)
+                if self.player1_position - (self.player_height / 2) >= 0.05:
+                    self.player1_position -= 0.05
             elif action == 'move_down':
-                new_y_position = min(self.player1_position + 0.05, 1)
-                self.player1_position = max(new_y_position, 0)
+                if self.player1_position + (self.player_height / 2) <= 1:
+                    self.player1_position += 0.05
 
         elif player == 2:
             if action == 'move_up':
-                new_y_position = max(self.player2_position - 0.05, 0)
-                self.player2_position = min(new_y_position, 1)
+                if self.player2_position - (self.player_height / 2) >= 0.05:
+                    self.player2_position -= 0.05
             elif action == 'move_down':
-                new_y_position = min(self.player2_position + 0.05, 1)
-                self.player2_position = max(new_y_position, 0)
+               if self.player2_position + (self.player_height / 2) <= 1:
+                    self.player2_position += 0.05
 
 
 
