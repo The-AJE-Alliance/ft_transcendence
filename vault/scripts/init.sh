@@ -3,7 +3,6 @@ set -ex
 
 INIT_FILE=/vault/secrets/vault.init
 export VAULT_CACERT=/vault/ssl/cert.pem
-sleep 5
 if [ -f "${INIT_FILE}" ]; then
   echo "${INIT_FILE} exists. Vault already initialized."
 else
