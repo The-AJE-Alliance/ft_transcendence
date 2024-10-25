@@ -14,31 +14,25 @@ export async function pong() {
     document.addEventListener('keydown', (event) => handleKeyPress(event, socket));
     socket.onmessage = function(event) {
         const gameState = JSON.parse(event.data);
-        // console.log('État du jeu reçu:', gameState);
+        console.log('État du jeu reçu:', gameState);
     
-        // Initialiser le canvas avec les données reçues
         initializeCanvas(gameState);
     };
 
 }
 
 
-
-// Initialisation du canvas et de son contexte 2D
-
-// Fonction simple pour dessiner le canvas initialement (par exemple, un fond noir)
 async function initializeCanvas(gameState) {
     const canvas = document.getElementById('pongCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Efface le canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Dessine le fond noir du terrain de jeu
+   
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Dessine la ligne blanche au milieu
+  
     ctx.strokeStyle = 'white';
     ctx.setLineDash([5, 15]);
     ctx.beginPath();
@@ -46,23 +40,30 @@ async function initializeCanvas(gameState) {
     ctx.lineTo(canvas.width / 2, canvas.height);
     ctx.stroke();
 
-    // Positionner les éléments du jeu en fonction des données du backend
     if (gameState) {
+        ctx.font = '24px Arial';
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+
+        ctx.fillText(`Player 1: ${gameState.player1_score}`, canvas.width * 0.25, 30);
+
+        ctx.fillText(`Player 2: ${gameState.player2_score}`, canvas.width * 0.75, 30);
+
         const player1Y = gameState.player1_position * canvas.height;
         const player2Y = gameState.player2_position * canvas.height;
         const ballX = gameState.ball_position[0] * canvas.width;
         const ballY = gameState.ball_position[1] * canvas.height;
 
-        // Dessiner la raquette du joueur 1
+        
+        // Dessin des raquettes
         ctx.fillStyle = 'white';
-        ctx.fillRect(10, player1Y - 40, 10, 80); // Exemple de raquette (x=10, largeur=10, hauteur=80)
+        ctx.fillRect(10, player1Y - 40, 10, 80); // (x=10, largeur=10, hauteur=80)
 
-        // Dessiner la raquette du joueur 2
-        ctx.fillRect(canvas.width - 20, player2Y - 40, 10, 80); // Raquette joueur 2
+        ctx.fillRect(canvas.width - 20, player2Y - 40, 10, 80);
 
         // Dessiner la balle
         ctx.beginPath();
-        ctx.arc(ballX, ballY, 10, 0, Math.PI * 2); // La balle avec un rayon de 10
+        ctx.arc(ballX, ballY, 10, 0, Math.PI * 2); // Avec un rayon de 10
         ctx.fill();
     }
 }

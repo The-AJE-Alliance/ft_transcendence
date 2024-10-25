@@ -8,7 +8,7 @@ class PongGame:
         self.player2_score = 0
         self.width = 1.0
         self.height = 1.0
-        self.player_width = 0.02 #largeur de la raquette
+        self.player_width = 0.02
         self.player_height = 0.2
 
 
@@ -63,6 +63,7 @@ class PongGame:
             self.update_score(1)
 
         elif collision_player2:
+            print("Collision avec le joueur 2")
             self.ball_velocity[0] = -self.ball_velocity[0]
             self.update_score(2)
 
@@ -79,7 +80,7 @@ class PongGame:
             self.ball_position[1] = 1  # Réajuster la position de la balle
             self.ball_velocity[1] = -self.ball_velocity[1]  # Inverser la direction
 
-        #  ##collisions avec le mur inf : axe Y : murs de gauche et de droite
+        # axe Y : murs de gauche et de droite
         if self.ball_position[0] <= 0:  
             self.ball_position[0] = 0  
             self.ball_velocity[0] = -self.ball_velocity[0]  
@@ -90,6 +91,8 @@ class PongGame:
 
 
     def check_collision_with_players(self):
+        #on vérifie d'abord selon l'axe des x (est-ce dans la zone atteignable par la raquette)
+        #puis en y : la balle est-elle à l'intérieur de la raquette
         collision_player1 = (
                 self.ball_position[0] <= (self.player_width / self.width) and
                 self.player1_position <= self.ball_position[1] <= (
@@ -103,3 +106,9 @@ class PongGame:
         )
 
         return collision_player1, collision_player2
+
+    def update_score(self, player):
+        if player == 1:
+            self.player1_score += 1
+        elif player == 2:
+            self.player2_score += 1
