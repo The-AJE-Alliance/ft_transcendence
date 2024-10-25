@@ -21,7 +21,12 @@ router.get('/users', users)
 
 router.get('/login', login)
 
-router.get('/login/42', (client) => {
+router.get('/sign-in', async (client) => {
+  client.app.innerHTML = await loadHTML('../auth.html') // Charger auth.html pour la sélection
+})
+
+router.get('/login/42', async (client) => {
+  client.app.innerHTML = await loadHTML('../login42.html') // Charger login42.html
   const oauthButton = document.createElement('button')
   oauthButton.textContent = 'Log in with 42'
   oauthButton.addEventListener('click', () => {
