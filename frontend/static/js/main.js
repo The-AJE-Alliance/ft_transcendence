@@ -1,12 +1,10 @@
-import { login, register, users } from './auth.js'
+import { login, logout, register, users } from './auth.js'
 import Client from './client.js'
 import Router from './router.js'
 import { loadHTML } from './utils.js'
 
 const router = new Router(Client)
 
-// Here we are generating our routes, using callback that are doing basic things for the moment.
-// The callbacks will become bigger functions that are generating dynamic content for every service.
 router.get('/', async (client) => {
   client.app.innerHTML = await loadHTML('../home.html')
 })
@@ -32,5 +30,7 @@ router.get('/login/42', (client) => {
   client.app.innerHTML = ''
   client.app.appendChild(oauthButton)
 })
+
+router.get('/logout', logout)
 
 router.get('/register', register)

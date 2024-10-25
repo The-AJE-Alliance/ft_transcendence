@@ -100,3 +100,31 @@ async function getUsers(client) {
     return null
   }
 }
+
+export async function logout(client) {
+  const logoutButton = document.createElement('button')
+  logoutButton.textContent = 'Logout'
+  logoutButton.addEventListener('click', async () => {
+    try {
+      const response = await fetch('https://auth.api.transcendence.local/logout/', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${client.token}` },
+        credentials: 'include',
+      })
+      if (response.ok) {
+        // TODO: confirm logout by html
+        client.app.innerHTML = '<p>Logout done.</p>'
+        client.token = ''
+      }
+      else {
+        // TODO: confirm logout failed by html
+        client.app.innerHTML = '<p>Logout failed.</p>'
+      }
+    }
+    catch (error) {
+      console.error('Error while trying to logout:', error)
+    }
+  })
+  client.app.innerHTML = ''
+  client.app.appendChild(logoutButton)
+}
