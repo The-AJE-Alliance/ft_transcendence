@@ -16,7 +16,6 @@ class PongConsumer(AsyncWebsocketConsumer):
     
     async def game_loop(self):
         while True:
-            print("Mise à jour de la position de la balle")
             self.pong_game.update_ball_position()  # Mettre à jour la position de la balle
             await self.send_game_state()  # Envoyer l'état mis à jour du jeu
             await asyncio.sleep(1/30) 
@@ -25,7 +24,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         player = data.get('player')
         action = data.get('action')
-
         self.pong_game.update_player_position(player, action)
 
         await self.send_game_state()

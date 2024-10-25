@@ -14,7 +14,7 @@ export async function pong() {
     document.addEventListener('keydown', (event) => handleKeyPress(event, socket));
     socket.onmessage = function(event) {
         const gameState = JSON.parse(event.data);
-        console.log('État du jeu reçu:', gameState);
+        // console.log('État du jeu reçu:', gameState);
     
         // Initialiser le canvas avec les données reçues
         initializeCanvas(gameState);
@@ -69,15 +69,26 @@ async function initializeCanvas(gameState) {
 
 //event listener pour les touches
 function handleKeyPress(event, socket) {
-    const player = 2;
+    console.log(`Key pressed: ${event.key}`);
     let action = '';
+    let player = 0;
 
     switch(event.key) {
         case 'ArrowUp':
             action = 'move_up';
+            player = 2;
             break;
         case 'ArrowDown':
             action = 'move_down';
+            player = 2;
+            break;
+        case 'w':
+            action = 'move_up';
+            player = 1;
+            break;
+        case 's':
+            action = 'move_down';
+            player = 1;
             break;
         default:
             return; 
