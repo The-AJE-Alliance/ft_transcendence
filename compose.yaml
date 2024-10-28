@@ -49,8 +49,8 @@ services:
       - static-files:/static
       - vault-ca:/ca
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:8080"
+      - "443:8443"
   vault:
     <<: *base
     container_name: vault
