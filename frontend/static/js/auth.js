@@ -2,6 +2,7 @@ import { createAndHandleForm, loadHTML, processLoginData } from './utils.js'
 
 export async function login(client) {
   client.app.innerHTML = await loadHTML('../login.html')
+  console.log('HTML chargé dans client.app.innerHTML')
   const loginContainer = document.getElementById('login-form')
   createAndHandleForm({
     app: loginContainer,
@@ -24,8 +25,6 @@ export async function profile(client) {
   client.app.innerHTML = await loadHTML('../profile.html')
   if (client.token) {
     const user = await getUserProfile(client)
-    console.log('Contenu de user:', user)
-    const profileContainer = document.getElementById('profile-info')
     if (user) {
       document.getElementById('username').textContent = user.username
       document.getElementById('email').textContent = user.email
@@ -33,11 +32,7 @@ export async function profile(client) {
       document.getElementById('status').textContent = user.is_online ? 'Online' : 'Offline'
       const avatarElement = document.getElementById('avatar')
       avatarElement.src = user.avatar
-      console.log(user.avatar)
       avatarElement.alt = `Avatar de ${user.username}`
-    }
-    else {
-      profileContainer.innerHTML = '<p>Erreur lors de la récupération des informations utilisateur.</p>'
     }
   }
   await logout(client)
@@ -46,14 +41,10 @@ export async function profile(client) {
 async function loginPostProcess(client, result, ok) {
   if (ok) {
     client.token = result.access
-    console.log('Jeton d\'accès : ', client.token)
-    window.history.pushState(null, null, '/profile')
-    await profile(client)
-    // client.app.innerHTML = '<p>Login ok !</p>
+    client.router.redirect('/profile')
   }
   else {
-    // TODO: confirm invalid login by html
-    client.app.innerHTML = '<p>Invalid login</p>'
+    document.getElementById('invalid-login').classList.remove('d-none')
   }
 }
 
@@ -79,8 +70,7 @@ export async function register(client) {
 
 async function registerPostProcess(client, result, ok) {
   if (ok) {
-    // TODO: confirm registration by html
-    client.app.innerHTML = '<p>Registration successfully done. Please login</p>'
+    client.router.redirect('/login')
   }
   else {
     // TODO: confirm invalid registration by html
@@ -121,10 +111,6 @@ export async function getUserProfile(client) {
     const result = await response.json()
     if (response.ok) {
       return result
-    }
-    else {
-      console.error('Échec de la récupération du profil utilisateur :', result)
-      return null
     }
   }
   catch (error) {
