@@ -24,13 +24,24 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     authentication_classes = [JWTAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
         if self.action in ["update", "destroy", "partial_update", "retrieve"]:
-            permission_classes = [IsAuthenticated, IsOwner | IsAdminUser]
-        else:
             permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[IsAuthenticated],
+        url_path="me",
+    )
+    def me(self, request):
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
 
     @action(
         detail=False,

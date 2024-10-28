@@ -146,11 +146,6 @@ class Router {
     this.#processURL(result, targetUrl)
     return true
   }
-
-  navigate(path) {
-    window.history.pushState(null, null, path)
-    this.#checkPatterns(path)
-  }
 }
 
 export default Router

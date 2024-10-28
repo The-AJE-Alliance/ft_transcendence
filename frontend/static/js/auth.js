@@ -20,11 +20,36 @@ export async function login(client) {
   })
 }
 
+export async function profile(client) {
+  client.app.innerHTML = await loadHTML('../profile.html')
+  if (client.token) {
+    const user = await getUserProfile(client)
+    console.log('Contenu de user:', user)
+    const profileContainer = document.getElementById('profile-info')
+    if (user) {
+      document.getElementById('username').textContent = user.username
+      document.getElementById('email').textContent = user.email
+      document.getElementById('nickname').textContent = user.nickname
+      document.getElementById('status').textContent = user.is_online ? 'Online' : 'Offline'
+      const avatarElement = document.getElementById('avatar')
+      avatarElement.src = user.avatar
+      console.log(user.avatar)
+      avatarElement.alt = `Avatar de ${user.username}`
+    }
+    else {
+      profileContainer.innerHTML = '<p>Erreur lors de la récupération des informations utilisateur.</p>'
+    }
+  }
+  await logout(client)
+}
+
 async function loginPostProcess(client, result, ok) {
   if (ok) {
     client.token = result.access
-    client.app.innerHTML = '<p>Login ok !</p>'
-    // TODO: confirm login by html
+    console.log('Jeton d\'accès : ', client.token)
+    window.history.pushState(null, null, '/profile')
+    await profile(client)
+    // client.app.innerHTML = '<p>Login ok !</p>
   }
   else {
     // TODO: confirm invalid login by html
@@ -64,6 +89,7 @@ async function registerPostProcess(client, result, ok) {
 }
 
 // Example of working JWT auth, probably not necessary in this form
+
 export async function users(client) {
   if (!client.token) {
     await client.refresh()
@@ -82,11 +108,32 @@ export async function users(client) {
     }
     users = await getUsers(client)
   }
-
   client.app.innerHTML = `<ul><li>${users[0].username}</li><li>${users[0].email}</li></ul><br>`
 }
 
-async function getUsers(client) {
+export async function getUserProfile(client) {
+  try {
+    const response = await fetch('https://auth.api.transcendence.local/users/me/', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+    })
+    const result = await response.json()
+    if (response.ok) {
+      return result
+    }
+    else {
+      console.error('Échec de la récupération du profil utilisateur :', result)
+      return null
+    }
+  }
+  catch (error) {
+    console.error('Erreur lors de la récupération du profil utilisateur :', error)
+    return null
+  }
+}
+
+export async function getUsers(client) {
   try {
     const response = await fetch('https://auth.api.transcendence.local/users/', {
       method: 'GET',
@@ -140,6 +187,7 @@ export async function logout(client) {
       console.error('Error while trying to logout:', error)
     }
   })
-  client.app.innerHTML = ''
-  client.app.appendChild(logoutButton)
+  const logoutContainer = document.getElementById('logout-container')
+  logoutContainer.innerHTML = ''
+  logoutContainer.appendChild(logoutButton)
 }

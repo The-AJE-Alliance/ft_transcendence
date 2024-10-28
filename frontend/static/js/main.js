@@ -1,4 +1,4 @@
-import { login, login42, logout, register, users } from './auth.js'
+import { login, login42, logout, profile, register, users } from './auth.js'
 import Client from './client.js'
 import Router from './router.js'
 import { loadHTML } from './utils.js'
@@ -18,7 +18,7 @@ router.get('/users', users)
 router.get('/login', login)
 
 router.get('/sign-in', async (client) => {
-  client.app.innerHTML = await loadHTML('../auth.html') // Charger auth.html pour la sélection
+  client.app.innerHTML = await loadHTML('../auth.html')
 })
 
 router.get('/login/42', login42)
@@ -26,4 +26,5 @@ router.get('/login/42', login42)
 router.get('/logout', logout)
 
 router.get('/register', register)
-window.router = router
+
+router.get('/profile', profile)
