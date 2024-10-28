@@ -42,13 +42,15 @@ class PongGame:
                 if self.player2_position + (self.player_height / 2) <= 1:
                     self.player2_position += 0.05
 
-    # If "there should be a collision" (x and y are in the good range) but there is not ("check_collision is false")
-    # then we grant one point to the opponent
     def update_ball_position(self):
         self.ball_position[0] += self.ball_velocity[0]
         self.ball_position[1] += self.ball_velocity[1]
 
         wall, player, player1, player2 = self.check_collisions()
+
+        self.update_score(wall, player, player1, player2)
+
+        self.revert_ball_direction(wall, player, player1, player2)
 
         # if collision_player1:
         #     self.ball_velocity[0] = -self.ball_velocity[0]
@@ -58,6 +60,12 @@ class PongGame:
         #     print("Collision avec le joueur 2")
         #     self.ball_velocity[0] = -self.ball_velocity[0]
         #     self.update_score(2)
+
+    def revert_ball_direction(self, wall, player, player1, player2):
+        if not player1 and not player2:
+            self.ball_velocity[1] = -self.ball_velocity[0]
+        else:
+            self.ball_velocity[0] = -self.ball_velocity[0]
 
     def check_collisions(self):
         # check collisions with players
@@ -90,7 +98,7 @@ class PongGame:
         if self.ball_position[0] <= 0:
             return True, False, True, False
 
-        #right wall
+        # right wall
         elif self.ball_position[0] >= 1:
             return True, False, False, True
 
@@ -115,25 +123,28 @@ class PongGame:
     #         self.ball_position[0] = 1
     #         self.ball_velocity[0] = -self.ball_velocity[0]
 
-    def check_collision_with_players(self):
-        # on vérifie d'abord selon l'axe des x (est-ce dans la zone atteignable par la raquette)
-        # puis en y : la balle est-elle à l'intérieur de la raquette
-        collision_player1 = self.ball_position[0] <= (
-            self.player_width / self.width
-        ) and self.player1_position <= self.ball_position[1] <= (
-            self.player1_position + (self.player_height / self.height)
-        )
+    # def check_collision_with_players(self):
+    #     # on vérifie d'abord selon l'axe des x (est-ce dans la zone atteignable par la raquette)
+    #     # puis en y : la balle est-elle à l'intérieur de la raquette
+    #     collision_player1 = self.ball_position[0] <= (
+    #         self.player_width / self.width
+    #     ) and self.player1_position <= self.ball_position[1] <= (
+    #         self.player1_position + (self.player_height / self.height)
+    #     )
+    #
+    #     collision_player2 = self.ball_position[0] >= (
+    #         1 - self.player_width / self.width
+    #     ) and self.player2_position <= self.ball_position[1] <= (
+    #         self.player2_position + (self.player_height / self.height)
+    #     )
+    #
+    #     return collision_player1, collision_player2
 
-        collision_player2 = self.ball_position[0] >= (
-            1 - self.player_width / self.width
-        ) and self.player2_position <= self.ball_position[1] <= (
-            self.player2_position + (self.player_height / self.height)
-        )
-
-        return collision_player1, collision_player2
-
-    def update_score(self, player):
-        if player == 1:
-            self.player1_score += 1
-        elif player == 2:
+    def update_score(self, wall, player, player1, player2):
+        # if collision with wall on player1 side
+        if wall and player1:
             self.player2_score += 1
+
+        # if collision with wall on player2 side
+        elif wall and player2:
+            self.player1_score += 1
