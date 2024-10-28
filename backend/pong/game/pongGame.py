@@ -42,42 +42,78 @@ class PongGame:
                 if self.player2_position + (self.player_height / 2) <= 1:
                     self.player2_position += 0.05
 
+    # If "there should be a collision" (x and y are in the good range) but there is not ("check_collision is false")
+    # then we grant one point to the opponent
     def update_ball_position(self):
         self.ball_position[0] += self.ball_velocity[0]
         self.ball_position[1] += self.ball_velocity[1]
 
-        self.check_collision_with_walls()
-        collision_player1, collision_player2 = self.check_collision_with_players()
+        wall, player, player1, player2 = self.check_collisions()
 
+        # if collision_player1:
+        #     self.ball_velocity[0] = -self.ball_velocity[0]
+        #     self.update_score(1)
+        #
+        # elif collision_player2:
+        #     print("Collision avec le joueur 2")
+        #     self.ball_velocity[0] = -self.ball_velocity[0]
+        #     self.update_score(2)
+
+    def check_collisions(self):
+        # check collisions with players
+        collision_player1 = self.ball_position[0] <= (
+            self.player_width / self.width
+        ) and self.player1_position <= self.ball_position[1] <= (
+            self.player1_position + (self.player_height / self.height)
+        )
         if collision_player1:
-            self.ball_velocity[0] = -self.ball_velocity[0]
-            self.update_score(1)
+            return False, True, True, False
 
-        elif collision_player2:
-            print("Collision avec le joueur 2")
-            self.ball_velocity[0] = -self.ball_velocity[0]
-            self.update_score(2)
+        collision_player2 = self.ball_position[0] >= (
+            1 - self.player_width / self.width
+        ) and self.player2_position <= self.ball_position[1] <= (
+            self.player2_position + (self.player_height / self.height)
+        )
+        if collision_player2:
+            return False, True, False, True
 
-    def check_collision_with_walls(self):
-        ##collisions avec le mur inf : axe Y
-        ##si la balle touche le mur on reset à 0 la coordonnée 'y' et on inverse sa direction
+        # check collisions with walls
+        # upper wall ( y = 0 )
         if self.ball_position[1] <= 0:
-            self.ball_position[1] = 0
-            self.ball_velocity[1] = -self.ball_velocity[1]
+            return True, False, False, False
 
-        ##avec le mur sup
-        elif self.ball_position[1] >= 1:  # Si la balle touche le mur supérieur
-            self.ball_position[1] = 1  # Réajuster la position de la balle
-            self.ball_velocity[1] = -self.ball_velocity[1]  # Inverser la direction
+        # lower wall ( y = 1 )
+        elif self.ball_position[1] >= 1:
+            return True, False, False, False
 
-        # axe Y : murs de gauche et de droite
+        # left wall
         if self.ball_position[0] <= 0:
-            self.ball_position[0] = 0
-            self.ball_velocity[0] = -self.ball_velocity[0]
+            return True, False, True, False
 
+        #right wall
         elif self.ball_position[0] >= 1:
-            self.ball_position[0] = 1
-            self.ball_velocity[0] = -self.ball_velocity[0]
+            return True, False, False, True
+
+    # def check_collision_with_walls(self):
+    #     ##collisions avec le mur inf : axe Y
+    #     ##si la balle touche le mur on reset à 0 la coordonnée 'y' et on inverse sa direction
+    #     if self.ball_position[1] <= 0:
+    #         self.ball_position[1] = 0
+    #         self.ball_velocity[1] = -self.ball_velocity[1]
+    #
+    #     ##avec le mur sup
+    #     elif self.ball_position[1] >= 1:  # Si la balle touche le mur supérieur
+    #         self.ball_position[1] = 1  # Réajuster la position de la balle
+    #         self.ball_velocity[1] = -self.ball_velocity[1]  # Inverser la direction
+    #
+    #     # axe Y : murs de gauche et de droite
+    #     if self.ball_position[0] <= 0:
+    #         self.ball_position[0] = 0
+    #         self.ball_velocity[0] = -self.ball_velocity[0]
+    #
+    #     elif self.ball_position[0] >= 1:
+    #         self.ball_position[0] = 1
+    #         self.ball_velocity[0] = -self.ball_velocity[0]
 
     def check_collision_with_players(self):
         # on vérifie d'abord selon l'axe des x (est-ce dans la zone atteignable par la raquette)
