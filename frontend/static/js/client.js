@@ -1,6 +1,7 @@
 export default {
   app: document.getElementById('app'),
   token: '',
+  socket: undefined,
 
   async refresh() {
     try {

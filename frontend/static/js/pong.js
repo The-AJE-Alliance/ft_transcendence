@@ -1,18 +1,24 @@
 import { loadHTML } from './utils.js'
 
-export async function pong() {
-  const app = document.getElementById('app')
-  app.innerHTML = await loadHTML(('../pong.html'))
+export async function pong(client) {
+  client.app.innerHTML = await loadHTML(('../pong.html'))
   // creation de la websocket
 
-  const socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
+  client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
 
-  socket.onopen = function () {
+  document.addEventListener('visibilitychange', () => {
+    client.socket.close()
+    client.router.redirect('/')
+  })
+
+  client.socket.onopen = function () {
     console.log('WebSocket connected.')
   }
 
-  document.addEventListener('keydown', event => handleKeyPress(event, socket))
-  socket.onmessage = function (event) {
+  document.addEventListener('keydown', (event) => {
+    handleKeyPress(event, client.socket)
+  })
+  client.socket.onmessage = function (event) {
     const gameState = JSON.parse(event.data)
     console.log('Received game status:', gameState)
 

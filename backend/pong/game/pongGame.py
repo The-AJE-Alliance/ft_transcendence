@@ -62,6 +62,10 @@ class PongGame:
     def revert_ball_direction(self, wall, player, player1, player2):
         if not player1 and not player2:
             self.ball_velocity[1] *= -1
+            if self.ball_position[1] < 0.5:
+                self.ball_position[1] += 0.005
+            else:
+                self.ball_position[1] -= 0.005
         elif player1:
             self.ball_velocity[0] *= -1
             self.ball_position[0] += 0.005
