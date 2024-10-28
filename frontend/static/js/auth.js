@@ -2,7 +2,6 @@ import { createAndHandleForm, loadHTML, processLoginData } from './utils.js'
 
 export async function login(client) {
   client.app.innerHTML = await loadHTML('../login.html')
-  console.log('HTML chargé dans client.app.innerHTML')
   const loginContainer = document.getElementById('login-form')
   createAndHandleForm({
     app: loginContainer,
@@ -44,6 +43,8 @@ async function loginPostProcess(client, result, ok) {
     client.router.redirect('/profile')
   }
   else {
+    document.getElementById('username').value = ''
+    document.getElementById('password').value = ''
     document.getElementById('invalid-login').classList.remove('d-none')
   }
 }
@@ -73,8 +74,7 @@ async function registerPostProcess(client, result, ok) {
     client.router.redirect('/login')
   }
   else {
-    // TODO: confirm invalid registration by html
-    client.app.innerHTML = '<p>Error during registration</p>'
+    console.error('Registration failed:', result)
   }
 }
 

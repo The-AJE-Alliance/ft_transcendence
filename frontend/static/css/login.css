@@ -33,8 +33,8 @@ h1 {
   font-size: 18px;
   border-radius: 5px;
   margin-top: 20px;
-  display: block; /* Rend le bouton un élément de bloc pour pouvoir le centrer */
-  margin-left: auto; /* Centrage horizontal */
+  display: block;
+  margin-left: auto;
   margin-right: auto;
   transition: all 0.3s ease;
 }
@@ -66,4 +66,13 @@ h1 {
   padding: 30px;
   border-radius: 10px;
   box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
+}
+
+#invalid-login {
+  background-color: #1a1a1a;
+  color: #ff0000;
+  border: 1px solid #ff0000;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 20px;
 }

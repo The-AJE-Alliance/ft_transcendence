@@ -45,6 +45,8 @@ function createInput(field) {
   input.setAttribute('name', field.name || '')
   input.setAttribute('placeholder', field.placeholder || '')
   input.setAttribute('autocomplete', field.autocomplete || 'on')
+  if (field.required)
+    input.setAttribute('required', 'true')
   if (field.value)
     input.value = field.value
   return input
@@ -71,6 +73,34 @@ function createForm({ action = '', method = 'GET', fields = [], submitText = 'Su
   return form
 }
 
+function handleBackendErrors(errors) {
+  const formContainer = document.getElementById('register-form')
+  if (formContainer) {
+    clearFieldErrors()
+    for (const [field, messages] of Object.entries(errors)) {
+      const fieldElement = document.querySelector(`#${field}`)
+      if (fieldElement) {
+        const errorElement = document.createElement('div')
+        errorElement.className = 'form-error text-danger'
+        errorElement.textContent = messages.join(', ')
+        fieldElement.insertAdjacentElement('afterend', errorElement)
+      }
+      else {
+        const generalError = document.createElement('div')
+        generalError.className = 'form-error text-danger'
+        generalError.textContent = `${field}: ${messages.join(', ')}`
+        formContainer.appendChild(generalError)
+      }
+    }
+  }
+}
+
+function clearFieldErrors() {
+  document.querySelectorAll('.form-error').forEach((errorElement) => {
+    errorElement.remove()
+  })
+}
+
 export function createAndHandleForm({ app, actionUrl, method, fields, submitText, processData, callback, client }) {
   const form = createForm({
     action: actionUrl,
@@ -82,6 +112,7 @@ export function createAndHandleForm({ app, actionUrl, method, fields, submitText
   app.appendChild(form)
   form.addEventListener('submit', async (event) => {
     event.preventDefault()
+    clearFieldErrors()
     const formData = new FormData(form)
     let body
     if (processData)
@@ -95,11 +126,16 @@ export function createAndHandleForm({ app, actionUrl, method, fields, submitText
         credentials: 'include',
       })
       const result = await response.json()
-      if (callback) {
-        await callback(client, result, response.ok)
+      if (response.ok) {
+        if (callback) {
+          await callback(client, result, response.ok)
+        }
+        else {
+          console.log(`${submitText} successful:`, result)
+        }
       }
       else {
-        console.log(`${submitText} successful:`, result)
+        handleBackendErrors(result)
       }
     }
     catch (error) {

@@ -34,13 +34,30 @@ class UserSerializer(serializers.ModelSerializer):
             "date_joined",
             "is_online",
         ]
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {
+            "username": {"required": True},
+            "nickname": {"required": True},
+            "email": {"required": True},
+            "password": {"write_only": True, "required": True},
+            "avatar": {"required": False},
+        }
+
+    def validate(self, data):
+        if not data.get("username"):
+            raise serializers.ValidationError({"username": "Username is required."})
+        if not data.get("nickname"):
+            raise serializers.ValidationError({"nickname": "Nickname is required."})
+        if not data.get("email"):
+            raise serializers.ValidationError({"email": "Email is required."})
+        if not data.get("password"):
+            raise serializers.ValidationError({"password": "Password is required."})
+        return data
 
     def create(self, validated_data):
         friends_data = validated_data.pop("friends", [])
         user = User.objects.create_user(**validated_data)
         if friends_data:
-            user.friends.set(friends_data)  # Utiliser les IDs des amis
+            user.friends.set(friends_data)
         return user
 
     def update(self, instance, validated_data):
