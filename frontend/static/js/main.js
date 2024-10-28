@@ -1,6 +1,6 @@
 import { login, login42, logout, profile, register, users } from './auth.js'
-import {pong} from './pong.js'
 import Client from './client.js'
+import { pong } from './pong.js'
 import Router from './router.js'
 import { loadHTML } from './utils.js'
 
