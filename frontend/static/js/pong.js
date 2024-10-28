@@ -8,13 +8,13 @@ export async function pong() {
     const socket = new WebSocket('wss://pong.api.transcendence.local/ws/');
 
     socket.onopen = function() {
-        console.log('WebSocket est connecté.');
+        console.log('WebSocket connected.');
     };
 
     document.addEventListener('keydown', (event) => handleKeyPress(event, socket));
     socket.onmessage = function(event) {
         const gameState = JSON.parse(event.data);
-        console.log('État du jeu reçu:', gameState);
+        console.log('Received game status:', gameState);
     
         initializeCanvas(gameState);
     };
