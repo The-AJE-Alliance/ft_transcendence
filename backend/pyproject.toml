@@ -17,6 +17,7 @@ django-postgresql-setrole = "^1.0.12"
 pillow = "^10.4.0"
 requests = "^2.32.3"
 django-cors-headers = "^4.5.0"
+channels = "^4.1.0"
 
 
 [tool.poetry.group.dev.dependencies]

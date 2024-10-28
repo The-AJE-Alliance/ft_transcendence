@@ -1,5 +1,6 @@
 import { login, login42, logout, profile, register, users } from './auth.js'
 import Client from './client.js'
+import { pong } from './pong.js'
 import Router from './router.js'
 import { loadHTML } from './utils.js'
 
@@ -28,3 +29,5 @@ router.get('/logout', logout)
 router.get('/register', register)
 
 router.get('/profile', profile)
+
+router.get('/pong', pong)
