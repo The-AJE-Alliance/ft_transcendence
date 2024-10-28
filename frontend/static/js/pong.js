@@ -52,9 +52,9 @@ async function initializeCanvas(gameState) {
 
     // Dessin des raquettes
     ctx.fillStyle = 'white'
-    ctx.fillRect(10, player1Y - 40, 10, 80) // (x=10, largeur=10, hauteur=80)
+    ctx.fillRect(0, player1Y - 40, 10, 80) // (x=10, largeur=10, hauteur=80)
 
-    ctx.fillRect(canvas.width - 20, player2Y - 40, 10, 80)
+    ctx.fillRect(canvas.width - 10, player2Y - 40, 10, 80)
 
     // Dessiner la balle
     ctx.beginPath()

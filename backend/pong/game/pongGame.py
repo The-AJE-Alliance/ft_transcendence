@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 class PongGame:
     def __init__(self):
         self.ball_position = [0.5, 0.5]
@@ -47,25 +52,22 @@ class PongGame:
         self.ball_position[1] += self.ball_velocity[1]
 
         wall, player, player1, player2 = self.check_collisions()
+        if not wall and not player:
+            return
 
         self.update_score(wall, player, player1, player2)
 
         self.revert_ball_direction(wall, player, player1, player2)
 
-        # if collision_player1:
-        #     self.ball_velocity[0] = -self.ball_velocity[0]
-        #     self.update_score(1)
-        #
-        # elif collision_player2:
-        #     print("Collision avec le joueur 2")
-        #     self.ball_velocity[0] = -self.ball_velocity[0]
-        #     self.update_score(2)
-
     def revert_ball_direction(self, wall, player, player1, player2):
         if not player1 and not player2:
-            self.ball_velocity[1] = -self.ball_velocity[0]
-        else:
-            self.ball_velocity[0] = -self.ball_velocity[0]
+            self.ball_velocity[1] *= -1
+        elif player1:
+            self.ball_velocity[0] *= -1
+            self.ball_position[0] += 0.005
+        elif player2:
+            self.ball_velocity[0] *= -1
+            self.ball_position[0] -= 0.005
 
     def check_collisions(self):
         # check collisions with players
@@ -101,6 +103,8 @@ class PongGame:
         # right wall
         elif self.ball_position[0] >= 1:
             return True, False, False, True
+
+        return False, False, False, False
 
     # def check_collision_with_walls(self):
     #     ##collisions avec le mur inf : axe Y

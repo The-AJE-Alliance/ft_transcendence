@@ -16,6 +16,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         await self.accept()
         await self.send_game_state()
         self.game_loop_task = asyncio.create_task(self.game_loop())
+        await self.disconnect(0)
 
     async def game_loop(self):
         while True:
