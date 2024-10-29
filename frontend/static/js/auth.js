@@ -114,7 +114,7 @@ export async function getUserProfile(client) {
     }
   }
   catch (error) {
-    console.error('Erreur lors de la récupération du profil utilisateur :', error)
+    console.error('Error while trying to get user:', error)
     return null
   }
 }
@@ -159,14 +159,20 @@ export async function logout(client) {
         headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
       })
+      const successMessage = document.getElementById('logout-message')
+      const failedMessage = document.getElementById('logout-failed-message')
       if (response.ok) {
-        // TODO: confirm logout by html
-        client.app.innerHTML = '<p>Logout done.</p>'
-        client.token = ''
+        successMessage.classList.remove('d-none')
+        setTimeout(() => {
+          client.router.redirect('/')
+          successMessage.classList.add('d-none')
+        }, 2000)
       }
       else {
-        // TODO: confirm logout failed by html
-        client.app.innerHTML = '<p>Logout failed.</p>'
+        failedMessage.classList.remove('d-none')
+        setTimeout(() => {
+          failedMessage.classList.add('d-none')
+        }, 2000)
       }
     }
     catch (error) {

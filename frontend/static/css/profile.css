@@ -45,3 +45,20 @@ button:hover {
   object-fit: cover;
   border-radius: 50%;
 }
+
+.alert-container {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  top: 20%; /* Positionner les alertes à environ 20% de la hauteur de l'écran */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px; /* Limiter la largeur du conteneur pour un alignement centré */
+  z-index: 1000; /* S'assurer que les alertes sont au-dessus du contenu principal */
+}
+
+.alert {
+  width: 100%;
+  text-align: center;
+}

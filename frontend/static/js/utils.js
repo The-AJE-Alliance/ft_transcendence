@@ -112,7 +112,6 @@ export function createAndHandleForm({ app, actionUrl, method, fields, submitText
   app.appendChild(form)
   form.addEventListener('submit', async (event) => {
     event.preventDefault()
-    clearFieldErrors()
     const formData = new FormData(form)
     let body
     if (processData)
@@ -126,17 +125,13 @@ export function createAndHandleForm({ app, actionUrl, method, fields, submitText
         credentials: 'include',
       })
       const result = await response.json()
-      if (response.ok) {
-        if (callback) {
-          await callback(client, result, response.ok)
-        }
-        else {
-          console.log(`${submitText} successful:`, result)
-        }
+      if (callback) {
+        await callback(client, result, response.ok)
       }
       else {
-        handleBackendErrors(result)
+        console.log(`${submitText} successful:`, result)
       }
+      handleBackendErrors(result)
     }
     catch (error) {
       console.error(`Error during ${submitText.toLowerCase()}:`, error)
