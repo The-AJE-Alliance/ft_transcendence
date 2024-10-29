@@ -12,14 +12,14 @@ h1 {
 }
 
 .container {
-  margin-top: 150px !important;
+  margin-top: 150px;
   text-align: center;
 }
 
 #register-form .form-control {
-  background-color: #262626 !important;
-  color: #00cc99 !important;
-  border: 1px solid #00cc99 !important;
+  background-color: #262626;
+  color: #00cc99;
+  border: 1px solid #00cc99;
 }
 
 #register-form button {
@@ -41,7 +41,7 @@ h1 {
 }
 
 #register-form .mb-3 {
-  margin-bottom: 15px !important;
+  margin-bottom: 15px;
 }
 #register-form label {
   display: block;
@@ -49,7 +49,23 @@ h1 {
   color: #00cc99 !important;
 }
 #register-form input[type='file'] {
-  color: #00cc99 !important;
-  background-color: #262626 !important;
-  border: 1px solid #00cc99 !important;
+  color: #00cc99;
+  background-color: #262626;
+  border: 1px solid #00cc99;
+}
+
+#register-form .is-invalid {
+  border-color: #ff4d4d; /* Rouge pour montrer l'erreur */
+}
+
+#register-form .is-valid {
+  border-color: #4dff88; /* Vert pour montrer la validation */
+}
+
+#register-form .invalid-feedback {
+  color: #ff4d4d; /* Couleur pour le texte d'erreur */
+}
+
+#register-form .valid-feedback {
+  color: #4dff88; /* Couleur pour le texte de validation */
 }
