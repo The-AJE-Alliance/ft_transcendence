@@ -75,13 +75,8 @@ class PongGame:
 
     def check_collisions(self):
         # check collisions with players
-        # collision_player1 = self.ball_position[0] <= (
-        #     self.player_width / self.width
-        # ) and self.player1_position <= self.ball_position[1] <= (
-        #     self.player1_position + (self.player_height / self.height)
-        # )
         collision_player1 = self.ball_position[0] <= (
-            self.player_width / self.width + 0.01
+            self.player_width / self.width
         ) and self.player1_position <= self.ball_position[1] <= (
             self.player1_position + (self.player_height / self.height)
         )

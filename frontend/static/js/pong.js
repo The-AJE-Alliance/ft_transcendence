@@ -6,6 +6,7 @@ export async function pong(client) {
 
   client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
 
+  const canvas = document.getElementById('pongCanvas')
   document.addEventListener('visibilitychange', () => {
     client.socket.close()
     client.router.redirect('/')
@@ -18,16 +19,28 @@ export async function pong(client) {
   document.addEventListener('keyup', (event) => {
     handleKeyPress(event, client.socket)
   })
+
+  // window.addEventListener('resize', () => {
+  //   canvasResize(canvas)
+  // })
+
   client.socket.onmessage = function (event) {
     const gameState = JSON.parse(event.data)
-    console.log('Received game status:', gameState)
+    // console.log('Received game status:', gameState)
 
-    initializeCanvas(gameState)
+    initializeCanvas(gameState, canvas)
   }
 }
 
-async function initializeCanvas(gameState) {
-  const canvas = document.getElementById('pongCanvas')
+function canvasResize(canvas) {
+  console.log('canvasResize called')
+  const style = getComputedStyle(canvas)
+  console.log(style)
+  canvas.width = Number.parseInt(style.width)
+  canvas.height = Number.parseInt(style.height)
+}
+
+async function initializeCanvas(gameState, canvas) {
   const ctx = canvas.getContext('2d')
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)
