@@ -28,6 +28,7 @@ up: _env _before && _after
     until docker logs vault-init |& grep -w 'Vault init done.' &> /dev/null; do
       true
     done
+    . "./vault/scripts/install-ca.sh"
     . "./vault/scripts/launch.sh" "{{APPS}}"
 
 logs:
@@ -53,6 +54,7 @@ down:
 rm:
 	@echo "{{RED}}██████████████████ Removing All Containers and Volumes ██████████████████{{RESET}}"
 	@{{DOCKER}} down --remove-orphans -v
+	@bash "./vault/scripts/remove-ca.sh"
 
 watch: build
     @echo "{{GREEN}}██████████████████████ Watching Containers... ██████████████████████{{RESET}}"
