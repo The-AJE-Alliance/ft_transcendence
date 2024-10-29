@@ -10,7 +10,7 @@ else
   echo "Certificate expired or missing, generating new certificate..."
   RESULT="$(curl --cacert /ca/ca.pem -s --header "X-Vault-Token: $APP_TOKEN" \
     --request POST \
-    --data "{\"common_name\":\"${HOSTNAME}\",\"ttl\":\"450h\"}" \
+    --data "{\"common_name\":\"${HOSTNAME}\", \"alt_names\":\"*.${HOSTNAME}, *.api.${HOSTNAME}\", \"ttl\":\"450h\"}" \
     "$VAULT_ADDR/v1/pki_int/issue/domain")"
 
   echo "$RESULT" | jq -r .data.certificate | tee /etc/ssl/"${HOSTNAME}".crt &> /dev/null

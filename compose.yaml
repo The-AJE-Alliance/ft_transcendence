@@ -79,6 +79,7 @@ services:
     restart: no
     volumes:
       - vault-pki:/vault/pki
+      - ./vault/ca/:/export/
       - vault-secrets:/vault/secrets
       - vault-ssl:/vault/ssl
   auth:
