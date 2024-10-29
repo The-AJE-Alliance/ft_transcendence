@@ -75,8 +75,13 @@ class PongGame:
 
     def check_collisions(self):
         # check collisions with players
+        # collision_player1 = self.ball_position[0] <= (
+        #     self.player_width / self.width
+        # ) and self.player1_position <= self.ball_position[1] <= (
+        #     self.player1_position + (self.player_height / self.height)
+        # )
         collision_player1 = self.ball_position[0] <= (
-            self.player_width / self.width
+            self.player_width / self.width + 0.01
         ) and self.player1_position <= self.ball_position[1] <= (
             self.player1_position + (self.player_height / self.height)
         )
@@ -110,49 +115,18 @@ class PongGame:
 
         return False, False, False, False
 
-    # def check_collision_with_walls(self):
-    #     ##collisions avec le mur inf : axe Y
-    #     ##si la balle touche le mur on reset à 0 la coordonnée 'y' et on inverse sa direction
-    #     if self.ball_position[1] <= 0:
-    #         self.ball_position[1] = 0
-    #         self.ball_velocity[1] = -self.ball_velocity[1]
-    #
-    #     ##avec le mur sup
-    #     elif self.ball_position[1] >= 1:  # Si la balle touche le mur supérieur
-    #         self.ball_position[1] = 1  # Réajuster la position de la balle
-    #         self.ball_velocity[1] = -self.ball_velocity[1]  # Inverser la direction
-    #
-    #     # axe Y : murs de gauche et de droite
-    #     if self.ball_position[0] <= 0:
-    #         self.ball_position[0] = 0
-    #         self.ball_velocity[0] = -self.ball_velocity[0]
-    #
-    #     elif self.ball_position[0] >= 1:
-    #         self.ball_position[0] = 1
-    #         self.ball_velocity[0] = -self.ball_velocity[0]
-
-    # def check_collision_with_players(self):
-    #     # on vérifie d'abord selon l'axe des x (est-ce dans la zone atteignable par la raquette)
-    #     # puis en y : la balle est-elle à l'intérieur de la raquette
-    #     collision_player1 = self.ball_position[0] <= (
-    #         self.player_width / self.width
-    #     ) and self.player1_position <= self.ball_position[1] <= (
-    #         self.player1_position + (self.player_height / self.height)
-    #     )
-    #
-    #     collision_player2 = self.ball_position[0] >= (
-    #         1 - self.player_width / self.width
-    #     ) and self.player2_position <= self.ball_position[1] <= (
-    #         self.player2_position + (self.player_height / self.height)
-    #     )
-    #
-    #     return collision_player1, collision_player2
-
     def update_score(self, wall, player, player1, player2):
         # if collision with wall on player1 side
         if wall and player1:
             self.player2_score += 1
+            self.reset_game()
 
         # if collision with wall on player2 side
         elif wall and player2:
             self.player1_score += 1
+            self.reset_game()
+
+    def reset_game(self):
+        self.ball_position = [0.5, 0.5]
+        self.player1_position = 0.5
+        self.player2_position = 0.5

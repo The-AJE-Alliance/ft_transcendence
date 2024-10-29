@@ -15,7 +15,7 @@ export async function pong(client) {
     console.log('WebSocket connected.')
   }
 
-  document.addEventListener('keydown', (event) => {
+  document.addEventListener('keyup', (event) => {
     handleKeyPress(event, client.socket)
   })
   client.socket.onmessage = function (event) {
