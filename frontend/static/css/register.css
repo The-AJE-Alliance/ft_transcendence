@@ -16,6 +16,29 @@ h1 {
   text-align: center;
 }
 
+.form-control.is-valid {
+  border-color: #28a745; /* Couleur de la bordure en cas de validation réussie */
+  background-color: #1a1a1a; /* Couleur de fond personnalisée pour les champs valides */
+  color: #00cc99; /* Couleur du texte pour les champs valides */
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545; /* Couleur de la bordure en cas de validation échouée */
+  background-color: #1a1a1a; /* Couleur de fond personnalisée pour les champs invalides */
+  color: #ff6b6b; /* Couleur du texte pour les champs invalides */
+}
+
+.invalid-feedback {
+  color: #ff6b6b; /* Couleur du texte pour les messages d'erreur */
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+.valid-feedback {
+  color: #28a745; /* Couleur du texte pour les messages de succès */
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
 #register-form .form-control {
   background-color: #262626;
   color: #00cc99;
@@ -52,20 +75,4 @@ h1 {
   color: #00cc99;
   background-color: #262626;
   border: 1px solid #00cc99;
-}
-
-#register-form .is-invalid {
-  border-color: #ff4d4d; /* Rouge pour montrer l'erreur */
-}
-
-#register-form .is-valid {
-  border-color: #4dff88; /* Vert pour montrer la validation */
-}
-
-#register-form .invalid-feedback {
-  color: #ff4d4d; /* Couleur pour le texte d'erreur */
-}
-
-#register-form .valid-feedback {
-  color: #4dff88; /* Couleur pour le texte de validation */
 }

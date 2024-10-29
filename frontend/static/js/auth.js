@@ -1,18 +1,12 @@
-import { createAndHandleForm, loadHTML, processLoginData } from './utils.js'
+import { handleForm, loadHTML, processLoginData } from './utils.js'
 
 export async function login(client) {
   client.app.innerHTML = await loadHTML('../login.html')
-  const loginContainer = document.getElementById('login-form')
-  createAndHandleForm({
-    app: loginContainer,
+  const form = document.getElementById('login-form')
+  handleForm({
+    form,
     actionUrl: 'https://auth.api.transcendence.local/login/',
     method: 'POST',
-    fields: [{
-      type: 'text',
-      name: 'username',
-      placeholder: 'Enter your username',
-      label: 'Username:',
-    }, { type: 'password', name: 'password', placeholder: 'Enter your password', label: 'Password:' }],
     submitText: 'Log In',
     processData: processLoginData,
     callback: loginPostProcess,
@@ -51,19 +45,13 @@ async function loginPostProcess(client, result, ok) {
 
 export async function register(client) {
   client.app.innerHTML = await loadHTML('../register.html')
-  const registerContainer = document.getElementById('register-form')
-  await createAndHandleForm({
-    app: registerContainer,
+  const form = document.getElementById('register-form')
+  await handleForm({
+    form,
     actionUrl: 'https://auth.api.transcendence.local/register/',
     method: 'POST',
-    fields: [
-      { type: 'text', name: 'username', placeholder: 'Enter your username', label: 'Username:', required: true },
-      { type: 'email', name: 'email', placeholder: 'Enter your email', label: 'Email:', required: true },
-      { type: 'password', name: 'password', placeholder: 'Enter your password', label: 'Password:', required: true },
-      { type: 'text', name: 'nickname', placeholder: 'Enter your nickname', label: 'Nickname:', required: true },
-      { type: 'file', name: 'avatar', label: 'Avatar:', required: false },
-    ],
     submitText: 'Register',
+    processData: processLoginData,
     callback: registerPostProcess,
     client,
   })
