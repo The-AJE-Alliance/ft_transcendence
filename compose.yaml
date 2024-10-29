@@ -14,7 +14,7 @@ x-micro: &micro
   <<: *base
   healthcheck:
     test: [ "CMD-SHELL", "python manage.py health_check || exit 1" ]
-    interval: 2s
+    interval: 5s
     timeout: 2s
     retries: 5
     start_period: 5s
@@ -79,7 +79,7 @@ services:
     restart: no
     volumes:
       - vault-pki:/vault/pki
-      - ./vault/ca/:/export/
+      - ./vault/ca:/export
       - vault-secrets:/vault/secrets
       - vault-ssl:/vault/ssl
   auth:

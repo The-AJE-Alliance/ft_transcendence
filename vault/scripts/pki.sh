@@ -17,8 +17,8 @@ else
   vault secrets tune -max-lease-ttl=876000h pki_int
   vault pki issue -issuer_name="transcendence-local-intermediate" \
     /pki/issuer/"$(vault list -format=json pki/issuers/ | jq -r '.[]')" /pki_int/ \
-    common_name="Transcendence Local Intermediate Authority" \
-    o="Transcendence" ou="Ecole 42" key_type="rsa" key_bits="4096" max_depth_len=1 \
+    common_name="TranscendenceLocalIntermediateAuthority" \
+    o="Transcendence" ou="Ecole42" key_type="rsa" key_bits="4096" max_depth_len=1 \
     permitted_dns_domains="${HOSTNAME},*.${HOSTNAME}" ttl="876000h"
   vault write pki_int/roles/domain issuer_ref="$(vault read -field=default pki_int/config/issuers)" \
     allowed_domains="${HOSTNAME}",localhost,127.0.0.1,host.docker.internal \
@@ -26,5 +26,6 @@ else
   vault policy write domain /vault/policies/domain.hcl
   curl -ks "${VAULT_ADDR}"/v1/pki_int/issuer/"$(vault read -field=default pki_int/config/issuers)"/pem > /export/transcendence.crt
   cp /vault/pki/vault_root_ca.crt /export/transcendence_ca.crt
+  chown -R 1000:1000 /export/
   touch ${PKI_INIT_FILE}
 fi
