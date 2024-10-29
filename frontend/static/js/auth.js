@@ -11,6 +11,8 @@ export async function login(client) {
     processData: processLoginData,
     callback: loginPostProcess,
     client,
+    enableValidation: false,
+    enablePasswordConfirmation: false,
   })
 }
 
@@ -51,9 +53,10 @@ export async function register(client) {
     actionUrl: 'https://auth.api.transcendence.local/register/',
     method: 'POST',
     submitText: 'Register',
-    processData: processLoginData,
     callback: registerPostProcess,
     client,
+    enableValidation: true,
+    enablePasswordConfirmation: true,
   })
 }
 
@@ -167,7 +170,7 @@ export async function logout(client) {
       console.error('Error while trying to logout:', error)
     }
   })
-  const logoutContainer = document.getElementById('logout-container')
-  logoutContainer.innerHTML = ''
-  logoutContainer.appendChild(logoutButton)
+  // const logoutContainer = document.getElementById('logout-container')
+  // logoutContainer.innerHTML = ''
+  // logoutContainer.appendChild(logoutButton)
 }

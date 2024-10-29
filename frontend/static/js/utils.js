@@ -15,39 +15,26 @@ export async function loadHTML(filePath) {
   }
 }
 
-export function handleForm({ form, actionUrl, method, submitText, processData, callback, client }) {
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault()
-    form.classList.add('was-validated')
-    if (form.checkValidity()) {
-      const formData = new FormData(form)
-      let body
-      if (processData)
-        body = processData(formData)
-      else
-        body = formData
-      try {
-        const response = await fetch(actionUrl, {
-          method,
-          body,
-          headers: processData ? { 'Content-Type': 'application/json' } : {},
-          credentials: 'include',
-        })
-        const result = await response.json()
-        if (callback)
-          await callback(client, result, response.ok)
-        else
-          console.log(`${submitText} successful:`, result)
+function validatePasswordConfirmation(form) {
+  const passwordInput = form.querySelector('#password')
+  const confirmPasswordInput = form.querySelector('#confirm-password')
+
+  if (passwordInput && confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('input', () => {
+      if (passwordInput.value !== confirmPasswordInput.value) {
+        confirmPasswordInput.classList.remove('is-valid')
+        confirmPasswordInput.classList.add('is-invalid')
+        confirmPasswordInput.nextElementSibling.textContent = 'Passwords do not match.'
       }
-      catch (error) {
-        console.error(`Error during ${submitText.toLowerCase()}:`, error)
+      else {
+        confirmPasswordInput.classList.remove('is-invalid')
+        confirmPasswordInput.classList.add('is-valid')
       }
-    }
-    else {
-      console.log('Form is invalid.')
-      form.reportValidity()
-    }
-  })
+    })
+  }
+}
+
+function validateFormFields(form) {
   form.querySelectorAll('.form-control').forEach((input) => {
     input.addEventListener('input', () => {
       if (input.checkValidity()) {
@@ -60,6 +47,60 @@ export function handleForm({ form, actionUrl, method, submitText, processData, c
       }
     })
   })
+}
+
+async function submitForm({ form, actionUrl, method, processData, submitText, callback, client }) {
+  const formData = new FormData(form)
+  const body = processData ? processData(formData) : formData
+  try {
+    const response = await fetch(actionUrl, {
+      method,
+      body,
+      headers: processData ? { 'Content-Type': 'application/json' } : {},
+      credentials: 'include',
+    })
+    const result = await response.json()
+    if (callback)
+      await callback(client, result, response.ok)
+    else
+      console.log(`${submitText} successful:`, result)
+  }
+  catch (error) {
+    console.error(`Error during ${submitText.toLowerCase()}:`, error)
+  }
+}
+
+export function handleForm({ form, actionUrl, method, submitText, processData, callback, client, enableValidation = false, enablePasswordConfirmation = false }) {
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    if (enablePasswordConfirmation) {
+      const passwordInput = form.querySelector('#password')
+      const confirmPasswordInput = form.querySelector('#confirm-password')
+      if (passwordInput && confirmPasswordInput && passwordInput.value !== confirmPasswordInput.value) {
+        confirmPasswordInput.classList.add('is-invalid')
+        confirmPasswordInput.nextElementSibling.textContent = 'Passwords do not match.'
+        return
+      }
+      else if (confirmPasswordInput) {
+        confirmPasswordInput.classList.remove('is-invalid')
+        confirmPasswordInput.classList.add('is-valid')
+      }
+    }
+    if (enableValidation) {
+      form.classList.add('was-validated')
+      if (!form.checkValidity()) {
+        console.log('Form is invalid.')
+        form.reportValidity()
+        return
+      }
+    }
+    await submitForm({ form, actionUrl, method, processData, submitText, callback, client })
+  })
+  if (enableValidation) {
+    validateFormFields(form)
+    if (enablePasswordConfirmation)
+      validatePasswordConfirmation(form)
+  }
 }
 
 export function processLoginData(formData) {

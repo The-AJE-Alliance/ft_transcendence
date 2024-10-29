@@ -17,28 +17,23 @@ h1 {
 }
 
 .form-control.is-valid {
-  border-color: #28a745; /* Couleur de la bordure en cas de validation réussie */
-  background-color: #1a1a1a; /* Couleur de fond personnalisée pour les champs valides */
-  color: #00cc99; /* Couleur du texte pour les champs valides */
+  border-color: #28a745;
+  background-color: #1a1a1a;
+  color: #00cc99;
 }
 
 .form-control.is-invalid {
-  border-color: #dc3545; /* Couleur de la bordure en cas de validation échouée */
-  background-color: #1a1a1a; /* Couleur de fond personnalisée pour les champs invalides */
-  color: #ff6b6b; /* Couleur du texte pour les champs invalides */
+  border-color: #dc3545;
+  background-color: #1a1a1a;
+  color: #ff6b6b;
 }
 
 .invalid-feedback {
-  color: #ff6b6b; /* Couleur du texte pour les messages d'erreur */
+  color: #ff6b6b;
   font-size: 0.9rem;
   margin-top: 5px;
 }
 
-.valid-feedback {
-  color: #28a745; /* Couleur du texte pour les messages de succès */
-  font-size: 0.9rem;
-  margin-top: 5px;
-}
 #register-form .form-control {
   background-color: #262626;
   color: #00cc99;

@@ -9,56 +9,91 @@ body {
   text-align: center;
 }
 
+#profile-card {
+  background-color: #262626;
+  border: 1px solid #00cc99;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.profile-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 #profile-info {
-  margin-bottom: 30px;
+  text-align: left;
+  flex: 1;
+  margin-right: 20px;
 }
 
 #profile-info p {
-  font-size: 20px;
+  font-size: 18px;
   color: #00cc99;
+  margin: 10px 0;
 }
 
-button {
+#profile-avatar {
+  text-align: center;
+}
+
+#avatar {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #00cc99;
+}
+
+#logout-button {
   background-color: #1a1a1a;
   color: #00cc99;
   border: 2px solid #00cc99;
   padding: 10px 20px;
   font-size: 18px;
   border-radius: 5px;
-  margin-top: 20px;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-button:hover {
+#logout-button:hover {
   background-color: #00cc99;
   color: #1a1a1a;
-  border: 2px solid #00cc99;
   box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.5);
-}
-
-#avatar {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 50%;
 }
 
 .alert-container {
   display: flex;
   justify-content: center;
   position: fixed;
-  top: 20%; /* Positionner les alertes à environ 20% de la hauteur de l'écran */
+  top: 10%;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 500px; /* Limiter la largeur du conteneur pour un alignement centré */
-  z-index: 1000; /* S'assurer que les alertes sont au-dessus du contenu principal */
+  max-width: 500px;
+  z-index: 1000;
 }
 
 .alert {
   width: 100%;
   text-align: center;
+  font-size: 1rem;
+  color: #fff;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.alert-success {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.alert-danger {
+  background-color: #dc3545;
+  color: #fff;
 }
