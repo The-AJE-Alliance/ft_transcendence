@@ -20,9 +20,9 @@ export async function pong(client) {
     handleKeyPress(event, client.socket)
   })
 
-  // window.addEventListener('resize', () => {
-  //   canvasResize(canvas)
-  // })
+  window.addEventListener('resize', () => {
+    canvasResize(canvas)
+  })
 
   client.socket.onmessage = function (event) {
     const gameState = JSON.parse(event.data)
@@ -33,11 +33,12 @@ export async function pong(client) {
 }
 
 function canvasResize(canvas) {
-  console.log('canvasResize called')
-  const style = getComputedStyle(canvas)
-  console.log(style)
-  canvas.width = Number.parseInt(style.width)
-  canvas.height = Number.parseInt(style.height)
+  // console.log('canvasResize called')
+  // const style = getComputedStyle(canvas)
+  // console.log(style)
+  // canvas.width = Number.parseInt(style.width)
+  // canvas.height = Number.parseInt(style.height)
+  
 }
 
 async function initializeCanvas(gameState, canvas) {
