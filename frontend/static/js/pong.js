@@ -65,22 +65,26 @@ async function initializeCanvas(gameState, canvas) {
 
     ctx.fillText(`Player 2: ${gameState.player2_score}`, canvas.width * 0.75, 30)
 
-    const player1Y = gameState.player1_position * canvas.height
-    const player2Y = gameState.player2_position * canvas.height
+    const player1 = gameState.player1
+    const player2 = gameState.player2
     const ballX = gameState.ball_position[0] * canvas.width
     const ballY = gameState.ball_position[1] * canvas.height
 
     // Dessin des raquettes
-    ctx.fillStyle = 'white'
-    ctx.fillRect(0, player1Y - 40, 10, 80) // (x=10, largeur=10, hauteur=80)
-
-    ctx.fillRect(canvas.width - 10, player2Y - 40, 10, 80)
+    drawPad(ctx, canvas, player1)
+    drawPad(ctx, canvas, player2)
 
     // Dessiner la balle
     ctx.beginPath()
     ctx.arc(ballX, ballY, 10, 0, Math.PI * 2) // Avec un rayon de 10
     ctx.fill()
+    ctx.closePath()
   }
+}
+
+function drawPad(ctx, canvas, pad) {
+  ctx.fillStyle = pad.color
+  ctx.fillRect(pad.x * canvas.width, pad.y * canvas.height, pad.width * canvas.width, pad.height * canvas.height)
 }
 
 // event listener pour les touches
