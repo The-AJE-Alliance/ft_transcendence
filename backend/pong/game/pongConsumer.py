@@ -1,7 +1,11 @@
 import json
 import asyncio
+import channels.exceptions
+import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .pongGame import PongGame
+
+logger = logging.getLogger(__name__)
 
 
 class PongConsumer(AsyncWebsocketConsumer):
@@ -11,16 +15,21 @@ class PongConsumer(AsyncWebsocketConsumer):
         )  # on fait ca pour appeler le constructeur de la classe parente
         self.pong_game = PongGame()
         self.game_loop_task = None
+        self.connected = False
 
     async def connect(self):
         await self.accept()
         await self.send_game_state()
+        self.connected = True
         self.game_loop_task = asyncio.create_task(self.game_loop())
 
     async def game_loop(self):
-        while True:
+        while self.connected:
             self.pong_game.update_ball_position()
             await self.send_game_state()
+            if self.pong_game.scored == True:
+                await asyncio.sleep(1)
+                self.pong_game.scored = False
             await asyncio.sleep(1 / 30)
 
     async def receive(self, text_data):
@@ -42,4 +51,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(game_state))
 
     async def disconnect(self, close_code):
-        print("Client déconnecté")
+        logger.warning("Client déconnecté")
+        self.connected = False
+        channels.exceptions.StopConsumer()

@@ -5,6 +5,7 @@ import Router from './router.js'
 import { loadHTML } from './utils.js'
 
 const router = new Router(Client)
+Client.router = router
 
 router.get('/', async (client) => {
   client.app.innerHTML = await loadHTML('../home.html')

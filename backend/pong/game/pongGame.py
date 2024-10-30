@@ -1,7 +1,14 @@
+import logging
+import asyncio
+import random
+
+logger = logging.getLogger(__name__)
+
+
 class PongGame:
     def __init__(self):
         self.ball_position = [0.5, 0.5]
-        self.ball_velocity = [0.01, 0.01]
+        self.ball_velocity = self.randomize_velocity()
         self.player1_position = 0.5
         self.player2_position = 0.5
         self.player1_score = 0
@@ -10,6 +17,18 @@ class PongGame:
         self.height = 1.0
         self.player_width = 0.02
         self.player_height = 0.2
+        self.scored = False
+
+    def randomize_velocity(self):
+        speed_x = random.uniform(0.01, 0.03)
+        speed_y = random.uniform(0.01, 0.03)
+
+        velocity = [speed_x, speed_y]
+        if random.randint(0, 1):
+            velocity[0] *= -1
+        if random.randint(0, 1):
+            velocity[1] *= -1
+        return velocity
 
     def get_game_state(self):
         return {
@@ -46,58 +65,82 @@ class PongGame:
         self.ball_position[0] += self.ball_velocity[0]
         self.ball_position[1] += self.ball_velocity[1]
 
-        self.check_collision_with_walls()
-        collision_player1, collision_player2 = self.check_collision_with_players()
+        wall, player, player1, player2 = self.check_collisions()
+        if not wall and not player:
+            return
 
-        if collision_player1:
-            self.ball_velocity[0] = -self.ball_velocity[0]
-            self.update_score(1)
+        self.update_score(wall, player, player1, player2)
 
-        elif collision_player2:
-            print("Collision avec le joueur 2")
-            self.ball_velocity[0] = -self.ball_velocity[0]
-            self.update_score(2)
+        self.revert_ball_direction(wall, player, player1, player2)
 
-    def check_collision_with_walls(self):
-        ##collisions avec le mur inf : axe Y
-        ##si la balle touche le mur on reset à 0 la coordonnée 'y' et on inverse sa direction
-        if self.ball_position[1] <= 0:
-            self.ball_position[1] = 0
-            self.ball_velocity[1] = -self.ball_velocity[1]
+    def revert_ball_direction(self, wall, player, player1, player2):
+        if not player1 and not player2:
+            self.ball_velocity[1] *= -1
+            if self.ball_position[1] < 0.5:
+                self.ball_position[1] += 0.005
+            else:
+                self.ball_position[1] -= 0.005
+        elif player1:
+            self.ball_velocity[0] *= -1
+            self.ball_position[0] += 0.005
+        elif player2:
+            self.ball_velocity[0] *= -1
+            self.ball_position[0] -= 0.005
 
-        ##avec le mur sup
-        elif self.ball_position[1] >= 1:  # Si la balle touche le mur supérieur
-            self.ball_position[1] = 1  # Réajuster la position de la balle
-            self.ball_velocity[1] = -self.ball_velocity[1]  # Inverser la direction
-
-        # axe Y : murs de gauche et de droite
-        if self.ball_position[0] <= 0:
-            self.ball_position[0] = 0
-            self.ball_velocity[0] = -self.ball_velocity[0]
-
-        elif self.ball_position[0] >= 1:
-            self.ball_position[0] = 1
-            self.ball_velocity[0] = -self.ball_velocity[0]
-
-    def check_collision_with_players(self):
-        # on vérifie d'abord selon l'axe des x (est-ce dans la zone atteignable par la raquette)
-        # puis en y : la balle est-elle à l'intérieur de la raquette
+    def check_collisions(self):
+        # check collisions with players
         collision_player1 = self.ball_position[0] <= (
             self.player_width / self.width
         ) and self.player1_position <= self.ball_position[1] <= (
             self.player1_position + (self.player_height / self.height)
         )
+        if collision_player1:
+            return False, True, True, False
 
         collision_player2 = self.ball_position[0] >= (
             1 - self.player_width / self.width
         ) and self.player2_position <= self.ball_position[1] <= (
             self.player2_position + (self.player_height / self.height)
         )
+        if collision_player2:
+            return False, True, False, True
 
-        return collision_player1, collision_player2
+        # check collisions with walls
+        # upper wall ( y = 0 )
+        if self.ball_position[1] <= 0:
+            return True, False, False, False
 
-    def update_score(self, player):
-        if player == 1:
-            self.player1_score += 1
-        elif player == 2:
+        # lower wall ( y = 1 )
+        elif self.ball_position[1] >= 1:
+            return True, False, False, False
+
+        # left wall
+        if self.ball_position[0] <= 0:
+            return True, False, True, False
+
+        # right wall
+        elif self.ball_position[0] >= 1:
+            return True, False, False, True
+
+        return False, False, False, False
+
+    def update_score(self, wall, player, player1, player2):
+        # if collision with wall on player1 side
+        if wall and player1:
             self.player2_score += 1
+            self.scored = True
+            self.reset_game()
+
+        # if collision with wall on player2 side
+        elif wall and player2:
+            self.player1_score += 1
+            self.scored = True
+            self.reset_game()
+
+    def reset_game(self):
+        self.ball_position = [0.5, 0.5]
+        self.player1_position = 0.5
+        self.player2_position = 0.5
+        self.ball_velocity = self.randomize_velocity()
+
+        

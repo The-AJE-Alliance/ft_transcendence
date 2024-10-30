@@ -1,27 +1,47 @@
 import { loadHTML } from './utils.js'
 
-export async function pong() {
-  const app = document.getElementById('app')
-  app.innerHTML = await loadHTML(('../pong.html'))
+export async function pong(client) {
+  client.app.innerHTML = await loadHTML(('../pong.html'))
   // creation de la websocket
 
-  const socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
+  client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
 
-  socket.onopen = function () {
+  const canvas = document.getElementById('pongCanvas')
+  document.addEventListener('visibilitychange', () => {
+    client.socket.close()
+    client.router.redirect('/')
+  })
+
+  client.socket.onopen = function () {
     console.log('WebSocket connected.')
   }
 
-  document.addEventListener('keydown', event => handleKeyPress(event, socket))
-  socket.onmessage = function (event) {
-    const gameState = JSON.parse(event.data)
-    console.log('Received game status:', gameState)
+  document.addEventListener('keyup', (event) => {
+    handleKeyPress(event, client.socket)
+  })
 
-    initializeCanvas(gameState)
+  window.addEventListener('resize', () => {
+    canvasResize(canvas)
+  })
+
+  client.socket.onmessage = function (event) {
+    const gameState = JSON.parse(event.data)
+    // console.log('Received game status:', gameState)
+
+    initializeCanvas(gameState, canvas)
   }
 }
 
-async function initializeCanvas(gameState) {
-  const canvas = document.getElementById('pongCanvas')
+function canvasResize(canvas) {
+  // console.log('canvasResize called')
+  // const style = getComputedStyle(canvas)
+  // console.log(style)
+  // canvas.width = Number.parseInt(style.width)
+  // canvas.height = Number.parseInt(style.height)
+  
+}
+
+async function initializeCanvas(gameState, canvas) {
   const ctx = canvas.getContext('2d')
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -52,9 +72,9 @@ async function initializeCanvas(gameState) {
 
     // Dessin des raquettes
     ctx.fillStyle = 'white'
-    ctx.fillRect(10, player1Y - 40, 10, 80) // (x=10, largeur=10, hauteur=80)
+    ctx.fillRect(0, player1Y - 40, 10, 80) // (x=10, largeur=10, hauteur=80)
 
-    ctx.fillRect(canvas.width - 20, player2Y - 40, 10, 80)
+    ctx.fillRect(canvas.width - 10, player2Y - 40, 10, 80)
 
     // Dessiner la balle
     ctx.beginPath()

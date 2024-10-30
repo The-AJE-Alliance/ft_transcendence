@@ -20,7 +20,9 @@ class Router {
 
       if (target.hostname === location.hostname) {
         event.preventDefault()
-        this.#redirect(url)
+        if (this.#client.socket)
+          this.#client.socket.close()
+        this.redirect(url)
       }
     }, false)
 
@@ -38,7 +40,7 @@ class Router {
   #previousPath = null
   #client
 
-  #redirect(url) {
+  redirect(url) {
     if (url === '/404') {
       window.history.replaceState(null, null, url)
     }
@@ -50,7 +52,7 @@ class Router {
 
   #handleError() {
     console.error('Page not found')
-    this.#redirect('/404')
+    this.redirect('/404')
   }
 
   #transformRegexOutput(input) {
