@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -7,7 +8,7 @@ logger = logging.getLogger(__name__)
 class PongGame:
     def __init__(self):
         self.ball_position = [0.5, 0.5]
-        self.ball_velocity = [0.01, 0.014]
+        self.ball_velocity = self.randomize_velocity()
         self.player1_position = 0.5
         self.player2_position = 0.5
         self.player1_score = 0
@@ -17,6 +18,17 @@ class PongGame:
         self.player_width = 0.02
         self.player_height = 0.2
         self.scored = False
+
+    def randomize_velocity(self):
+        speed_x = random.uniform(0.01, 0.03)
+        speed_y = random.uniform(0.01, 0.03)
+
+        velocity = [speed_x, speed_y]
+        if random.randint(0, 1):
+            velocity[0] *= -1
+        if random.randint(0, 1):
+            velocity[1] *= -1
+        return velocity
 
     def get_game_state(self):
         return {
@@ -129,4 +141,6 @@ class PongGame:
         self.ball_position = [0.5, 0.5]
         self.player1_position = 0.5
         self.player2_position = 0.5
+        self.ball_velocity = self.randomize_velocity()
+
         
