@@ -15,97 +15,92 @@ export async function loadHTML(filePath) {
   }
 }
 
-function createButton(submitText) {
-  const submitButton = document.createElement('button')
-  submitButton.setAttribute('type', 'submit')
-  submitButton.textContent = submitText
-  return submitButton
-}
+function validatePasswordConfirmation(form) {
+  const passwordInput = form.querySelector('#password')
+  const confirmPasswordInput = form.querySelector('#confirm-password')
 
-function createInput(field) {
-  let input
-  const fieldId = field.name || ''
-  if (field.type === 'textarea') {
-    input = document.createElement('textarea')
-  }
-  else if (field.type === 'select') {
-    input = document.createElement('select')
-    field.options.forEach((optionData) => {
-      const option = document.createElement('option')
-      option.value = optionData.value
-      option.textContent = optionData.text
-      input.appendChild(option)
-    })
-  }
-  else {
-    input = document.createElement('input')
-    input.setAttribute('type', field.type || 'text')
-  }
-  input.setAttribute('id', fieldId)
-  input.setAttribute('name', field.name || '')
-  input.setAttribute('placeholder', field.placeholder || '')
-  input.setAttribute('autocomplete', field.autocomplete || 'on')
-  if (field.value)
-    input.value = field.value
-  return input
-}
-
-function createForm({ action = '', method = 'GET', fields = [], submitText = 'Submit' }) {
-  const form = document.createElement('form')
-  form.setAttribute('action', action)
-  form.setAttribute('method', method)
-
-  fields.forEach((field) => {
-    if (field.label) {
-      const label = document.createElement('label')
-      label.textContent = field.label
-      label.setAttribute('for', field.name || '')
-      form.appendChild(label)
-    }
-    const input = createInput(field)
-    form.appendChild(input)
-    form.appendChild(document.createElement('br'))
-  })
-  const submitButton = createButton(submitText)
-  form.appendChild(submitButton)
-  return form
-}
-
-export function createAndHandleForm({ app, actionUrl, method, fields, submitText, processData, callback, client }) {
-  const form = createForm({
-    action: actionUrl,
-    method,
-    fields,
-    submitText,
-  })
-  app.innerHTML = ''
-  app.appendChild(form)
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault()
-    const formData = new FormData(form)
-    let body
-    if (processData)
-      body = processData(formData)
-    else body = formData
-    try {
-      const response = await fetch(actionUrl, {
-        method,
-        body,
-        headers: processData ? { 'Content-Type': 'application/json' } : {},
-        credentials: 'include',
-      })
-      const result = await response.json()
-      if (callback) {
-        await callback(client, result, response.ok)
+  if (passwordInput && confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('input', () => {
+      if (passwordInput.value !== confirmPasswordInput.value) {
+        confirmPasswordInput.classList.remove('is-valid')
+        confirmPasswordInput.classList.add('is-invalid')
+        confirmPasswordInput.nextElementSibling.textContent = 'Passwords do not match.'
       }
       else {
-        console.log(`${submitText} successful:`, result)
+        confirmPasswordInput.classList.remove('is-invalid')
+        confirmPasswordInput.classList.add('is-valid')
+      }
+    })
+  }
+}
+
+function validateFormFields(form) {
+  form.querySelectorAll('.form-control').forEach((input) => {
+    input.addEventListener('input', () => {
+      if (input.checkValidity()) {
+        input.classList.remove('is-invalid')
+        input.classList.add('is-valid')
+      }
+      else {
+        input.classList.remove('is-valid')
+        input.classList.add('is-invalid')
+      }
+    })
+  })
+}
+
+async function submitForm({ form, actionUrl, method, processData, submitText, callback, client }) {
+  const formData = new FormData(form)
+  const body = processData ? processData(formData) : formData
+  try {
+    const response = await fetch(actionUrl, {
+      method,
+      body,
+      headers: processData ? { 'Content-Type': 'application/json' } : {},
+      credentials: 'include',
+    })
+    const result = await response.json()
+    if (callback)
+      await callback(client, result, response.ok)
+    else
+      console.log(`${submitText} successful:`, result)
+  }
+  catch (error) {
+    console.error(`Error during ${submitText.toLowerCase()}:`, error)
+  }
+}
+
+export function handleForm({ form, actionUrl, method, submitText, processData, callback, client, enableValidation = false, enablePasswordConfirmation = false }) {
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    if (enablePasswordConfirmation) {
+      const passwordInput = form.querySelector('#password')
+      const confirmPasswordInput = form.querySelector('#confirm-password')
+      if (passwordInput && confirmPasswordInput && passwordInput.value !== confirmPasswordInput.value) {
+        confirmPasswordInput.classList.add('is-invalid')
+        confirmPasswordInput.nextElementSibling.textContent = 'Passwords do not match.'
+        return
+      }
+      else if (confirmPasswordInput) {
+        confirmPasswordInput.classList.remove('is-invalid')
+        confirmPasswordInput.classList.add('is-valid')
       }
     }
-    catch (error) {
-      console.error(`Error during ${submitText.toLowerCase()}:`, error)
+    if (enableValidation) {
+      form.classList.add('was-validated')
+      if (!form.checkValidity()) {
+        console.log('Form is invalid.')
+        form.reportValidity()
+        return
+      }
     }
+    await submitForm({ form, actionUrl, method, processData, submitText, callback, client })
   })
+  if (enableValidation) {
+    validateFormFields(form)
+    if (enablePasswordConfirmation)
+      validatePasswordConfirmation(form)
+  }
 }
 
 export function processLoginData(formData) {

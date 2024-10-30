@@ -2,6 +2,7 @@ export default {
   app: document.getElementById('app'),
   token: '',
   socket: undefined,
+  router: undefined,
 
   async refresh() {
     try {

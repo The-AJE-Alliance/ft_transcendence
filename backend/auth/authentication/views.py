@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.core.mail import send_mail
 from rest_framework.decorators import api_view
+from django.db.utils import IntegrityError
 
 from .models import User
 from .serializers import UserSerializer
@@ -59,25 +60,6 @@ class UserViewSet(viewsets.ModelViewSet):
         # Retourner les utilisateurs dans la réponse
         serializer = self.get_serializer(potential_friends, many=True)
         return Response(serializer.data)
-
-    # @action(detail=False, methods=['post'], permission_classes=[AllowAny], url_path='register')
-    # def register(self, request):
-    # 	data = request.data
-    # 	user = User.objects.create_user(
-    #        username=data['username'],
-    #        email=data['email'],
-    #        password=data['password'],
-    #        nickname=data['nickname'],
-    #    )
-
-    # 	friends_ids = data.get('friends', [])
-
-    # Ajouter les amis à l'utilisateur (s'ils existent)
-    # 	if friends_ids:
-    # 		friends = User.objects.filter(id__in=friends_ids)
-    # 		user.friends.add(*friends)
-    # 	user.save()
-    # 	return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,
@@ -147,29 +129,23 @@ class RegisterView(CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
-    def post(self, request):
-        data = request.data
-        avatar = request.FILES.get("avatar")
 
-        user = User.objects.create_user(
-            username=data["username"],
-            email=data["email"],
-            password=data["password"],
-            nickname=data["nickname"],
-            avatar=avatar,
-        )
+def post(self, request):
+    data = request.data
+    avatar = request.FILES.get("avatar")
 
-        # Ajout des amis si fourni
-        friends_ids = data.get("friends", [])
-        if friends_ids:
-            friends = User.objects.filter(id__in=friends_ids)
-            user.friends.add(*friends)
-
-        user.save()
-
-        return Response(
-            {"message": "User created successfully"}, status=status.HTTP_201_CREATED
-        )
+    user = User.objects.create_user(
+        username=data["username"],
+        email=data["email"],
+        password=data["password"],
+        nickname=data["nickname"],
+        avatar=avatar,
+    )
+    user.save()
+    return Response(
+        {"message": "User created successfully"},
+        status=status.HTTP_201_CREATED,
+    )
 
 
 class CookieTokenRefreshSerializer(TokenRefreshSerializer):

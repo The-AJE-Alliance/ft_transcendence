@@ -1,22 +1,18 @@
-import { createAndHandleForm, loadHTML, processLoginData } from './utils.js'
+import { handleForm, loadHTML, processLoginData } from './utils.js'
 
 export async function login(client) {
   client.app.innerHTML = await loadHTML('../login.html')
-  const loginContainer = document.getElementById('login-form')
-  createAndHandleForm({
-    app: loginContainer,
+  const form = document.getElementById('login-form')
+  handleForm({
+    form,
     actionUrl: 'https://auth.api.transcendence.local/login/',
     method: 'POST',
-    fields: [{
-      type: 'text',
-      name: 'username',
-      placeholder: 'Enter your username',
-      label: 'Username:',
-    }, { type: 'password', name: 'password', placeholder: 'Enter your password', label: 'Password:' }],
     submitText: 'Log In',
     processData: processLoginData,
     callback: loginPostProcess,
     client,
+    enableValidation: false,
+    enablePasswordConfirmation: false,
   })
 }
 
@@ -24,8 +20,6 @@ export async function profile(client) {
   client.app.innerHTML = await loadHTML('../profile.html')
   if (client.token) {
     const user = await getUserProfile(client)
-    console.log('Contenu de user:', user)
-    const profileContainer = document.getElementById('profile-info')
     if (user) {
       document.getElementById('username').textContent = user.username
       document.getElementById('email').textContent = user.email
@@ -33,11 +27,7 @@ export async function profile(client) {
       document.getElementById('status').textContent = user.is_online ? 'Online' : 'Offline'
       const avatarElement = document.getElementById('avatar')
       avatarElement.src = user.avatar
-      console.log(user.avatar)
       avatarElement.alt = `Avatar de ${user.username}`
-    }
-    else {
-      profileContainer.innerHTML = '<p>Erreur lors de la récupération des informations utilisateur.</p>'
     }
   }
   await logout(client)
@@ -46,45 +36,36 @@ export async function profile(client) {
 async function loginPostProcess(client, result, ok) {
   if (ok) {
     client.token = result.access
-    console.log('Jeton d\'accès : ', client.token)
-    window.history.pushState(null, null, '/profile')
-    await profile(client)
-    // client.app.innerHTML = '<p>Login ok !</p>
+    client.router.redirect('/profile')
   }
   else {
-    // TODO: confirm invalid login by html
-    client.app.innerHTML = '<p>Invalid login</p>'
+    document.getElementById('username').value = ''
+    document.getElementById('password').value = ''
+    document.getElementById('invalid-login').classList.remove('d-none')
   }
 }
 
 export async function register(client) {
   client.app.innerHTML = await loadHTML('../register.html')
-  const registerContainer = document.getElementById('register-form')
-  await createAndHandleForm({
-    app: registerContainer,
+  const form = document.getElementById('register-form')
+  await handleForm({
+    form,
     actionUrl: 'https://auth.api.transcendence.local/register/',
     method: 'POST',
-    fields: [
-      { type: 'text', name: 'username', placeholder: 'Enter your username', label: 'Username:' },
-      { type: 'email', name: 'email', placeholder: 'Enter your email', label: 'Email:' },
-      { type: 'password', name: 'password', placeholder: 'Enter your password', label: 'Password:' },
-      { type: 'text', name: 'nickname', placeholder: 'Enter your nickname', label: 'Nickname:' },
-      { type: 'file', name: 'avatar', label: 'Avatar:' },
-    ],
     submitText: 'Register',
     callback: registerPostProcess,
     client,
+    enableValidation: true,
+    enablePasswordConfirmation: true,
   })
 }
 
 async function registerPostProcess(client, result, ok) {
   if (ok) {
-    // TODO: confirm registration by html
-    client.app.innerHTML = '<p>Registration successfully done. Please login</p>'
+    client.router.redirect('/login')
   }
   else {
-    // TODO: confirm invalid registration by html
-    client.app.innerHTML = '<p>Error during registration</p>'
+    console.error('Registration failed:', result)
   }
 }
 
@@ -122,13 +103,9 @@ export async function getUserProfile(client) {
     if (response.ok) {
       return result
     }
-    else {
-      console.error('Échec de la récupération du profil utilisateur :', result)
-      return null
-    }
   }
   catch (error) {
-    console.error('Erreur lors de la récupération du profil utilisateur :', error)
+    console.error('Error while trying to get user:', error)
     return null
   }
 }
@@ -164,8 +141,7 @@ export async function login42(client) {
 }
 
 export async function logout(client) {
-  const logoutButton = document.createElement('button')
-  logoutButton.textContent = 'Logout'
+  const logoutButton = document.getElementById('logout-button')
   logoutButton.addEventListener('click', async () => {
     try {
       const response = await fetch('https://auth.api.transcendence.local/logout/', {
@@ -173,21 +149,24 @@ export async function logout(client) {
         headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
       })
+      const successMessage = document.getElementById('logout-message')
+      const failedMessage = document.getElementById('logout-failed-message')
       if (response.ok) {
-        // TODO: confirm logout by html
-        client.app.innerHTML = '<p>Logout done.</p>'
-        client.token = ''
+        successMessage.classList.remove('d-none')
+        setTimeout(() => {
+          client.router.redirect('/')
+          successMessage.classList.add('d-none')
+        }, 2000)
       }
       else {
-        // TODO: confirm logout failed by html
-        client.app.innerHTML = '<p>Logout failed.</p>'
+        failedMessage.classList.remove('d-none')
+        setTimeout(() => {
+          failedMessage.classList.add('d-none')
+        }, 2000)
       }
     }
     catch (error) {
       console.error('Error while trying to logout:', error)
     }
   })
-  const logoutContainer = document.getElementById('logout-container')
-  logoutContainer.innerHTML = ''
-  logoutContainer.appendChild(logoutButton)
 }

@@ -34,13 +34,15 @@ class UserSerializer(serializers.ModelSerializer):
             "date_joined",
             "is_online",
         ]
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {
+            "password": {"write_only": True, "required": True},
+        }
 
     def create(self, validated_data):
         friends_data = validated_data.pop("friends", [])
         user = User.objects.create_user(**validated_data)
         if friends_data:
-            user.friends.set(friends_data)  # Utiliser les IDs des amis
+            user.friends.set(friends_data)
         return user
 
     def update(self, instance, validated_data):
