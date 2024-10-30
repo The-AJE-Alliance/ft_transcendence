@@ -10,6 +10,8 @@ ssl_certificate /etc/ssl/${HOSTNAME}.crt;
 ssl_certificate_key /etc/ssl/${HOSTNAME}.key;
 ssl_protocols TLSv1.2 TLSv1.3;
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header Referrer-Policy "no-referrer-when-downgrade";
+add_header X-Content-Type-Options nosniff;
 add_header X-XSS-Protection "1; mode=block";
 add_header X-Frame-Options "SAMEORIGIN";
 
@@ -59,7 +61,7 @@ server {
     }
 
     location @index {
-        add_header Cache-Control 'no-store, no-cache';
+        add_header Cache-Control 'no-store, no-cache, must-revalidate';
         expires off;
         try_files /index.html =404;
     }

@@ -1,7 +1,9 @@
 // Loads a html file at the filePath and returns it as text
 export async function loadHTML(filePath) {
   try {
-    const response = await fetch(filePath)
+    const response = await fetch(filePath, {
+      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+    })
     if (!response.ok) {
       throw new Error('Failed to load HTML file')
     }
