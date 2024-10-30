@@ -29,7 +29,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.send_game_state()
             if self.pong_game.scored == True:
                 await asyncio.sleep(1)
-                self.pong_game.scored == False
+                self.pong_game.scored = False
             await asyncio.sleep(1 / 30)
 
     async def receive(self, text_data):

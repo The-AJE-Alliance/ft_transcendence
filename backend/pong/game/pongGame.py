@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 class PongGame:
     def __init__(self):
         self.ball_position = [0.5, 0.5]
-        self.ball_velocity = [0.01, 0.01]
+        self.ball_velocity = [0.01, 0.014]
         self.player1_position = 0.5
         self.player2_position = 0.5
         self.player1_score = 0
