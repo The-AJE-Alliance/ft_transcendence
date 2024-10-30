@@ -1,14 +1,3 @@
-body {
-  background-color: #1a1a1a;
-  color: #00cc99;
-  font-family: 'Space Mono', monospace;
-}
-
-.container {
-  margin-top: 100px;
-  text-align: center;
-}
-
 #profile-card {
   background-color: #262626;
   border: 1px solid #00cc99;
@@ -20,6 +9,7 @@ body {
 }
 
 .profile-content {
+  color: #00cc99;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -47,53 +37,4 @@ body {
   object-fit: cover;
   border-radius: 50%;
   border: 2px solid #00cc99;
-}
-
-#logout-button {
-  background-color: #1a1a1a;
-  color: #00cc99;
-  border: 2px solid #00cc99;
-  padding: 10px 20px;
-  font-size: 18px;
-  border-radius: 5px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-#logout-button:hover {
-  background-color: #00cc99;
-  color: #1a1a1a;
-  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.5);
-}
-
-.alert-container {
-  display: flex;
-  justify-content: center;
-  position: fixed;
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 500px;
-  z-index: 1000;
-}
-
-.alert {
-  width: 100%;
-  text-align: center;
-  font-size: 1rem;
-  color: #fff;
-  border-radius: 5px;
-  padding: 10px;
-  margin-top: 10px;
-}
-
-.alert-success {
-  background-color: #28a745;
-  color: #fff;
-}
-
-.alert-danger {
-  background-color: #dc3545;
-  color: #fff;
 }

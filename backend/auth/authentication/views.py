@@ -134,40 +134,18 @@ def post(self, request):
     data = request.data
     avatar = request.FILES.get("avatar")
 
-    missing_fields = []
-    for field in ["username", "email", "password", "nickname"]:
-        if not data.get(field):
-            missing_fields.append(field)
-    if missing_fields:
-        return Response(
-            {
-                "error": f"The following fields are required: {', '.join(missing_fields)}"
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    try:
-        user = User.objects.create_user(
-            username=data["username"],
-            email=data["email"],
-            password=data["password"],
-            nickname=data["nickname"],
-            avatar=avatar,
-        )
-        user.save()
-        return Response(
-            {"message": "User created successfully"},
-            status=status.HTTP_201_CREATED,
-        )
-    except IntegrityError as e:
-        if "username" in str(e):
-            error_message = "This username is already taken."
-        elif "email" in str(e):
-            error_message = "This email is already used."
-        elif "nickname" in str(e):
-            error_message = "This nickname is already taken."
-        else:
-            error_message = "An error occurred. Please try again."
-        return Response({"error": error_message}, status=status.HTTP_400_BAD_REQUEST)
+    user = User.objects.create_user(
+        username=data["username"],
+        email=data["email"],
+        password=data["password"],
+        nickname=data["nickname"],
+        avatar=avatar,
+    )
+    user.save()
+    return Response(
+        {"message": "User created successfully"},
+        status=status.HTTP_201_CREATED,
+    )
 
 
 class CookieTokenRefreshSerializer(TokenRefreshSerializer):

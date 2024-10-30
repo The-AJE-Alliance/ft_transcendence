@@ -1,12 +1,22 @@
 body {
-  background-color: #1a1a1a; /* Noir très doux */
-  color: #00cc99; /* Vert d'eau doux */
-  font-family: 'Space Mono', monospace; /* Police rétro mais moderne */
+  background-color: #1a1a1a;
+  color: #00cc99;
+  font-family: 'Space Mono', monospace;
+  margin: 0;
+  padding: 0;
+}
+
+h1,
+h2,
+h3 {
+  margin-top: 20px;
+  color: #00cc99;
+  text-shadow: 2px 2px 5px rgba(0, 204, 153, 0.3);
 }
 
 .navbar {
-  background-color: #1a1a1a; /* Fond noir très doux */
-  border-bottom: 2px solid #00cc99; /* Bordure vert d'eau */
+  background-color: #1a1a1a;
+  border-bottom: 2px solid #00cc99;
 }
 
 .navbar-brand,
@@ -16,6 +26,14 @@ body {
 
 .navbar-toggler {
   border-color: #00cc99;
+}
+
+#app {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  color: #00cc99;
 }
 
 .container {
@@ -34,8 +52,8 @@ body {
   color: #00cc99;
 }
 
-button,
-.btn-link {
+.btn,
+button {
   background-color: transparent;
   color: #00cc99 !important;
   border: 2px solid #00cc99;
@@ -44,25 +62,86 @@ button,
   transition: all 0.3s ease;
 }
 
-button:hover,
-.btn-link:hover {
+.btn:hover,
+button:hover {
   background-color: #00cc99;
   color: #1a1a1a !important; /* Inverse texte et fond au survol */
   box-shadow: 0px 0px 10px rgba(0, 204, 153, 0.5); /* Lueur douce */
 }
 
-#app {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
+/* Formulaires */
+.form-control {
+  background-color: #262626;
   color: #00cc99;
+  border: 1px solid #00cc99;
 }
 
-h1,
-h2,
-h3 {
-  color: #00cc99;
+.form-control.is-valid {
+  border-color: #28a745;
+  background-color: #1a1a1a;
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545;
+  background-color: #1a1a1a;
+  color: #ff6b6b;
+}
+
+.invalid-feedback {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+/* Cartes */
+.card {
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+/* Alertes */
+.alert {
+  text-align: center;
+  font-size: 1rem;
+  color: #fff;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.alert-container {
+  display: flex;
+  justify-content: center;
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  z-index: 1000;
+}
+
+.alert {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  color: #fff;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.alert-success {
+  background-color: #28a745;
+}
+
+.alert-warning {
+  background-color: #d7061a;
 }
 
 .play-button {

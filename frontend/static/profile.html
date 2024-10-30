@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
+    <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/profile.css">
 </head>
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -22,7 +23,7 @@
         <h1 class="mb-4">Profile Page</h1>
         <div id="profile-card" class="card">
             <div class="profile-content">
-                <div id="profile-info">
+                <div class="profile-info">
                    <p><strong>Username:</strong> <span id="username"></span></p>
                     <p><strong>Email:</strong> <span id="email"></span></p>
                     <p><strong>Nickname:</strong> <span id="nickname"></span></p>
@@ -40,7 +41,7 @@
     </div>
     <div class="alert-container">
         <div id="logout-message" class="alert alert-success d-none">
-            <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
+            <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
             Logout successful!
         </div>
         <div id="logout-failed-message" class="alert alert-warning d-none">

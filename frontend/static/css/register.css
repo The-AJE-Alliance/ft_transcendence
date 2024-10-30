@@ -1,37 +1,9 @@
-body {
-  background-color: #1a1a1a;
-  color: #00cc99;
-  font-family: 'Space Mono', monospace;
-}
-
-h1 {
-  font-size: 48px;
-  color: #00cc99;
-  text-shadow: 2px 2px 5px rgba(0, 204, 153, 0.3);
-  margin-top: 10px;
-}
-
 .container {
   margin-top: 150px;
-  text-align: center;
 }
 
 .form-control.is-valid {
-  border-color: #28a745;
-  background-color: #1a1a1a;
   color: #00cc99;
-}
-
-.form-control.is-invalid {
-  border-color: #dc3545;
-  background-color: #1a1a1a;
-  color: #ff6b6b;
-}
-
-.invalid-feedback {
-  color: #ff6b6b;
-  font-size: 0.9rem;
-  margin-top: 5px;
 }
 
 #register-form .form-control {

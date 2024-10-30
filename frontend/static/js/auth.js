@@ -141,8 +141,7 @@ export async function login42(client) {
 }
 
 export async function logout(client) {
-  const logoutButton = document.createElement('button')
-  logoutButton.textContent = 'Logout'
+  const logoutButton = document.getElementById('logout-button')
   logoutButton.addEventListener('click', async () => {
     try {
       const response = await fetch('https://auth.api.transcendence.local/logout/', {
@@ -170,7 +169,4 @@ export async function logout(client) {
       console.error('Error while trying to logout:', error)
     }
   })
-  // const logoutContainer = document.getElementById('logout-container')
-  // logoutContainer.innerHTML = ''
-  // logoutContainer.appendChild(logoutButton)
 }
