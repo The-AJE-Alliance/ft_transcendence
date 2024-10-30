@@ -27,6 +27,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         while self.connected:
             self.pong_game.update_ball_position()
             await self.send_game_state()
+            if self.pong_game.scored == True:
+                await asyncio.sleep(1)
+                self.pong_game.scored == False
             await asyncio.sleep(1 / 30)
 
     async def receive(self, text_data):

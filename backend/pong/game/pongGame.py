@@ -1,4 +1,5 @@
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class PongGame:
         self.height = 1.0
         self.player_width = 0.02
         self.player_height = 0.2
+        self.scored = False
 
     def get_game_state(self):
         return {
@@ -114,14 +116,17 @@ class PongGame:
         # if collision with wall on player1 side
         if wall and player1:
             self.player2_score += 1
+            self.scored = True
             self.reset_game()
 
         # if collision with wall on player2 side
         elif wall and player2:
             self.player1_score += 1
+            self.scored = True
             self.reset_game()
 
     def reset_game(self):
         self.ball_position = [0.5, 0.5]
         self.player1_position = 0.5
         self.player2_position = 0.5
+        
