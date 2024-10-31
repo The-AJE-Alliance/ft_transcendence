@@ -1,3 +1,4 @@
+from ast import Try
 import json
 import asyncio
 import channels.exceptions
@@ -12,7 +13,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args, **kwargs
-        )  # on fait ca pour appeler le constructeur de la classe parente
+        )
         self.pong_game = PongGame()
         self.game_loop_task = None
         self.connected = False
@@ -25,12 +26,16 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def game_loop(self):
         while self.connected:
-            self.pong_game.update_ball_position()
-            await self.send_game_state()
-            if self.pong_game.scored == True:
-                await asyncio.sleep(1)
-                self.pong_game.scored = False
-            await asyncio.sleep(1 / 30)
+            try:
+                self.pong_game.update_ball_position()
+                await self.send_game_state()
+                if self.pong_game.scored == True:
+                    await asyncio.sleep(1)
+                    self.pong_game.scored = False
+                await asyncio.sleep(1 / 30)
+            except Exception as e:
+                logger.error(f"{str(e)}")
+                break
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -42,9 +47,9 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def send_game_state(self):
         game_state = {
-            "player1_position": self.pong_game.player1_position,
-            "player2_position": self.pong_game.player2_position,
-            "ball_position": self.pong_game.ball_position,
+            "player1": self.pong_game.player1.__dict__,
+            "player2": self.pong_game.player2.__dict__,
+            "ball": self.pong_game.ball.__dict__,
             "player1_score": self.pong_game.player1_score,
             "player2_score": self.pong_game.player2_score,
         }
@@ -53,4 +58,5 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         logger.warning("Client déconnecté")
         self.connected = False
+        self.game_loop_task.cancel()
         channels.exceptions.StopConsumer()
