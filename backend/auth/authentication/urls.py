@@ -9,6 +9,9 @@ from .views import (
     CookieTokenRefreshView,
     CookieTokenObtainPairView,
     RegisterView,
+    SendFriendRequestView,
+    AcceptFriendRequestView,
+    PendingFriendRequestsView,
 )
 
 router = DefaultRouter()
@@ -20,6 +23,23 @@ urlpatterns = [
     path("login/refresh/", CookieTokenRefreshView.as_view(), name="token_refresh"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("register/", RegisterView.as_view(), name="register"),
+    path("friends/", UserViewSet.as_view({"get": "list_friends"}), name="friends"),
+    path("add-friend/", UserViewSet.as_view({"post": "add_friend"}), name="add_friend"),
+    path(
+        "send-friend-request/",
+        SendFriendRequestView.as_view(),
+        name="send_friend_request",
+    ),
+    path(
+        "accept-friend-request/",
+        AcceptFriendRequestView.as_view(),
+        name="accept_friend_request",
+    ),
+    path(
+        "pending-friend-requests/",
+        PendingFriendRequestsView.as_view(),
+        name="pending_friend_requests",
+    ),
     # path('verify-email/', send_mymail, name='send_mymail'),
     # path('email-verified/', views.mail_verified),
     path(

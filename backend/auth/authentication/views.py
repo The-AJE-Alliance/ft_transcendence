@@ -11,14 +11,64 @@ from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.core.mail import send_mail
-from rest_framework.decorators import api_view
-from django.db.utils import IntegrityError
-
-from .models import User
+from django.contrib.auth import get_user_model
+from .models import User, FriendRequest
 from .serializers import UserSerializer
 from .permissions import IsOwner
 import requests
+from .serializers import FriendRequestSerializer
+
+User = get_user_model()
+
+
+class PendingFriendRequestsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get all pending friend requests where the authenticated user is the recipient
+        pending_requests = FriendRequest.objects.filter(
+            recipient=request.user, status="pending"
+        )
+
+        # Serialize the pending friend requests
+        serializer = FriendRequestSerializer(pending_requests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SendFriendRequestView(APIView):
+    def post(self, request):
+        username = request.data.get("username")
+        try:
+            recipient = User.objects.get(username=username)
+            FriendRequest.objects.create(sender=request.user, recipient=recipient)
+            return Response(
+                {"message": "Friend request sent."}, status=status.HTTP_201_CREATED
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class AcceptFriendRequestView(APIView):
+    def post(self, request):
+        from_user_id = request.data.get("from_user_id")
+        try:
+            friend_request = FriendRequest.objects.get(
+                sender_id=from_user_id, recipient=request.user
+            )
+            # Accepter la demande d'ami
+            request.user.friends.add(friend_request.sender)
+            friend_request.sender.friends.add(request.user)
+            friend_request.delete()  # Supprimer la demande après acceptation
+            return Response(
+                {"message": "Friend request accepted."}, status=status.HTTP_200_OK
+            )
+        except FriendRequest.DoesNotExist:
+            return Response(
+                {"error": "Friend request does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -50,10 +100,88 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated],
         url_path="list-friends",
     )
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[IsAuthenticated],
+        url_path="friends",
+    )
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_path="send-friend-request",
+    )
+    def send_friend_request(self, request):
+        to_user_id = request.data.get("to_user_id")
+        to_user = User.objects.get(id=to_user_id)
+        if FriendRequest.objects.filter(
+            from_user=request.user, to_user=to_user
+        ).exists():
+            return Response(
+                {"detail": "Friend request already sent"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        FriendRequest.objects.create(from_user=request.user, to_user=to_user)
+        return Response(
+            {"detail": "Friend request sent"}, status=status.HTTP_201_CREATED
+        )
+
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_path="accept-friend-request",
+    )
+    def accept_friend_request(self, request):
+        from_user_id = request.data.get("from_user_id")
+        friend_request = FriendRequest.objects.filter(
+            from_user__id=from_user_id, to_user=request.user, status="pending"
+        ).first()
+
+        if not friend_request:
+            return Response(
+                {"detail": "Friend request not found or already accepted"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Accept the friend request
+        friend_request.status = "accepted"
+        friend_request.save()
+
+        # Add each other as friends
+        request.user.friends.add(friend_request.from_user)
+        friend_request.from_user.friends.add(request.user)
+
+        return Response(
+            {"detail": "Friend request accepted"}, status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=["post"], url_path="add-friend")
+    def add_friend(self, request):
+        friend_username = request.data.get("username")
+        if not friend_username:
+            return Response(
+                {"error": "Username is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            friend = User.objects.get(username=friend_username)
+            request.user.friends.add(friend)
+            return Response(
+                {"message": f"{friend_username} added as a friend"},
+                status=status.HTTP_200_OK,
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
     def list_friends(self, request):
         user = request.user
-        potential_friends = User.objects.exclude(friends=user).exclude(id=user.id)
-        serializer = self.get_serializer(potential_friends, many=True)
+        friends = user.friends.all()
+        serializer = self.get_serializer(friends, many=True)
         return Response(serializer.data)
 
     @action(
