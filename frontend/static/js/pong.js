@@ -1,7 +1,7 @@
 import { loadHTML } from './utils.js'
 
 export async function pong(client) {
-  client.app.innerHTML = await loadHTML(('../pong.html'))
+  client.app.innerHTML = await loadHTML(('../html/pong.html'))
   // creation de la websocket
 
   client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
@@ -38,7 +38,7 @@ function canvasResize(canvas) {
   // console.log(style)
   // canvas.width = Number.parseInt(style.width)
   // canvas.height = Number.parseInt(style.height)
-  
+
 }
 
 async function initializeCanvas(gameState, canvas) {
