@@ -28,7 +28,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         while self.connected:
             try:
                 self.pong_game.update_ball_position()
-                logger.info(f"Ball : {self.pong_game.ball_position}")
                 await self.send_game_state()
                 if self.pong_game.scored == True:
                     await asyncio.sleep(1)
@@ -50,7 +49,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         game_state = {
             "player1": self.pong_game.player1.__dict__,
             "player2": self.pong_game.player2.__dict__,
-            "ball_position": self.pong_game.ball_position,
+            "ball": self.pong_game.ball.__dict__,
             "player1_score": self.pong_game.player1_score,
             "player2_score": self.pong_game.player2_score,
         }

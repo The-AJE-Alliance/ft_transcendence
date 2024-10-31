@@ -40,7 +40,7 @@ function canvasResize(canvas) {
   // canvas.height = Number.parseInt(style.height)
 
 }
-
+//fonction pr initialiser canvas puis une autre qui render
 async function initializeCanvas(gameState, canvas) {
   const ctx = canvas.getContext('2d')
 
@@ -67,19 +67,25 @@ async function initializeCanvas(gameState, canvas) {
 
     const player1 = gameState.player1
     const player2 = gameState.player2
-    const ballX = gameState.ball_position[0] * canvas.width
-    const ballY = gameState.ball_position[1] * canvas.height
+    const ballX = gameState.ball.x
+    const ballY = gameState.ball.y
 
-    // Dessin des raquettes
     drawPad(ctx, canvas, player1)
     drawPad(ctx, canvas, player2)
 
-    // Dessiner la balle
-    ctx.beginPath()
-    ctx.arc(ballX, ballY, 10, 0, Math.PI * 2) // Avec un rayon de 10
-    ctx.fill()
-    ctx.closePath()
+    drawBall(ctx, gameState, canvas, ballX, ballY)
+
   }
+}
+
+function drawBall(ctx, gameState, canvas, ballX, ballY) {
+  const radius = gameState.ball.radius * Math.min(canvas.width, canvas.height)
+  ctx.beginPath()
+  ctx.arc(ballX * canvas.width, ballY * canvas.height, radius, 0, Math.PI * 2) // Avec un rayon de 10
+  ctx.fillStyle = gameState.ball.color
+  ctx.fill()
+  ctx.closePath()
+
 }
 
 function drawPad(ctx, canvas, pad) {
@@ -87,7 +93,7 @@ function drawPad(ctx, canvas, pad) {
   ctx.fillRect(pad.x * canvas.width, pad.y * canvas.height, pad.width * canvas.width, pad.height * canvas.height)
 }
 
-// event listener pour les touches
+
 function handleKeyPress(event, socket) {
   console.log(`Key pressed: ${event.key}`)
   let action = ''
@@ -121,14 +127,4 @@ function handleKeyPress(event, socket) {
   // Envoyer les données via la websocket
   socket.send(JSON.stringify(data))
 }
-// !!!!!!!!!! pour calculer les coordonnées adaptées à la taille du canvas
-// // Taille du canvas
-// let canvasWidth = canvas.width;
-// let canvasHeight = canvas.height;
 
-// // Coordonnées normalisées venant du back-end
-// let normalizedBallPosition = [0.5, 0.5]; // Exemple
-
-// // Calcul des coordonnées réelles
-// let realBallPositionX = normalizedBallPosition[0] * canvasWidth;
-// let realBallPositionY = normalizedBallPosition[1] * canvasHeight;
