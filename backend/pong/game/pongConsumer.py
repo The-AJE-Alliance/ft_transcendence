@@ -13,7 +13,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args, **kwargs
-        )  # on fait ca pour appeler le constructeur de la classe parente
+        )
         self.pong_game = PongGame()
         self.game_loop_task = None
         self.connected = False
@@ -58,4 +58,5 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         logger.warning("Client déconnecté")
         self.connected = False
+        self.game_loop_task.cancel()
         channels.exceptions.StopConsumer()

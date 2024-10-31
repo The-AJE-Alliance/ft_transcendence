@@ -12,23 +12,23 @@ export async function pong(client) {
     client.router.redirect('/')
   })
 
-  client.socket.onopen = function () {
+  client.socket.onopen = () => {
     console.log('WebSocket connected.')
   }
 
-  document.addEventListener('keyup', (event) => {
-    handleKeyPress(event, client.socket)
+  document.addEventListener('keyup', async (event) => {
+    await handleKeyPress(event, client.socket)
   })
 
   window.addEventListener('resize', () => {
     canvasResize(canvas)
   })
 
-  client.socket.onmessage = function (event) {
+  client.socket.onmessage = async (event) => {
     const gameState = JSON.parse(event.data)
     // console.log('Received game status:', gameState)
 
-    renderGame(gameState, canvas)
+    await renderGame(gameState, canvas)
   }
 }
 
@@ -94,7 +94,10 @@ function drawPad(ctx, canvas, pad) {
 }
 
 
-function handleKeyPress(event, socket) {
+async function handleKeyPress(event, socket) {
+  if (!socket)
+    return
+
   console.log(`Key pressed: ${event.key}`)
   let action = ''
   let player = 0
@@ -119,6 +122,8 @@ function handleKeyPress(event, socket) {
     default:
       return
   }
+
+  //event.preventDefault()
   const data = {
     player,
     action,

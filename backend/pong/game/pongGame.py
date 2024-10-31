@@ -17,26 +17,10 @@ class PongGame:
         self.height = 1.0
         self.scored = False
 
-
-
-
     def update_player_position(self, player, action):
-        if player == 1:
-            if action == "move_up":
-                if self.player1.y - (self.player1.height / 2) >= 0.0:
-                    self.player1.y = max(0.0, round(self.player1.y - 0.10, 2))
-
-            elif action == "move_down":
-                if (self.player1.y + self.player1.height + 0.10) <= 1.0:
-                    self.player1.y = min(1.0 - self.player1.height, round(self.player1.y + 0.10, 2))
-
-        elif player == 2:
-            if action == "move_up":
-                if self.player2.y - (self.player2.height / 2) >= 0.0:
-                    self.player2.y = max(0.0, round(self.player2.y - 0.10, 2))
-            elif action == "move_down":
-                if (self.player2.y + self.player2.height + 0.10) <= 1.0:
-                    self.player2.y = min(1.0 - self.player2.height, round(self.player2.y + 0.10, 2))
+        pad = self.player1 if player == 1 else self.player2
+        step = pad.step if action == "move_down" else -pad.step
+        pad.y = min(max(pad.y + step, 0), 1 - pad.height)
 
     def update_ball_position(self):
         self.ball.x += self.ball_velocity[0]
@@ -133,7 +117,7 @@ class PongGame:
             self.height = height
             self.x = 0 if self.left else 1 - self.width
             self.y = 0.4
-            self.step = 0.05
+            self.step = 0.08
             self.move = 0
         
     class Ball:
