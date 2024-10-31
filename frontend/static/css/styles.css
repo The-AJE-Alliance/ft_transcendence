@@ -28,6 +28,19 @@ h3 {
   border-color: #00cc99;
 }
 
+.icon-button {
+  font-size: 1.5rem;
+}
+
+.navbar-nav .icon-button {
+  display: flex;
+  align-items: center;
+}
+
+#profile-link {
+  margin-right: 10px;
+}
+
 #app {
   display: flex;
   justify-content: center;
