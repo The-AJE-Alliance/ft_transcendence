@@ -28,7 +28,7 @@ export async function pong(client) {
     const gameState = JSON.parse(event.data)
     // console.log('Received game status:', gameState)
 
-    initializeCanvas(gameState, canvas)
+    renderGame(gameState, canvas)
   }
 }
 
@@ -41,7 +41,7 @@ function canvasResize(canvas) {
 
 }
 //fonction pr initialiser canvas puis une autre qui render
-async function initializeCanvas(gameState, canvas) {
+async function renderGame(gameState, canvas) {
   const ctx = canvas.getContext('2d')
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)

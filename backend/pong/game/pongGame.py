@@ -21,38 +21,22 @@ class PongGame:
 
 
     def update_player_position(self, player, action):
-        # if player == 1:
-        #     if action == "move_up":
-        #         if self.player1.y - (self.player1.height / 2) >= 0.0:
-        #             self.player1.y -= 0.10
-        #             logger.warning(f"player1.y: {self.player1.y}")
-        #     elif action == "move_down":
-        #         if self.player1.y + (self.player1.height / 2) <= 1:
-        #             self.player1.y += 0.10
-        #             logger.warning(f"player1.y: {self.player1.y}")
-
         if player == 1:
             if action == "move_up":
                 if self.player1.y - (self.player1.height / 2) >= 0.0:
                     self.player1.y = max(0.0, round(self.player1.y - 0.10, 2))
-                    logger.warning(f"player1.y: {self.player1.y}")
 
             elif action == "move_down":
-                if self.player1.y + (self.player1.height / 2) <= 1.0:
-                    self.player1.y = min(1.0, round(self.player1.y + (self.player1.height / 2) + 0.10, 2))
-                    logger.warning(f"player1.y: {self.player1.y}")
-
-
-            
-
+                if (self.player1.y + self.player1.height + 0.10) <= 1.0:
+                    self.player1.y = min(1.0 - self.player1.height, round(self.player1.y + 0.10, 2))
 
         elif player == 2:
             if action == "move_up":
                 if self.player2.y - (self.player2.height / 2) >= 0.0:
-                    self.player2.y -= 0.10
+                    self.player2.y = max(0.0, round(self.player2.y - 0.10, 2))
             elif action == "move_down":
-                if self.player2.y + (self.player2.height / 2) <= 1:
-                    self.player2.y += 0.10
+                if (self.player2.y + self.player2.height + 0.10) <= 1.0:
+                    self.player2.y = min(1.0 - self.player2.height, round(self.player2.y + 0.10, 2))
 
     def update_ball_position(self):
         self.ball.x += self.ball_velocity[0]
