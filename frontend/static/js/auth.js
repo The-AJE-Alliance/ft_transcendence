@@ -1,6 +1,8 @@
+import { updateNavbar } from './navbar.js'
 import { handleForm, loadHTML, processLoginData } from './utils.js'
 
 export async function login(client) {
+  updateNavbar(client)
   client.app.innerHTML = await loadHTML('../login.html')
   const form = document.getElementById('login-form')
   handleForm({
@@ -17,6 +19,7 @@ export async function login(client) {
 }
 
 export async function profile(client) {
+  updateNavbar(client)
   client.app.innerHTML = await loadHTML('../profile.html')
   if (client.token) {
     const user = await getUserProfile(client)
@@ -36,6 +39,7 @@ export async function profile(client) {
 async function loginPostProcess(client, result, ok) {
   if (ok) {
     client.token = result.access
+    updateNavbar(client)
     client.router.redirect('/profile')
   }
   else {
@@ -46,6 +50,7 @@ async function loginPostProcess(client, result, ok) {
 }
 
 export async function register(client) {
+  updateNavbar(client)
   client.app.innerHTML = await loadHTML('../register.html')
   const form = document.getElementById('register-form')
   await handleForm({
@@ -61,11 +66,14 @@ export async function register(client) {
 }
 
 async function registerPostProcess(client, result, ok) {
+  const errorAlert = document.getElementById('error-alert')
   if (ok) {
+    errorAlert.classList.add('d-none')
     client.router.redirect('/login')
   }
   else {
     console.error('Registration failed:', result)
+    errorAlert.classList.remove('d-none')
   }
 }
 
@@ -130,6 +138,7 @@ export async function getUsers(client) {
 }
 
 export async function login42(client) {
+  updateNavbar(client)
   client.app.innerHTML = await loadHTML('../login42.html') // Charger login42.html
   const oauthButton = document.createElement('button')
   oauthButton.textContent = 'Log in with 42'
@@ -141,7 +150,7 @@ export async function login42(client) {
 }
 
 export async function logout(client) {
-  const logoutButton = document.getElementById('logout-button')
+  const logoutButton = document.getElementById('logout-link')
   logoutButton.addEventListener('click', async () => {
     try {
       const response = await fetch('https://auth.api.transcendence.local/logout/', {
@@ -149,20 +158,16 @@ export async function logout(client) {
         headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
       })
-      const successMessage = document.getElementById('logout-message')
-      const failedMessage = document.getElementById('logout-failed-message')
       if (response.ok) {
-        successMessage.classList.remove('d-none')
-        setTimeout(() => {
-          client.router.redirect('/')
-          successMessage.classList.add('d-none')
-        }, 2000)
+        client.token = null
+        updateNavbar(client)
+        client.router.redirect('/')
+        const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
+        toastSuccess.show()
       }
       else {
-        failedMessage.classList.remove('d-none')
-        setTimeout(() => {
-          failedMessage.classList.add('d-none')
-        }, 2000)
+        const toastFailed = new bootstrap.Toast(document.getElementById('logout-toast-failed'))
+        toastFailed.show()
       }
     }
     catch (error) {

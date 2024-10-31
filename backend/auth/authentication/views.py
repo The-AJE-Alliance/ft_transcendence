@@ -51,13 +51,8 @@ class UserViewSet(viewsets.ModelViewSet):
         url_path="list-friends",
     )
     def list_friends(self, request):
-        # Obtenir l'utilisateur actuel
         user = request.user
-
-        # Filtrer les utilisateurs qui ne sont pas encore amis
         potential_friends = User.objects.exclude(friends=user).exclude(id=user.id)
-
-        # Retourner les utilisateurs dans la réponse
         serializer = self.get_serializer(potential_friends, many=True)
         return Response(serializer.data)
 

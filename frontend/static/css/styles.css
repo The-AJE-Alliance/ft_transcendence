@@ -28,6 +28,19 @@ h3 {
   border-color: #00cc99;
 }
 
+.icon-button {
+  font-size: 1.5rem;
+}
+
+.navbar-nav .icon-button {
+  display: flex;
+  align-items: center;
+}
+
+#profile-link {
+  margin-right: 10px;
+}
+
 #app {
   display: flex;
   justify-content: center;
@@ -136,14 +149,6 @@ button:hover {
   margin-top: 10px;
 }
 
-.alert-success {
-  background-color: #28a745;
-}
-
-.alert-warning {
-  background-color: #d7061a;
-}
-
 .play-button {
   margin-top: 20px;
   font-size: 22px;
@@ -152,5 +157,41 @@ button:hover {
 .ready-to-transcend {
   margin-top: 40px;
   font-size: 24px;
-  text-shadow: 2px 2px 8px rgba(0, 204, 153, 0.4); /* Ombre pour titre */
+  text-shadow: 2px 2px 8px rgba(0, 204, 153, 0.4);
+}
+
+#logout-toast .toast-body {
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  color: #00cc99;
+  border-radius: 10px;
+  box-shadow: 0px 0px 10px rgba(0, 204, 153, 0.5);
+}
+
+#logout-toast-failed .toast-body {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+#logout-toast {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1050;
+}
+
+#logout-toast-failed {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1050;
+}
+
+#error-alert {
+  background-color: #ff4d4d;
+  color: #ffffff;
+  border: 1px solid #ff3333;
+  border-radius: 5px;
 }
