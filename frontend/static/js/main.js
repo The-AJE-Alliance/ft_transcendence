@@ -9,8 +9,8 @@ const router = new Router(Client)
 Client.router = router
 
 router.get('/', async (client) => {
-  client.app.innerHTML = await loadHTML('../home.html')
   updateNavbar(client)
+  client.app.innerHTML = await loadHTML('../html/home.html')
 })
 
 router.get('/404', (client) => {
@@ -22,7 +22,7 @@ router.get('/users', users)
 router.get('/login', login)
 
 router.get('/sign-in', async (client) => {
-  client.app.innerHTML = await loadHTML('../auth.html')
+  client.app.innerHTML = await loadHTML('../html/auth.html')
 })
 
 router.get('/login/42', login42)

@@ -3,7 +3,7 @@ import { handleForm, loadHTML, processLoginData } from './utils.js'
 
 export async function login(client) {
   updateNavbar(client)
-  client.app.innerHTML = await loadHTML('../login.html')
+  client.app.innerHTML = await loadHTML('../html/login.html')
   const form = document.getElementById('login-form')
   handleForm({
     form,
@@ -20,7 +20,7 @@ export async function login(client) {
 
 export async function profile(client) {
   updateNavbar(client)
-  client.app.innerHTML = await loadHTML('../profile.html')
+  client.app.innerHTML = await loadHTML('../html/profile.html')
   if (client.token) {
     const user = await getUserProfile(client)
     if (user) {
@@ -51,7 +51,7 @@ async function loginPostProcess(client, result, ok) {
 
 export async function register(client) {
   updateNavbar(client)
-  client.app.innerHTML = await loadHTML('../register.html')
+  client.app.innerHTML = await loadHTML('../html/register.html')
   const form = document.getElementById('register-form')
   await handleForm({
     form,
@@ -139,7 +139,7 @@ export async function getUsers(client) {
 
 export async function login42(client) {
   updateNavbar(client)
-  client.app.innerHTML = await loadHTML('../login42.html') // Charger login42.html
+  client.app.innerHTML = await loadHTML('../html/login42.html') // Charger login42.html
   const oauthButton = document.createElement('button')
   oauthButton.textContent = 'Log in with 42'
   oauthButton.addEventListener('click', () => {
