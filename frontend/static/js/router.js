@@ -22,6 +22,7 @@ class Router {
         event.preventDefault()
         if (this.#client.socket)
           this.#client.socket.close()
+        this.#cleanEvents()
         this.redirect(url)
       }
     }, false)
@@ -39,6 +40,7 @@ class Router {
   #paths = {}
   #previousPath = null
   #client
+  #events = []
 
   redirect(url) {
     if (url === '/404') {
@@ -147,6 +149,18 @@ class Router {
 
     this.#processURL(result, targetUrl)
     return true
+  }
+
+  addEvent(target, type, listener, ...args) {
+    target.addEventListener(type, listener, ...args)
+    this.#events.push(target.removeEventListener.bind(target, type, listener))
+  }
+
+  #cleanEvents() {
+    for (const event of this.#events) {
+      event()
+    }
+    this.#events = []
   }
 }
 

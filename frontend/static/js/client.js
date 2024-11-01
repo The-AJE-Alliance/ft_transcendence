@@ -16,12 +16,11 @@ export default {
         this.token = result.access
       }
       else {
-        console.log('Refresh invalid')
+        console.log('Disconnected')
         this.token = ''
       }
     }
-    catch (error) {
-      console.error('Error during refresh token fetch:', error)
+    catch {
       this.token = ''
     }
   },

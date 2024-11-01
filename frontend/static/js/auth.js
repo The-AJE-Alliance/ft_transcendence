@@ -1,3 +1,4 @@
+import * as bootstrap from 'bootstrap'
 import loginPage from '../pages/login.html?raw'
 import login42Page from '../pages/login42.html?raw'
 import profilePage from '../pages/profile.html?raw'
@@ -221,7 +222,7 @@ export async function login42(client) {
 /*
 export async function logout(client) {
   const logoutButton = document.getElementById('logout-link')
-  logoutButton.addEventListener('click', async () => {
+  client.router.addEvent(logoutButton, 'click', async () => {
     try {
       const response = await fetch('https://auth.api.transcendence.fr/logout/', {
         method: 'POST',
@@ -229,8 +230,8 @@ export async function logout(client) {
         credentials: 'include',
       })
       if (response.ok) {
-        client.token = null
-        updateNavbar(client)
+        client.token = ''
+        await updateNavbar(client)
         client.router.redirect('/')
         const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
         toastSuccess.show()

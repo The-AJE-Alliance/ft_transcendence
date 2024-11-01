@@ -54,7 +54,7 @@ async function submitForm({ form, actionUrl, method, processData, submitText, ca
 }
 
 export function handleForm({ form, actionUrl, method, submitText, processData, callback, client, enableValidation = false, enablePasswordConfirmation = false }) {
-  form.addEventListener('submit', async (event) => {
+  client.router.addEvent(form, 'submit', async (event) => {
     event.preventDefault()
     if (enablePasswordConfirmation) {
       const passwordInput = form.querySelector('#password')
