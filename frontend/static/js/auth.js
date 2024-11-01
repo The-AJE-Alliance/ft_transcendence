@@ -4,7 +4,7 @@ import profilePage from '../pages/profile.html?raw'
 import registerPage from '../pages/register.html?raw'
 import { getFriends, loadFriends, loadPendingFriendRequests, sendFriendRequest } from './friends.js'
 import { updateNavbar } from './navbar.js'
-import { handleForm, processLoginData } from './utils.js'
+import { handleForm, loadPageStyle, processLoginData } from './utils.js'
 import '../css/login.css'
 import '../css/login42.css'
 import '../css/profile.css'
@@ -47,13 +47,14 @@ export async function chooseFriends(client) {
 }
 
 export async function login(client) {
-  updateNavbar(client)
   client.redirectToGame = client.redirectToGame || false
+  loadPageStyle('login')
   client.app.innerHTML = loginPage
+  await updateNavbar(client)
   const form = document.getElementById('login-form')
   handleForm({
     form,
-    actionUrl: 'https://auth.api.transcendence.local/login/',
+    actionUrl: 'https://auth.api.transcendence.fr/login/',
     method: 'POST',
     submitText: 'Log In',
     processData: processLoginData,
@@ -65,9 +66,10 @@ export async function login(client) {
 }
 
 export async function profile(client) {
-  updateNavbar(client)
+  loadPageStyle('profile')
   client.app.innerHTML = profilePage
-  if (client.token) {
+  await updateNavbar(client)
+  if (await client.isLoggedIn()) {
     const user = await getUserProfile(client)
     if (user) {
       document.getElementById('username').textContent = user.username
@@ -100,7 +102,7 @@ export async function profile(client) {
 async function loginPostProcess(client, result, ok) {
   if (ok) {
     client.token = result.access
-    updateNavbar(client)
+    await updateNavbar(client)
     if (client.redirectToGame) {
       client.router.redirect('/choose-friends')
       client.redirectToGame = false
@@ -117,12 +119,13 @@ async function loginPostProcess(client, result, ok) {
 }
 
 export async function register(client) {
-  updateNavbar(client)
+  await updateNavbar(client)
+  loadPageStyle('register')
   client.app.innerHTML = registerPage
   const form = document.getElementById('register-form')
   await handleForm({
     form,
-    actionUrl: 'https://auth.api.transcendence.local/register/',
+    actionUrl: 'https://auth.api.transcendence.fr/register/',
     method: 'POST',
     submitText: 'Register',
     callback: registerPostProcess,
@@ -169,7 +172,7 @@ export async function users(client) {
 
 export async function getUserProfile(client) {
   try {
-    const response = await fetch('https://auth.api.transcendence.local/users/me/', {
+    const response = await fetch('https://auth.api.transcendence.fr/users/me/', {
       method: 'GET',
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
@@ -187,7 +190,7 @@ export async function getUserProfile(client) {
 
 export async function getUsers(client) {
   try {
-    const response = await fetch('https://auth.api.transcendence.local/users/', {
+    const response = await fetch('https://auth.api.transcendence.fr/users/', {
       method: 'GET',
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
@@ -205,12 +208,13 @@ export async function getUsers(client) {
 }
 
 export async function login42(client) {
-  updateNavbar(client)
+  loadPageStyle('login42')
   client.app.innerHTML = login42Page
+  await updateNavbar(client)
   const oauthButton = document.getElementById('login42Button')
   oauthButton.textContent = 'Log in with 42'
   oauthButton.addEventListener('click', () => {
-    window.location.href = 'https://auth.api.transcendence.local/login/42/'
+    window.location.href = 'https://auth.api.transcendence.fr/login/42/'
   })
 }
 
@@ -219,7 +223,7 @@ export async function logout(client) {
   const logoutButton = document.getElementById('logout-link')
   logoutButton.addEventListener('click', async () => {
     try {
-      const response = await fetch('https://auth.api.transcendence.local/logout/', {
+      const response = await fetch('https://auth.api.transcendence.fr/logout/', {
         method: 'POST',
         headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
@@ -260,7 +264,7 @@ export async function logout(client) {
 
       if (response.ok) {
         client.token = null
-        updateNavbar(client)
+        await updateNavbar(client)
         client.router.redirect('/')
         const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
         toastSuccess.show()

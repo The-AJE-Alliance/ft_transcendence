@@ -4,7 +4,7 @@ export async function pong(client) {
   client.app.innerHTML = pongPage
   // creation de la websocket
 
-  client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
+  client.socket = new WebSocket('wss://pong.api.transcendence.fr/ws/')
 
   const canvas = document.getElementById('pongCanvas')
   if (!canvas) {

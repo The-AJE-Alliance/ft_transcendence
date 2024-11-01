@@ -86,6 +86,18 @@ export function handleForm({ form, actionUrl, method, submitText, processData, c
   }
 }
 
+export function loadPageStyle(page) {
+  const existingStyle = document.getElementById('page-style')
+  if (existingStyle)
+    existingStyle.remove()
+
+  const styleSheet = document.createElement('link')
+  styleSheet.rel = 'stylesheet'
+  styleSheet.href = `../css/${page}.css`
+  styleSheet.id = 'page-style'
+  document.head.appendChild(styleSheet)
+}
+
 export function processLoginData(formData) {
   return JSON.stringify(Object.fromEntries(formData.entries()))
 }
