@@ -1,6 +1,14 @@
+import loginPage from '../pages/login.html?raw'
+import login42Page from '../pages/login42.html?raw'
+import profilePage from '../pages/profile.html?raw'
+import registerPage from '../pages/register.html?raw'
 import { getFriends, loadFriends, loadPendingFriendRequests, sendFriendRequest } from './friends.js'
 import { updateNavbar } from './navbar.js'
-import { handleForm, loadHTML, processLoginData } from './utils.js'
+import { handleForm, processLoginData } from './utils.js'
+import '../css/login.css'
+import '../css/login42.css'
+import '../css/profile.css'
+import '../css/register.css'
 
 export async function chooseMode(client) {
   client.app.innerHTML = await loadHTML('../html/choose-mode.html')
@@ -41,7 +49,7 @@ export async function chooseFriends(client) {
 export async function login(client) {
   updateNavbar(client)
   client.redirectToGame = client.redirectToGame || false
-  client.app.innerHTML = await loadHTML('../html/login.html')
+  client.app.innerHTML = loginPage
   const form = document.getElementById('login-form')
   handleForm({
     form,
@@ -58,7 +66,7 @@ export async function login(client) {
 
 export async function profile(client) {
   updateNavbar(client)
-  client.app.innerHTML = await loadHTML('../html/profile.html')
+  client.app.innerHTML = profilePage
   if (client.token) {
     const user = await getUserProfile(client)
     if (user) {
@@ -109,7 +117,8 @@ async function loginPostProcess(client, result, ok) {
 }
 
 export async function register(client) {
-  client.app.innerHTML = await loadHTML('../html/register.html')
+  updateNavbar(client)
+  client.app.innerHTML = registerPage
   const form = document.getElementById('register-form')
   await handleForm({
     form,
@@ -197,8 +206,9 @@ export async function getUsers(client) {
 
 export async function login42(client) {
   updateNavbar(client)
-  client.app.innerHTML = await loadHTML('../html/login42.html') // Charger login42.html
+  client.app.innerHTML = login42Page
   const oauthButton = document.getElementById('login42Button')
+  oauthButton.textContent = 'Log in with 42'
   oauthButton.addEventListener('click', () => {
     window.location.href = 'https://auth.api.transcendence.local/login/42/'
   })

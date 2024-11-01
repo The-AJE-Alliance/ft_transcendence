@@ -53,7 +53,7 @@ server {
     listen 8443 ssl;
     server_name www.${HOSTNAME} ${HOSTNAME};
 
-    root /usr/share/nginx/html;
+    root /usr/share/nginx/html/dist;
 
     location / {
         index unresolvable-file.html;

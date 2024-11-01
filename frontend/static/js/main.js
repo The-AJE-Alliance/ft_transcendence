@@ -1,8 +1,11 @@
+import authPage from '../pages/auth.html?raw'
+import homePage from '../pages/home.html?raw'
 import { chooseFriends, chooseMode, login, login42, logout, profile, register, users } from './auth.js'
 import Client from './client.js'
 import { pong } from './pong.js'
 import Router from './router.js'
-import { loadHTML } from './utils.js'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import '../css/styles.css'
 
 const router = new Router(Client)
 Client.router = router
@@ -12,7 +15,8 @@ router.get('/choose-mode', chooseMode)
 router.get('/choose-friends', chooseFriends)
 
 router.get('/', async (client) => {
-  client.app.innerHTML = await loadHTML('../html/home.html')
+  updateNavbar(client)
+  client.app.innerHTML = homePage
 })
 
 router.get('/404', (client) => {
@@ -24,7 +28,7 @@ router.get('/users', users)
 router.get('/login', login)
 
 router.get('/sign-in', async (client) => {
-  client.app.innerHTML = await loadHTML('../html/auth.html')
+  client.app.innerHTML = authPage
 })
 
 router.get('/login/42', login42)

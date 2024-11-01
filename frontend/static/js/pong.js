@@ -1,7 +1,7 @@
-import { loadHTML } from './utils.js'
+import pongPage from '../pages/pong.html?raw'
 
 export async function pong(client) {
-  client.app.innerHTML = await loadHTML(('../html/pong.html'))
+  client.app.innerHTML = pongPage
   // creation de la websocket
 
   client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
