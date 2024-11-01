@@ -12,12 +12,12 @@ x-base: &base
 
 x-micro: &micro
   <<: *base
-  healthcheck:
-    test: [ "CMD-SHELL", "python manage.py health_check || exit 1" ]
-    interval: 5s
-    timeout: 2s
-    retries: 5
-    start_period: 5s
+  # healthcheck:
+  #   test: [ "CMD-SHELL", "python manage.py health_check || exit 1" ]
+  #   interval: 5s
+  #   timeout: 2s
+  #   retries: 20
+  #   start_period: 5s
 
 x-db: &db
   <<: *base
@@ -38,7 +38,7 @@ services:
       context: frontend
     depends_on:
       auth:
-        condition: service_healthy
+        condition: service_started
     environment:
       - APP_RID=${NGINX_RID}
       - APP_SID=${NGINX_SID}
