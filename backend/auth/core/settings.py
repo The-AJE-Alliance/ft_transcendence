@@ -42,26 +42,26 @@ DATABASE_OWNERROLE = "auth"
 # Application definition
 
 INSTALLED_APPS = [
-    'authentication',
-    'daphne',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django_dbconn_retry',
-    'django_otp',
-    'django_otp.plugins.otp_totp',
-    'health_check',
-    'health_check.db',
-    'postgresql_setrole',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
-    'vault12factor',
-    'corsheaders',
-    'channels',
+    "authentication",
+    "daphne",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_dbconn_retry",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "health_check",
+    "health_check.db",
+    "postgresql_setrole",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "vault12factor",
+    "corsheaders",
+    "channels",
 ]
 
 REST_FRAMEWORK = {
@@ -85,7 +85,7 @@ MIDDLEWARE = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = ["https://transcendence.local"]
+CORS_ALLOWED_ORIGINS = ["https://transcendence.fr"]
 
 CORS_ALLOW_HEADERS = [
     "authorization",
@@ -94,7 +94,7 @@ CORS_ALLOW_HEADERS = [
     "cookie",
 ]
 
-CSRF_TRUSTED_ORIGINS = ["https://transcendence.local"]
+CSRF_TRUSTED_ORIGINS = ["https://transcendence.fr"]
 
 ROOT_URLCONF = "core.urls"
 
