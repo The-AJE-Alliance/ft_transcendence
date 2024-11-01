@@ -4,30 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Choose Friends</title>
-    <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/choose-friends.css">
 </head>
 <body>
-    <div id="add-friend-section">
-        <input type="text" id="friend-username" placeholder="Enter friend's username">
-        <button id="add-friend-btn">Add Friend</button>
+    <div class="container">
+        <div id="add-friend-section" class="section">
+            <h3>Add a Friend</h3>
+            <input type="text" id="friend-username" placeholder="Enter friend's username">
+            <button id="add-friend-btn" class="btn">Add Friend</button>
+            <div id="duplicate-alert" class="alert alert-warning d-none mt-3" role="alert">
+                You are already friends with this user or a request is pending.
+            </div>
+            <div id="error-alert" class="alert alert-danger d-none mt-3" role="alert">
+                User doesn't exist
+            </div>
+        </div>
     </div>
-
-    <div id="friend-requests-section">
-        <h3>Pending Friend Requests</h3>
-        <ul id="friend-requests-list">
-            <!-- Les demandes d'amis en attente seront affichées ici -->
-        </ul>
-    </div>
-
-    <div id="friends-list-section">
-        <h3>Your Friends</h3>
-        <ul id="friends-list">
-            <!-- Liste des amis acceptés -->
-        </ul>
+     <div class="container">
+        <div id="friend-requests-section" class="section">
+            <h3>Friend Requests</h3>
+            <ul id="pending-requests-list">
+            </ul>
+        </div>
+     </div>
+     <div class="container">
+        <div id="friends-list-section" class="section">
+            <h3>Your Friends</h3>
+            <ul id="friends-list">
+            </ul>
+        </div>
     </div>
 
     <script type="module" src="../js/friends.js"></script>
 </body>
 </html>
-

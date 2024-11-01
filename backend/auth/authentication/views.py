@@ -27,7 +27,7 @@ class PendingFriendRequestsView(APIView):
     def get(self, request):
         # Get all pending friend requests where the authenticated user is the recipient
         pending_requests = FriendRequest.objects.filter(
-            recipient=request.user, status="pending"
+            to_user=request.user, status="pending"
         )
 
         # Serialize the pending friend requests
@@ -40,7 +40,7 @@ class SendFriendRequestView(APIView):
         username = request.data.get("username")
         try:
             recipient = User.objects.get(username=username)
-            FriendRequest.objects.create(sender=request.user, recipient=recipient)
+            FriendRequest.objects.create(from_user=request.user, to_user=recipient)
             return Response(
                 {"message": "Friend request sent."}, status=status.HTTP_201_CREATED
             )
@@ -55,11 +55,11 @@ class AcceptFriendRequestView(APIView):
         from_user_id = request.data.get("from_user_id")
         try:
             friend_request = FriendRequest.objects.get(
-                sender_id=from_user_id, recipient=request.user
+                from_user=from_user_id, to_user=request.user
             )
             # Accepter la demande d'ami
-            request.user.friends.add(friend_request.sender)
-            friend_request.sender.friends.add(request.user)
+            request.user.friends.add(friend_request.from_user)
+            friend_request.from_user.friends.add(request.user)
             friend_request.delete()  # Supprimer la demande après acceptation
             return Response(
                 {"message": "Friend request accepted."}, status=status.HTTP_200_OK

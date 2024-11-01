@@ -7,6 +7,10 @@ export async function pong(client) {
   client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
 
   const canvas = document.getElementById('pongCanvas')
+  if (!canvas) {
+    console.log('No canvas found')
+    client.router.redirect('/')
+  }
   document.addEventListener('visibilitychange', () => {
     client.socket.close()
     client.router.redirect('/')

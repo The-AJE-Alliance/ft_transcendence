@@ -183,13 +183,10 @@ export async function getUsers(client) {
 export async function login42(client) {
   updateNavbar(client)
   client.app.innerHTML = await loadHTML('../html/login42.html') // Charger login42.html
-  const oauthButton = document.createElement('button')
-  oauthButton.textContent = 'Log in with 42'
+  const oauthButton = document.getElementById('login42Button')
   oauthButton.addEventListener('click', () => {
     window.location.href = 'https://auth.api.transcendence.local/login/42/'
   })
-  client.app.innerHTML = ''
-  client.app.appendChild(oauthButton)
 }
 
 /*

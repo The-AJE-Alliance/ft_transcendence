@@ -12,6 +12,47 @@ export async function loadFriends(client) {
     return
   }
   const friendsList = document.getElementById('friends-list')
+  friendsList.innerHTML = ''
+  if (friends && friends.length > 0) {
+    friends.forEach((friend) => {
+      const listItem = document.createElement('li')
+      listItem.textContent = friend.username
+
+      const playButton = document.createElement('button')
+      playButton.textContent = 'Jouer'
+      playButton.addEventListener('click', () => startGameWithFriend(client, friend.id))
+
+      listItem.appendChild(playButton)
+      friendsList.appendChild(listItem)
+    })
+  }
+  else {
+    friendsList.innerHTML = '<li>No friends found</li>'
+  }
+}
+
+// Fonction pour démarrer le jeu avec un ami
+function startGameWithFriend(client, friendId) {
+  // Redirige vers la route de jeu en ligne avec l'ID de l'ami comme adversaire
+  client.router.redirect(`/pong/remote/${friendId}`)
+}
+
+/*
+export async function loadFriends(client) {
+  if (!client.token) {
+    await client.refresh()
+    if (!client.token) {
+      client.app.innerHTML = '<p>Please login again</p>'
+      return
+    }
+  }
+  const friends = await getFriends(client)
+  if (!friends) {
+    client.app.innerHTML = '<p>Unable to load friends list</p>'
+    return
+  }
+  const friendsList = document.getElementById('friends-list')
+  friendsList.innerHTML = ''
   if (friends && friends.length > 0) {
     friendsList.innerHTML = friends.map(friend => `<li>${friend.username}</li>`).join('')
   }
@@ -19,7 +60,7 @@ export async function loadFriends(client) {
     friendsList.innerHTML = '<li>No friends found</li>'
   }
 }
-
+*/
 export async function getFriends(client) {
   try {
     const response = await fetch('https://auth.api.transcendence.local/friends/', {
@@ -64,6 +105,13 @@ export async function addFriend(client, friendUsername) {
   }
 }
 export async function sendFriendRequest(client, friendUsername) {
+  const duplicateAlert = document.getElementById('duplicate-alert')
+  const errorAlert = document.getElementById('error-alert')
+  const friends = await getFriends(client)
+  if (friends && friends.some(friend => friend.username === friendUsername)) {
+    duplicateAlert.classList.remove('d-none')
+    return
+  }
   try {
     const response = await fetch('https://auth.api.transcendence.local/send-friend-request/', {
       method: 'POST',
@@ -75,13 +123,16 @@ export async function sendFriendRequest(client, friendUsername) {
     })
     if (response.ok) {
       console.log(`Friend request sent to ${friendUsername}!`)
-      await loadPendingFriendRequests(client) // Charger les demandes d'amis en attente
+      errorAlert.classList.add('d-none')
+      await loadPendingFriendRequests(client)
     }
     else {
+      errorAlert.classList.remove('d-none')
       console.error('Failed to send friend request')
     }
   }
   catch (error) {
+    errorAlert.classList.remove('d-none')
     console.error('Error while trying to send friend request:', error)
   }
 }
@@ -98,6 +149,8 @@ export async function acceptFriendRequest(client, fromUserId) {
     })
     if (response.ok) {
       console.log(`Friend request from user ${fromUserId} accepted!`)
+      await loadPendingFriendRequests(client)
+      await loadFriends(client)
     }
     else {
       console.error('Failed to accept friend request')
@@ -117,9 +170,39 @@ export async function loadPendingFriendRequests(client) {
     if (response.ok) {
       const pendingRequests = await response.json()
       const pendingList = document.getElementById('pending-requests-list')
-      pendingList.innerHTML = pendingRequests.length
-        ? pendingRequests.map(req => `<li>${req.sender.username}</li>`).join('')
-        : '<li>No pending friend requests.</li>'
+      pendingList.innerHTML = ''
+
+      if (pendingRequests.length) {
+        pendingRequests.forEach((req) => {
+          if (req.from_user && req.from_user.username) {
+            // Créer un élément de liste pour chaque demande
+            const listItem = document.createElement('li')
+            listItem.textContent = req.from_user.username
+
+            // Créer un bouton "Accepter"
+            const acceptButton = document.createElement('button')
+            acceptButton.textContent = 'Accepter'
+
+            // Ajouter un écouteur d'événement au bouton
+            acceptButton.addEventListener('click', () => {
+              acceptFriendRequest(client, req.from_user.id)
+            })
+
+            // Ajouter le bouton à l'élément de liste
+            listItem.appendChild(acceptButton)
+            pendingList.appendChild(listItem)
+          }
+          else {
+            const unknownUserItem = document.createElement('li')
+            unknownUserItem.textContent = 'Unknown User'
+            pendingList.appendChild(unknownUserItem)
+            console.warn('Incomplete request data:', req)
+          }
+        })
+      }
+      else {
+        pendingList.innerHTML = '<li>No pending friend requests.</li>'
+      }
     }
     else {
       console.error('Failed to load pending friend requests')

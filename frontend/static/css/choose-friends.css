@@ -1,3 +1,58 @@
-#friends-list {
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.section {
+  background-color: #262626;
+  border: 1px solid #00cc99;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 50px;
+  box-shadow: 0 0 15px rgba(0, 204, 153, 0.3);
+  text-align: center;
+}
+
+.btn {
+  background-color: transparent;
   color: #00cc99;
+  border: 2px solid #00cc99;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #00cc99;
+  color: #1a1a1a;
+  box-shadow: 0px 0px 10px rgba(0, 204, 153, 0.5);
+}
+
+#pending-requests-list li button,
+#friends-list li button {
+  font-size: 0.9rem;
+  padding: 5px 10px;
+  margin-left: 10px;
+  border-radius: 4px;
+}
+
+#add-friend-section .alert {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  border-radius: 5px;
+  max-width: 300px;
+  margin: 10px auto;
+}
+
+#add-friend-section .alert-warning {
+  background-color: #1a1a1a;
+  color: #dad726;
+  border: 1px solid #dad726;
+}
+
+#add-friend-section .alert-danger {
+  background-color: #1a1a1a;
+  color: #ff4d4d;
+  border: 1px solid #ff3333;
 }
