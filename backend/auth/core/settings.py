@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
-
 from vault12factor import (
     DjangoAutoRefreshDBCredentialsDict,
     VaultAuth12Factor,
@@ -43,6 +42,8 @@ DATABASE_OWNERROLE = "auth"
 
 INSTALLED_APPS = [
     "authentication",
+    "corsheaders",
+    "channels",
     "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -60,8 +61,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "vault12factor",
-    "corsheaders",
-    "channels",
 ]
 
 REST_FRAMEWORK = {
@@ -86,13 +85,6 @@ MIDDLEWARE = [
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = ["https://transcendence.fr"]
-
-CORS_ALLOW_HEADERS = [
-    "authorization",
-    "content-type",
-    "x-csrftoken",
-    "cookie",
-]
 
 CSRF_TRUSTED_ORIGINS = ["https://transcendence.fr"]
 
@@ -196,12 +188,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'  # Serveur SMTP de Gmail
-# EMAIL_PORT = 587  # Port pour les connexions sécurisées avec TLS
-# EMAIL_USE_TLS = True  # Utilisation du protocole TLS
-# DEFAULT_FROM_EMAIL = 'ponggame@mail.com'
 
 CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
