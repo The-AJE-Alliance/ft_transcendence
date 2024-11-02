@@ -1,3 +1,5 @@
+import ky from 'ky'
+
 export default {
   app: document.getElementById('app'),
   token: '',
@@ -6,21 +8,13 @@ export default {
 
   async refresh() {
     try {
-      const response = await fetch('https://auth.api.transcendence.fr/login/refresh/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const result = await ky.post('https://auth.api.transcendence.fr/login/refresh/', {
         credentials: 'include',
-      })
-      const result = await response.json()
-      if (response.ok) {
-        this.token = result.access
-      }
-      else {
-        console.log('Disconnected')
-        this.token = ''
-      }
+      }).json()
+      this.token = result.access
     }
     catch {
+      // console.clear()
       this.token = ''
     }
   },

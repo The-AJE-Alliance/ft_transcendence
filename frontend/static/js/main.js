@@ -1,6 +1,6 @@
 import authPage from '../pages/auth.html?raw'
 import homePage from '../pages/home.html?raw'
-import { chooseFriends, chooseMode, login, login42, logout, profile, register, users } from './auth.js'
+import { chooseFriends, chooseMode, login, login42, logout, profile, register } from './auth.js'
 import Client from './client.js'
 import { updateNavbar } from './navbar.js'
 import { pong } from './pong.js'
@@ -24,8 +24,6 @@ router.get('/', async (client) => {
 router.get('/404', (client) => {
   client.app.innerHTML = '<p style="text-align: center">404 Not found</p>'
 })
-
-router.get('/users', users)
 
 router.get('/login', login)
 

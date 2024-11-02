@@ -1,4 +1,5 @@
 import * as bootstrap from 'bootstrap'
+import ky from 'ky'
 import loginPage from '../pages/login.html?raw'
 import login42Page from '../pages/login42.html?raw'
 import profilePage from '../pages/profile.html?raw'
@@ -56,14 +57,58 @@ export async function login(client) {
   handleForm({
     form,
     actionUrl: 'https://auth.api.transcendence.fr/login/',
-    method: 'POST',
-    submitText: 'Log In',
     processData: processLoginData,
     callback: loginPostProcess,
     client,
     enableValidation: false,
     enablePasswordConfirmation: false,
   })
+}
+
+async function loginPostProcess(client, result) {
+  if (result) {
+    client.token = result.access
+    await updateNavbar(client)
+    if (client.redirectToGame) {
+      client.router.redirect('/choose-friends')
+      client.redirectToGame = false
+    }
+    else {
+      client.router.redirect('/')
+    }
+  }
+  else {
+    document.getElementById('username').value = ''
+    document.getElementById('password').value = ''
+    document.getElementById('invalid-login').classList.remove('d-none')
+  }
+}
+
+export async function register(client) {
+  await updateNavbar(client)
+  loadPageStyle('register')
+  client.app.innerHTML = registerPage
+  const form = document.getElementById('register-form')
+  await handleForm({
+    form,
+    actionUrl: 'https://auth.api.transcendence.fr/register/',
+    callback: registerPostProcess,
+    client,
+    enableValidation: true,
+    enablePasswordConfirmation: true,
+  })
+}
+
+async function registerPostProcess(client, result) {
+  const errorAlert = document.getElementById('error-alert')
+  if (result) {
+    errorAlert.classList.add('d-none')
+    client.router.redirect('/login')
+  }
+  else {
+    console.error('Registration failed:', result)
+    errorAlert.classList.remove('d-none')
+  }
 }
 
 export async function profile(client) {
@@ -100,56 +145,6 @@ export async function profile(client) {
   await logout(client)
 }
 
-async function loginPostProcess(client, result, ok) {
-  if (ok) {
-    client.token = result.access
-    await updateNavbar(client)
-    if (client.redirectToGame) {
-      client.router.redirect('/choose-friends')
-      client.redirectToGame = false
-    }
-    else {
-      client.router.redirect('/')
-    }
-  }
-  else {
-    document.getElementById('username').value = ''
-    document.getElementById('password').value = ''
-    document.getElementById('invalid-login').classList.remove('d-none')
-  }
-}
-
-export async function register(client) {
-  await updateNavbar(client)
-  loadPageStyle('register')
-  client.app.innerHTML = registerPage
-  const form = document.getElementById('register-form')
-  await handleForm({
-    form,
-    actionUrl: 'https://auth.api.transcendence.fr/register/',
-    method: 'POST',
-    submitText: 'Register',
-    callback: registerPostProcess,
-    client,
-    enableValidation: true,
-    enablePasswordConfirmation: true,
-  })
-}
-
-async function registerPostProcess(client, result, ok) {
-  const errorAlert = document.getElementById('error-alert')
-  if (ok) {
-    errorAlert.classList.add('d-none')
-    client.router.redirect('/login')
-  }
-  else {
-    console.error('Registration failed:', result)
-    errorAlert.classList.remove('d-none')
-  }
-}
-
-// Example of working JWT auth, probably not necessary in this form
-
 export async function users(client) {
   if (!client.token) {
     await client.refresh()
@@ -173,37 +168,13 @@ export async function users(client) {
 
 export async function getUserProfile(client) {
   try {
-    const response = await fetch('https://auth.api.transcendence.fr/users/me/', {
-      method: 'GET',
+    return await ky.get('https://auth.api.transcendence.fr/users/me/', {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
-    })
-    const result = await response.json()
-    if (response.ok) {
-      return result
-    }
+    }).json()
   }
   catch (error) {
     console.error('Error while trying to get user:', error)
-    return null
-  }
-}
-
-export async function getUsers(client) {
-  try {
-    const response = await fetch('https://auth.api.transcendence.fr/users/', {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${client.token}` },
-      credentials: 'include',
-    })
-    const result = await response.json()
-    if (response.ok)
-      return result
-    else
-      return null
-  }
-  catch (error) {
-    console.error('Error while trying to get users:', error)
     return null
   }
 }
@@ -218,35 +189,6 @@ export async function login42(client) {
     window.location.href = 'https://auth.api.transcendence.fr/login/42/'
   })
 }
-
-/*
-export async function logout(client) {
-  const logoutButton = document.getElementById('logout-link')
-  client.router.addEvent(logoutButton, 'click', async () => {
-    try {
-      const response = await fetch('https://auth.api.transcendence.fr/logout/', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${client.token}` },
-        credentials: 'include',
-      })
-      if (response.ok) {
-        client.token = ''
-        await updateNavbar(client)
-        client.router.redirect('/')
-        const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
-        toastSuccess.show()
-      }
-      else {
-        const toastFailed = new bootstrap.Toast(document.getElementById('logout-toast-failed'))
-        toastFailed.show()
-      }
-    }
-    catch (error) {
-      console.error('Error while trying to logout:', error)
-    }
-  })
-}
-*/
 
 export async function logout(client) {
   const logoutButton = document.getElementById('logout-link')

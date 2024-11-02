@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.11.3"
+    "bootstrap-icons": "^1.11.3",
+    "ky": "^1.7.2"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.8.0",

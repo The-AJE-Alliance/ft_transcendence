@@ -1,3 +1,5 @@
+import ky from 'ky'
+
 function validatePasswordConfirmation(form) {
   const passwordInput = form.querySelector('#password')
   const confirmPasswordInput = form.querySelector('#confirm-password')
@@ -32,28 +34,27 @@ function validateFormFields(form) {
   })
 }
 
-async function submitForm({ form, actionUrl, method, processData, submitText, callback, client }) {
+async function submitForm({ form, actionUrl, processData, callback, client }) {
   const formData = new FormData(form)
   const body = processData ? processData(formData) : formData
+  let result
   try {
-    const response = await fetch(actionUrl, {
-      method,
+    result = await ky.post(actionUrl, {
       body,
       headers: processData ? { 'Content-Type': 'application/json' } : {},
       credentials: 'include',
-    })
-    const result = await response.json()
-    if (callback)
-      await callback(client, result, response.ok)
-    else
-      console.log(`${submitText} successful:`, result)
+    }).json()
   }
-  catch (error) {
-    console.error(`Error during ${submitText.toLowerCase()}:`, error)
+  catch {
+    // console.clear()
+  }
+  finally {
+    if (callback)
+      await callback(client, result)
   }
 }
 
-export function handleForm({ form, actionUrl, method, submitText, processData, callback, client, enableValidation = false, enablePasswordConfirmation = false }) {
+export function handleForm({ form, actionUrl, method, processData, callback, client, enableValidation = false, enablePasswordConfirmation = false }) {
   client.router.addEvent(form, 'submit', async (event) => {
     event.preventDefault()
     if (enablePasswordConfirmation) {
@@ -77,7 +78,7 @@ export function handleForm({ form, actionUrl, method, submitText, processData, c
         return
       }
     }
-    await submitForm({ form, actionUrl, method, processData, submitText, callback, client })
+    await submitForm({ form, actionUrl, method, processData, callback, client })
   })
   if (enableValidation) {
     validateFormFields(form)
