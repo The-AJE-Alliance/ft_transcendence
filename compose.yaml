@@ -43,7 +43,7 @@ services:
       - APP_RID=${NGINX_RID}
       - APP_SID=${NGINX_SID}
     volumes:
-      - ./frontend/static:/usr/share/nginx/html
+      - ./frontend/static/dist:/usr/share/nginx/html
       - media-files:/media
       - nginx-ssl:/etc/ssl
       - static-files:/static
