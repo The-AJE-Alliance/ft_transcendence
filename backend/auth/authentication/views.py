@@ -18,8 +18,6 @@ from .permissions import IsOwner
 import requests
 from .serializers import FriendRequestSerializer
 
-User = get_user_model()
-
 
 class PendingFriendRequestsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -353,29 +351,3 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-# @api_view(['POST'])
-# def send_mymail(request):
-#     from_mail = "ponggame@mail.com"
-#     user_email = request.data.get('email')
-#     # verification_token = get_random_string(length=32)
-#     verication_token = "true email"
-
-#     try:
-#         verification_link = f"http://localhost:8000/api/verify-email/?token={verification_token}"
-#         send_mail(
-#             'Pong game email checking',
-#             f'Click the link to activate your account : {verification_link}',
-#             from_mail,
-#             [user_email],
-#             fail_silently=False,
-#         )
-#         return Response({"message": "Send verification mail successfully !"}, status=status.HTTP_200_OK)
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-# # @api_view(['GET'])
-# # def mail_verified(request):
-# # 	token = request.data.get('token')
-# # 	if token and token == "true email"

@@ -1,4 +1,5 @@
 import pongPage from '../pages/pong.html?raw'
+import '../css/pong.css'
 
 export async function pong(client) {
   client.app.innerHTML = pongPage

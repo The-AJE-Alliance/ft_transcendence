@@ -4,52 +4,14 @@ import loginPage from '../pages/login.html?raw'
 import login42Page from '../pages/login42.html?raw'
 import profilePage from '../pages/profile.html?raw'
 import registerPage from '../pages/register.html?raw'
-import { getFriends, loadFriends, loadPendingFriendRequests, sendFriendRequest } from './friends.js'
+import { getFriends } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { handleForm, loadPageStyle, processLoginData } from './utils.js'
 import '../css/login.css'
-import '../css/login42.css'
 import '../css/profile.css'
 import '../css/register.css'
 
-export async function chooseMode(client) {
-  client.app.innerHTML = await loadHTML('../html/choose-mode.html')
-  document.getElementById('remote-btn').addEventListener('click', () => {
-    client.redirectToGame = true
-    client.router.redirect('/sign-in')
-  })
-  document.getElementById('local-btn').addEventListener('click', () => {
-    client.router.redirect('/pong/local')
-  })
-}
-
-export async function chooseFriends(client) {
-  if (!client.token) {
-    await client.refresh()
-    if (!client.token) {
-      client.router.redirect('/login')
-      return
-    }
-  }
-  client.app.innerHTML = await loadHTML('../html/choose-friends.html')
-  const addFriendBtn = document.getElementById('add-friend-btn')
-  const friendUsernameInput = document.getElementById('friend-username')
-
-  addFriendBtn.addEventListener('click', async () => {
-    const friendUsername = friendUsernameInput.value.trim()
-    if (friendUsername) {
-      await sendFriendRequest(client, friendUsername)
-      friendUsernameInput.value = ''
-    }
-  })
-
-  // Charger la liste d'amis dès le chargement de la page
-  await loadFriends(client)
-  await loadPendingFriendRequests(client)
-}
-
 export async function login(client) {
-  client.redirectToGame = client.redirectToGame || false
   loadPageStyle('login')
   client.app.innerHTML = loginPage
   await updateNavbar(client)
@@ -69,13 +31,7 @@ async function loginPostProcess(client, result) {
   if (result) {
     client.token = result.access
     await updateNavbar(client)
-    if (client.redirectToGame) {
-      client.router.redirect('/choose-friends')
-      client.redirectToGame = false
-    }
-    else {
-      client.router.redirect('/')
-    }
+    client.router.redirect('/')
   }
   else {
     document.getElementById('username').value = ''
@@ -142,27 +98,6 @@ export async function profile(client) {
       }
     }
   }
-}
-
-export async function users(client) {
-  if (!client.token) {
-    await client.refresh()
-    if (!client.token) {
-      client.app.innerHTML = '<p>Please login again</p>'
-      return
-    }
-  }
-
-  let users = await getUsers(client)
-  if (!users) {
-    await client.refresh()
-    if (!client.token) {
-      client.app.innerHTML = '<p>Please login again</p>'
-      return
-    }
-    users = await getUsers(client)
-  }
-  client.app.innerHTML = `<ul><li>${users[0].username}</li><li>${users[0].email}</li></ul><br>`
 }
 
 export async function getUserProfile(client) {

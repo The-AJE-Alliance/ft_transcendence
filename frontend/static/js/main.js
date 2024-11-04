@@ -1,9 +1,10 @@
 import authPage from '../pages/auth.html?raw'
 import homePage from '../pages/home.html?raw'
-import { chooseFriends, chooseMode, login, login42, logout, profile, register } from './auth.js'
+import { login, login42, logout, profile, register } from './auth.js'
 import Client from './client.js'
 import { updateNavbar } from './navbar.js'
 import { pong } from './pong.js'
+import { choosePongMode, remotePong, remoteSetup } from './pong-setup.js'
 import Router from './router.js'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
@@ -11,10 +12,6 @@ import '../css/styles.css'
 
 const router = new Router(Client)
 Client.router = router
-
-router.get('/choose-mode', chooseMode)
-
-router.get('/choose-friends', chooseFriends)
 
 router.get('/', async (client) => {
   client.app.innerHTML = homePage
@@ -39,7 +36,9 @@ router.get('/register', register)
 
 router.get('/profile', profile)
 
-// router.get('/pong', pong)
+router.get('/pong', choosePongMode)
+router.get('/pong/remote', remotePong)
+router.get('/pong/remote/setup', remoteSetup)
 
 router.get('/pong/local', client => pong(client, { mode: 'local' }))
 router.get('/pong/remote/:id', (client, params) => pong(client, { mode: 'remote', opponentId: params.id }))

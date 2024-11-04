@@ -20,7 +20,7 @@ export default {
   },
 
   async isLoggedIn() {
-    if (this.token)
+    if (this.token !== '')
       return true
     await this.refresh()
     return this.token

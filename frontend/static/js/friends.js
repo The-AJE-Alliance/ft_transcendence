@@ -1,10 +1,9 @@
+import ky from 'ky'
+
 export async function loadFriends(client) {
-  if (!client.token) {
-    await client.refresh()
-    if (!client.token) {
-      client.app.innerHTML = '<p>Please login again</p>'
-      return
-    }
+  if (!await client.isLoggedIn()) {
+    client.app.innerHTML = '<p>Please login again</p>'
+    return
   }
   const friends = await getFriends(client)
   if (!friends) {
@@ -20,7 +19,7 @@ export async function loadFriends(client) {
 
       const playButton = document.createElement('button')
       playButton.textContent = 'Jouer'
-      playButton.addEventListener('click', () => startGameWithFriend(client, friend.id))
+      client.router.addEvent(playButton, 'click', () => startGameWithFriend(client, friend.id))
 
       listItem.appendChild(playButton)
       friendsList.appendChild(listItem)
@@ -37,73 +36,34 @@ function startGameWithFriend(client, friendId) {
   client.router.redirect(`/pong/remote/${friendId}`)
 }
 
-/*
-export async function loadFriends(client) {
-  if (!client.token) {
-    await client.refresh()
-    if (!client.token) {
-      client.app.innerHTML = '<p>Please login again</p>'
-      return
-    }
-  }
-  const friends = await getFriends(client)
-  if (!friends) {
-    client.app.innerHTML = '<p>Unable to load friends list</p>'
-    return
-  }
-  const friendsList = document.getElementById('friends-list')
-  friendsList.innerHTML = ''
-  if (friends && friends.length > 0) {
-    friendsList.innerHTML = friends.map(friend => `<li>${friend.username}</li>`).join('')
-  }
-  else {
-    friendsList.innerHTML = '<li>No friends found</li>'
-  }
-}
-*/
 export async function getFriends(client) {
   try {
-    const response = await fetch('https://auth.api.transcendence.local/friends/', {
-      method: 'GET',
+    return await ky.get('https://auth.api.transcendence.fr/friends/', {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
-    })
-    if (response.ok) {
-      return await response.json()
-    }
-    else {
-      console.error('Failed to fetch friends', response.status)
-      return null
-    }
+    }).json()
   }
-  catch (error) {
-    console.error('Error while trying to get friends:', error)
+  catch {
+    console.error('Failed to fetch friends')
     return null
   }
 }
 
 export async function addFriend(client, friendUsername) {
   try {
-    const response = await fetch('https://auth.api.transcendence.local/send-friend-request/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${client.token}`,
-      },
-      body: JSON.stringify({ username: friendUsername }),
+    await ky.post('https://auth.api.transcendence.fr/send-friend-request/', {
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+      json: { username: friendUsername },
     })
-    if (response.ok) {
-      console.log(`${friendUsername} has been added as a friend!`)
-      await loadFriends(client)
-    }
-    else {
-      console.error('Failed to add friend')
-    }
+    console.log(`${friendUsername} has been added as a friend!`)
+    await loadFriends(client)
   }
   catch (error) {
     console.error('Error while trying to add friend:', error)
   }
 }
+
 export async function sendFriendRequest(client, friendUsername) {
   const duplicateAlert = document.getElementById('duplicate-alert')
   const errorAlert = document.getElementById('error-alert')
@@ -113,23 +73,14 @@ export async function sendFriendRequest(client, friendUsername) {
     return
   }
   try {
-    const response = await fetch('https://auth.api.transcendence.local/send-friend-request/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${client.token}`,
-      },
-      body: JSON.stringify({ username: friendUsername }),
+    await ky.post('https://auth.api.transcendence.fr/send-friend-request/', {
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+      json: { username: friendUsername },
     })
-    if (response.ok) {
-      console.log(`Friend request sent to ${friendUsername}!`)
-      errorAlert.classList.add('d-none')
-      await loadPendingFriendRequests(client)
-    }
-    else {
-      errorAlert.classList.remove('d-none')
-      console.error('Failed to send friend request')
-    }
+    console.log(`Friend request sent to ${friendUsername}!`)
+    errorAlert.classList.add('d-none')
+    await loadPendingFriendRequests(client)
   }
   catch (error) {
     errorAlert.classList.remove('d-none')
@@ -139,45 +90,29 @@ export async function sendFriendRequest(client, friendUsername) {
 
 export async function acceptFriendRequest(client, fromUserId) {
   try {
-    const response = await fetch('https://auth.api.transcendence.local/accept-friend-request/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${client.token}`,
-      },
-      body: JSON.stringify({ from_user_id: fromUserId }),
+    await ky.post('https://auth.api.transcendence.fr/accept-friend-request/', {
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+      json: { from_user_id: fromUserId },
     })
-    if (response.ok) {
-      console.log(`Friend request from user ${fromUserId} accepted!`)
-      await loadPendingFriendRequests(client)
-      await loadFriends(client)
-    }
-    else {
-      console.error('Failed to accept friend request')
-    }
+    console.log(`Friend request from user ${fromUserId} accepted!`)
+    await loadPendingFriendRequests(client)
+    await loadFriends(client)
   }
   catch (error) {
-    console.error('Error while trying to accept friend request:', error)
+    console.error('Failed to accept friend request :', error)
   }
 }
 
 export async function declineFriendRequest(client, fromUserId) {
   try {
-    const response = await fetch('https://auth.api.transcendence.local/decline-friend-request/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${client.token}`,
-      },
-      body: JSON.stringify({ from_user_id: fromUserId }),
+    await ky.post('https://auth.api.transcendence.local/decline-friend-request/', {
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+      json: { from_user_id: fromUserId },
     })
-    if (response.ok) {
-      console.log(`Friend request from user ${fromUserId} declined!`)
-      await loadPendingFriendRequests(client)
-    }
-    else {
-      console.error('Failed to decline friend request')
-    }
+    console.log(`Friend request from user ${fromUserId} declined!`)
+    await loadPendingFriendRequests(client)
   }
   catch (error) {
     console.error('Error while trying to decline friend request:', error)
@@ -187,54 +122,47 @@ export async function declineFriendRequest(client, fromUserId) {
 export async function loadPendingFriendRequests(client) {
   const friendRequest = document.getElementById('friend-requests-section')
   try {
-    const response = await fetch('https://auth.api.transcendence.local/pending-friend-requests/', {
-      method: 'GET',
+    const pendingRequests = await ky.get('https://auth.api.transcendence.local/pending-friend-requests/', {
       headers: { Authorization: `Bearer ${client.token}` },
-    })
-    if (response.ok) {
-      const pendingRequests = await response.json()
-      const pendingList = document.getElementById('pending-requests-list')
-      pendingList.innerHTML = ''
+    }).json()
+    const pendingList = document.getElementById('pending-requests-list')
+    pendingList.innerHTML = ''
 
-      if (pendingRequests.length > 0) {
-        friendRequest.classList.remove('d-none')
-        pendingRequests.forEach((req) => {
-          if (req.from_user && req.from_user.username) {
-            const listItem = document.createElement('li')
-            listItem.textContent = req.from_user.username
+    if (pendingRequests.length > 0) {
+      friendRequest.classList.remove('d-none')
+      pendingRequests.forEach((req) => {
+        if (req.from_user && req.from_user.username) {
+          const listItem = document.createElement('li')
+          listItem.textContent = req.from_user.username
 
-            const acceptButton = document.createElement('button')
-            acceptButton.textContent = 'Accept'
-            acceptButton.addEventListener('click', () => {
-              acceptFriendRequest(client, req.from_user.id)
-            })
+          const acceptButton = document.createElement('button')
+          acceptButton.textContent = 'Accept'
+          client.router.addEvent(acceptButton, 'click', async () => {
+            await acceptFriendRequest(client, req.from_user.id)
+          })
 
-            const declineButton = document.createElement('button')
-            declineButton.textContent = 'Decline'
-            declineButton.classList.add('btn', 'btn-danger', 'btn-sm')
-            declineButton.addEventListener('click', () => {
-              declineFriendRequest(client, req.from_user.id)
-            })
+          const declineButton = document.createElement('button')
+          declineButton.textContent = 'Decline'
+          declineButton.classList.add('btn', 'btn-danger', 'btn-sm')
+          client.router.addEvent(declineButton, 'click', async () => {
+            await declineFriendRequest(client, req.from_user.id)
+          })
 
-            // Ajouter le bouton à l'élément de liste
-            listItem.appendChild(acceptButton)
-            listItem.appendChild(declineButton)
-            pendingList.appendChild(listItem)
-          }
-          else {
-            const unknownUserItem = document.createElement('li')
-            unknownUserItem.textContent = 'Unknown User'
-            pendingList.appendChild(unknownUserItem)
-            console.warn('Incomplete request data:', req)
-          }
-        })
-      }
-      else {
-        friendRequest.classList.add('d-none')
-      }
+          // Ajouter le bouton à l'élément de liste
+          listItem.appendChild(acceptButton)
+          listItem.appendChild(declineButton)
+          pendingList.appendChild(listItem)
+        }
+        else {
+          const unknownUserItem = document.createElement('li')
+          unknownUserItem.textContent = 'Unknown User'
+          pendingList.appendChild(unknownUserItem)
+          console.warn('Incomplete request data:', req)
+        }
+      })
     }
     else {
-      console.error('Failed to load pending friend requests')
+      friendRequest.classList.add('d-none')
     }
   }
   catch (error) {
