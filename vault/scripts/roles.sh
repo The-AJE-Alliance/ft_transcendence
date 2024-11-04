@@ -3,7 +3,7 @@
 set -e
 
 ROLE_INIT_FILE=/vault/secrets/role.init
-SERVICE_APPS=("auth pong")
+SERVICE_APPS=("auth chat pong")
 
 if [ ! -f ${ROLE_INIT_FILE} ]; then
   echo "Enabling AppRole Auth Backend..."
