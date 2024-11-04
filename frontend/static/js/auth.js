@@ -119,7 +119,7 @@ export async function login42(client) {
   await updateNavbar(client)
   const oauthButton = document.getElementById('login42Button')
   oauthButton.textContent = 'Log in with 42'
-  oauthButton.addEventListener('click', () => {
+  client.router.addEvent(oauthButton, 'click', () => {
     window.location.href = 'https://auth.api.transcendence.fr/login/42/'
   })
 }
