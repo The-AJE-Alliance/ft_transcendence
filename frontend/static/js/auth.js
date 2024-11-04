@@ -1,4 +1,4 @@
-import { loadFriends, loadPendingFriendRequests, sendFriendRequest } from './friends.js'
+import { getFriends, loadFriends, loadPendingFriendRequests, sendFriendRequest } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { handleForm, loadHTML, processLoginData } from './utils.js'
 
@@ -69,6 +69,21 @@ export async function profile(client) {
       const avatarElement = document.getElementById('avatar')
       avatarElement.src = user.avatar
       avatarElement.alt = `Avatar de ${user.username}`
+
+      const friendsList = document.getElementById('friends-list')
+      const friends = await getFriends(client)
+      friendsList.innerHTML = ''
+
+      if (friends && friends.length > 0) {
+        friends.forEach((friend) => {
+          const friendItem = document.createElement('li')
+          friendItem.textContent = friend.username
+          friendsList.appendChild(friendItem)
+        })
+      }
+      else {
+        friendsList.innerHTML = '<li>No friends found</li>'
+      }
     }
   }
   await logout(client)

@@ -71,6 +71,26 @@ class AcceptFriendRequestView(APIView):
             )
 
 
+class DeclineFriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from_user_id = request.data.get("from_user_id")
+        try:
+            friend_request = FriendRequest.objects.get(
+                from_user=from_user_id, to_user=request.user, status="pending"
+            )
+            friend_request.delete()
+            return Response(
+                {"message": "Friend request declined."}, status=status.HTTP_200_OK
+            )
+        except FriendRequest.DoesNotExist:
+            return Response(
+                {"error": "Friend request does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer

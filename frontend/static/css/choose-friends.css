@@ -1,11 +1,11 @@
 .container {
   max-width: 800px;
-  margin: 0 auto;
   padding: 20px;
+  margin-top: 100px;
 }
 
 .section {
-  background-color: #262626;
+  background-color: #1a1a1a;
   border: 1px solid #00cc99;
   border-radius: 10px;
   padding: 20px;
@@ -14,7 +14,7 @@
   text-align: center;
 }
 
-.btn {
+.custom-btn {
   background-color: transparent;
   color: #00cc99;
   border: 2px solid #00cc99;
@@ -23,7 +23,7 @@
   transition: all 0.3s ease;
 }
 
-.btn:hover {
+.custom-btn:hover {
   background-color: #00cc99;
   color: #1a1a1a;
   box-shadow: 0px 0px 10px rgba(0, 204, 153, 0.5);
@@ -45,14 +45,20 @@
   margin: 10px auto;
 }
 
-#add-friend-section .alert-warning {
+#friend-username {
   background-color: #1a1a1a;
-  color: #dad726;
-  border: 1px solid #dad726;
+  color: #00cc99;
+  border: 1px solid #00cc99;
 }
 
-#add-friend-section .alert-danger {
+#error-alert {
   background-color: #1a1a1a;
   color: #ff4d4d;
   border: 1px solid #ff3333;
+}
+
+#duplicate-alert {
+  background-color: #1a1a1a;
+  color: #dad726;
+  border: 1px solid #dad726;
 }

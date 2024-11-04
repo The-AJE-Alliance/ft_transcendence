@@ -161,7 +161,31 @@ export async function acceptFriendRequest(client, fromUserId) {
   }
 }
 
+export async function declineFriendRequest(client, fromUserId) {
+  try {
+    const response = await fetch('https://auth.api.transcendence.local/decline-friend-request/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${client.token}`,
+      },
+      body: JSON.stringify({ from_user_id: fromUserId }),
+    })
+    if (response.ok) {
+      console.log(`Friend request from user ${fromUserId} declined!`)
+      await loadPendingFriendRequests(client)
+    }
+    else {
+      console.error('Failed to decline friend request')
+    }
+  }
+  catch (error) {
+    console.error('Error while trying to decline friend request:', error)
+  }
+}
+
 export async function loadPendingFriendRequests(client) {
+  const friendRequest = document.getElementById('friend-requests-section')
   try {
     const response = await fetch('https://auth.api.transcendence.local/pending-friend-requests/', {
       method: 'GET',
@@ -172,24 +196,29 @@ export async function loadPendingFriendRequests(client) {
       const pendingList = document.getElementById('pending-requests-list')
       pendingList.innerHTML = ''
 
-      if (pendingRequests.length) {
+      if (pendingRequests.length > 0) {
+        friendRequest.classList.remove('d-none')
         pendingRequests.forEach((req) => {
           if (req.from_user && req.from_user.username) {
-            // Créer un élément de liste pour chaque demande
             const listItem = document.createElement('li')
             listItem.textContent = req.from_user.username
 
-            // Créer un bouton "Accepter"
             const acceptButton = document.createElement('button')
-            acceptButton.textContent = 'Accepter'
-
-            // Ajouter un écouteur d'événement au bouton
+            acceptButton.textContent = 'Accept'
             acceptButton.addEventListener('click', () => {
               acceptFriendRequest(client, req.from_user.id)
             })
 
+            const declineButton = document.createElement('button')
+            declineButton.textContent = 'Decline'
+            declineButton.classList.add('btn', 'btn-danger', 'btn-sm')
+            declineButton.addEventListener('click', () => {
+              declineFriendRequest(client, req.from_user.id)
+            })
+
             // Ajouter le bouton à l'élément de liste
             listItem.appendChild(acceptButton)
+            listItem.appendChild(declineButton)
             pendingList.appendChild(listItem)
           }
           else {
@@ -201,7 +230,7 @@ export async function loadPendingFriendRequests(client) {
         })
       }
       else {
-        pendingList.innerHTML = '<li>No pending friend requests.</li>'
+        friendRequest.classList.add('d-none')
       }
     }
     else {

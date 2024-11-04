@@ -12,6 +12,7 @@ from .views import (
     SendFriendRequestView,
     AcceptFriendRequestView,
     PendingFriendRequestsView,
+    DeclineFriendRequestView,
 )
 
 router = DefaultRouter()
@@ -34,6 +35,11 @@ urlpatterns = [
         "accept-friend-request/",
         AcceptFriendRequestView.as_view(),
         name="accept_friend_request",
+    ),
+    path(
+        "decline-friend-request/",
+        DeclineFriendRequestView.as_view(),
+        name="decline_friend_request",
     ),
     path(
         "pending-friend-requests/",
