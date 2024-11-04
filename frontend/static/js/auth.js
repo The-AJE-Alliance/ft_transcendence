@@ -142,7 +142,6 @@ export async function profile(client) {
       }
     }
   }
-  await logout(client)
 }
 
 export async function users(client) {
@@ -191,36 +190,20 @@ export async function login42(client) {
 }
 
 export async function logout(client) {
-  const logoutButton = document.getElementById('logout-link')
-
-  logoutButton.removeEventListener('click', handleLogout)
-  logoutButton.addEventListener('click', handleLogout)
-
-  async function handleLogout(event) {
-    event.preventDefault()
-    try {
-      const response = await fetch('https://auth.api.transcendence.local/logout/', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${client.token}` },
-        credentials: 'include',
-      })
-
-      if (response.ok) {
-        client.token = null
-        await updateNavbar(client)
-        client.router.redirect('/')
-        const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
-        toastSuccess.show()
-      }
-      else {
-        const toastFailed = new bootstrap.Toast(document.getElementById('logout-toast-failed'))
-        toastFailed.show()
-      }
-    }
-    catch (error) {
-      console.error('Error while trying to logout:', error)
-      const toastFailed = new bootstrap.Toast(document.getElementById('logout-toast-failed'))
-      toastFailed.show()
-    }
+  try {
+    await ky.post('https://auth.api.transcendence.fr/logout/', {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${client.token}` },
+    })
+    client.token = ''
+    await updateNavbar(client)
+    client.router.redirect('/')
+    const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
+    toastSuccess.show()
+  }
+  catch {
+    client.router.redirect('/')
+    const toastFailed = new bootstrap.Toast(document.getElementById('logout-toast-failed'))
+    toastFailed.show()
   }
 }
