@@ -1,9 +1,10 @@
 import pongPage from '../pages/pong.html?raw'
 import '../css/pong.css'
 
-export async function pong(client) {
+export async function pong(client, options = {}) {
+  const { mode, host, opponentId } = options;
+
   client.app.innerHTML = pongPage
-  // creation de la websocket
 
   client.socket = new WebSocket('wss://pong.api.transcendence.fr/ws/')
 
