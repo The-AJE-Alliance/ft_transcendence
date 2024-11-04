@@ -1,6 +1,4 @@
-from rest_framework import serializers
-from .models import User
-
+from .models import FriendRequest
 from rest_framework import serializers
 from .models import User
 
@@ -56,3 +54,12 @@ class UserSerializer(serializers.ModelSerializer):
             instance.friends.set(friends_data)  # Utiliser les IDs des amis
         instance.save()
         return instance
+
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    from_user = UserSerializer(read_only=True)
+    to_user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = FriendRequest
+        fields = ["id", "from_user", "to_user", "status", "created_at"]

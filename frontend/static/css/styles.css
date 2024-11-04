@@ -44,8 +44,9 @@ h3 {
 #app {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 80vh;
+  margin-top: 60px;
   color: #00cc99;
 }
 

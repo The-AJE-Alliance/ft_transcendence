@@ -1,5 +1,10 @@
+h2 {
+  color: #00cc99;
+  text-shadow: 2px 2px 5px rgba(0, 204, 153, 0.3);
+}
+
 #profile-card {
-  background-color: #262626;
+  background-color: #1a1a1a;
   border: 1px solid #00cc99;
   padding: 20px;
   border-radius: 10px;
@@ -37,4 +42,19 @@
   object-fit: cover;
   border-radius: 50%;
   border: 2px solid #00cc99;
+}
+
+#friends-section {
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 0 15px rgba(0, 204, 153, 0.3);
+  text-align: left;
+}
+
+#friends-list li {
+  color: #00cc99;
+  font-size: 1rem;
+  margin-bottom: 5px;
 }

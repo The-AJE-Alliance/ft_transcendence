@@ -1,0 +1,54 @@
+/* Style du conteneur principal */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  padding-top: 60px;
+  font-family: Arial, sans-serif;
+  background-color: #1a1a1a;
+  color: #00ffcc;
+}
+
+.game-container {
+  text-align: center;
+  max-width: 800px;
+  width: 100%;
+}
+
+/* Style du titre et des instructions */
+.game-title {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #00ffcc;
+  text-transform: uppercase;
+}
+
+.game-instructions {
+  font-size: 1rem;
+  margin-bottom: 20px;
+  color: #cccccc;
+}
+
+/* Style du canvas et de son conteneur */
+#pongCanvas {
+  border: 2px solid #00ffcc;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 255, 204, 0.3);
+  background-color: #000;
+}
+
+/* Style du tableau de score */
+.scoreboard {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: #ffffff;
+  font-size: 1.2rem;
+}
+
+.scoreboard span {
+  font-weight: bold;
+  color: #00ffcc;
+}

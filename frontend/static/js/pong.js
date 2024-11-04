@@ -7,6 +7,10 @@ export async function pong(client) {
   client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
 
   const canvas = document.getElementById('pongCanvas')
+  if (!canvas) {
+    console.log('No canvas found')
+    client.router.redirect('/')
+  }
   document.addEventListener('visibilitychange', () => {
     client.socket.close()
     client.router.redirect('/')
@@ -40,7 +44,7 @@ function canvasResize(canvas) {
   // canvas.height = Number.parseInt(style.height)
 
 }
-//fonction pr initialiser canvas puis une autre qui render
+// fonction pr initialiser canvas puis une autre qui render
 async function renderGame(gameState, canvas) {
   const ctx = canvas.getContext('2d')
 
@@ -74,7 +78,6 @@ async function renderGame(gameState, canvas) {
     drawPad(ctx, canvas, player2)
 
     drawBall(ctx, gameState, canvas, ballX, ballY)
-
   }
 }
 
@@ -85,14 +88,12 @@ function drawBall(ctx, gameState, canvas, ballX, ballY) {
   ctx.fillStyle = gameState.ball.color
   ctx.fill()
   ctx.closePath()
-
 }
 
 function drawPad(ctx, canvas, pad) {
   ctx.fillStyle = pad.color
   ctx.fillRect(pad.x * canvas.width, pad.y * canvas.height, pad.width * canvas.width, pad.height * canvas.height)
 }
-
 
 async function handleKeyPress(event, socket) {
   if (!socket)
@@ -123,13 +124,10 @@ async function handleKeyPress(event, socket) {
       return
   }
 
-  //event.preventDefault()
+  // event.preventDefault()
   const data = {
     player,
     action,
   }
-
-  // Envoyer les données via la websocket
   socket.send(JSON.stringify(data))
 }
-

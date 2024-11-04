@@ -1,8 +1,46 @@
+import { getFriends, loadFriends, loadPendingFriendRequests, sendFriendRequest } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { handleForm, loadHTML, processLoginData } from './utils.js'
 
+export async function chooseMode(client) {
+  client.app.innerHTML = await loadHTML('../html/choose-mode.html')
+  document.getElementById('remote-btn').addEventListener('click', () => {
+    client.redirectToGame = true
+    client.router.redirect('/sign-in')
+  })
+  document.getElementById('local-btn').addEventListener('click', () => {
+    client.router.redirect('/pong/local')
+  })
+}
+
+export async function chooseFriends(client) {
+  if (!client.token) {
+    await client.refresh()
+    if (!client.token) {
+      client.router.redirect('/login')
+      return
+    }
+  }
+  client.app.innerHTML = await loadHTML('../html/choose-friends.html')
+  const addFriendBtn = document.getElementById('add-friend-btn')
+  const friendUsernameInput = document.getElementById('friend-username')
+
+  addFriendBtn.addEventListener('click', async () => {
+    const friendUsername = friendUsernameInput.value.trim()
+    if (friendUsername) {
+      await sendFriendRequest(client, friendUsername)
+      friendUsernameInput.value = ''
+    }
+  })
+
+  // Charger la liste d'amis dès le chargement de la page
+  await loadFriends(client)
+  await loadPendingFriendRequests(client)
+}
+
 export async function login(client) {
   updateNavbar(client)
+  client.redirectToGame = client.redirectToGame || false
   client.app.innerHTML = await loadHTML('../html/login.html')
   const form = document.getElementById('login-form')
   handleForm({
@@ -31,6 +69,21 @@ export async function profile(client) {
       const avatarElement = document.getElementById('avatar')
       avatarElement.src = user.avatar
       avatarElement.alt = `Avatar de ${user.username}`
+
+      const friendsList = document.getElementById('friends-list')
+      const friends = await getFriends(client)
+      friendsList.innerHTML = ''
+
+      if (friends && friends.length > 0) {
+        friends.forEach((friend) => {
+          const friendItem = document.createElement('li')
+          friendItem.textContent = friend.username
+          friendsList.appendChild(friendItem)
+        })
+      }
+      else {
+        friendsList.innerHTML = '<li>No friends found</li>'
+      }
     }
   }
   await logout(client)
@@ -40,7 +93,13 @@ async function loginPostProcess(client, result, ok) {
   if (ok) {
     client.token = result.access
     updateNavbar(client)
-    client.router.redirect('/profile')
+    if (client.redirectToGame) {
+      client.router.redirect('/choose-friends')
+      client.redirectToGame = false
+    }
+    else {
+      client.router.redirect('/')
+    }
   }
   else {
     document.getElementById('username').value = ''
@@ -50,7 +109,6 @@ async function loginPostProcess(client, result, ok) {
 }
 
 export async function register(client) {
-  updateNavbar(client)
   client.app.innerHTML = await loadHTML('../html/register.html')
   const form = document.getElementById('register-form')
   await handleForm({
@@ -140,15 +198,13 @@ export async function getUsers(client) {
 export async function login42(client) {
   updateNavbar(client)
   client.app.innerHTML = await loadHTML('../html/login42.html') // Charger login42.html
-  const oauthButton = document.createElement('button')
-  oauthButton.textContent = 'Log in with 42'
+  const oauthButton = document.getElementById('login42Button')
   oauthButton.addEventListener('click', () => {
     window.location.href = 'https://auth.api.transcendence.local/login/42/'
   })
-  client.app.innerHTML = ''
-  client.app.appendChild(oauthButton)
 }
 
+/*
 export async function logout(client) {
   const logoutButton = document.getElementById('logout-link')
   logoutButton.addEventListener('click', async () => {
@@ -174,4 +230,40 @@ export async function logout(client) {
       console.error('Error while trying to logout:', error)
     }
   })
+}
+*/
+
+export async function logout(client) {
+  const logoutButton = document.getElementById('logout-link')
+
+  logoutButton.removeEventListener('click', handleLogout)
+  logoutButton.addEventListener('click', handleLogout)
+
+  async function handleLogout(event) {
+    event.preventDefault()
+    try {
+      const response = await fetch('https://auth.api.transcendence.local/logout/', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${client.token}` },
+        credentials: 'include',
+      })
+
+      if (response.ok) {
+        client.token = null
+        updateNavbar(client)
+        client.router.redirect('/')
+        const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
+        toastSuccess.show()
+      }
+      else {
+        const toastFailed = new bootstrap.Toast(document.getElementById('logout-toast-failed'))
+        toastFailed.show()
+      }
+    }
+    catch (error) {
+      console.error('Error while trying to logout:', error)
+      const toastFailed = new bootstrap.Toast(document.getElementById('logout-toast-failed'))
+      toastFailed.show()
+    }
+  }
 }

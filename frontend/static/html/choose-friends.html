@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Friends</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/choose-friends.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row d-flex justify-content-center gap-4">
+            <!-- Add a Friend Section -->
+            <div class="section">
+                <h3>Add a Friend</h3>
+                <input type="text" id="friend-username" class="form-control my-3" placeholder="Enter friend's username">
+                <button id="add-friend-btn" class="btn custom-btn">Add Friend</button>
+                <div id="duplicate-alert" class="alert custom-alert-warning d-none mt-3" role="alert">
+                    You are already friends with this user or a request is pending.
+                </div>
+                <div id="error-alert" class="alert custom-alert-danger d-none mt-3" role="alert">
+                    User doesn't exist
+                </div>
+            </div>
+
+            <!-- Friend Requests Section -->
+            <div id="friend-requests-section" class="section d-none">
+                <h3>Friend Requests</h3>
+                <ul id="pending-requests-list" class="list-unstyled mt-3">
+                    <!-- Liste des demandes d'amis en attente -->
+                </ul>
+            </div>
+
+            <!-- Friends List Section -->
+            <div class="section">
+                <h3>Your Friends</h3>
+                <ul id="friends-list" class="list-unstyled mt-3">
+                    <!-- Liste des amis acceptés -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/friends.js"></script>
+</body>
+</html>
