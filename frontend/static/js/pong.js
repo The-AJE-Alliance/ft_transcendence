@@ -1,17 +1,18 @@
-import { loadHTML } from './utils.js'
+import pongPage from '../pages/pong.html?raw'
+import '../css/pong.css'
 
 export async function pong(client) {
-  client.app.innerHTML = await loadHTML(('../html/pong.html'))
+  client.app.innerHTML = pongPage
   // creation de la websocket
 
-  client.socket = new WebSocket('wss://pong.api.transcendence.local/ws/')
+  client.socket = new WebSocket('wss://pong.api.transcendence.fr/ws/')
 
   const canvas = document.getElementById('pongCanvas')
   if (!canvas) {
     console.log('No canvas found')
     client.router.redirect('/')
   }
-  document.addEventListener('visibilitychange', () => {
+  client.router.addEvent(document, 'visibilitychange', () => {
     client.socket.close()
     client.router.redirect('/')
   })
@@ -20,13 +21,13 @@ export async function pong(client) {
     console.log('WebSocket connected.')
   }
 
-  document.addEventListener('keyup', async (event) => {
+  client.router.addEvent(document, 'keyup', async (event) => {
     await handleKeyPress(event, client.socket)
   })
 
-  window.addEventListener('resize', () => {
-    canvasResize(canvas)
-  })
+  // client.router.addEventListener(window, 'resize', () => {
+  //   canvasResize(canvas)
+  // })
 
   client.socket.onmessage = async (event) => {
     const gameState = JSON.parse(event.data)
@@ -36,14 +37,14 @@ export async function pong(client) {
   }
 }
 
-function canvasResize(canvas) {
-  // console.log('canvasResize called')
-  // const style = getComputedStyle(canvas)
-  // console.log(style)
-  // canvas.width = Number.parseInt(style.width)
-  // canvas.height = Number.parseInt(style.height)
+// function canvasResize(canvas) {
+//   // console.log('canvasResize called')
+//   // const style = getComputedStyle(canvas)
+//   // console.log(style)
+//   // canvas.width = Number.parseInt(style.width)
+//   // canvas.height = Number.parseInt(style.height)
+// }
 
-}
 // fonction pr initialiser canvas puis une autre qui render
 async function renderGame(gameState, canvas) {
   const ctx = canvas.getContext('2d')

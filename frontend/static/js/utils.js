@@ -1,19 +1,4 @@
-// Loads a html file at the filePath and returns it as text
-export async function loadHTML(filePath) {
-  try {
-    const response = await fetch(filePath, {
-      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
-    })
-    if (!response.ok) {
-      throw new Error('Failed to load HTML file')
-    }
-    return await response.text() // Return the file content as text
-  }
-  catch (error) {
-    console.error('Error loading HTML:', error)
-    return '<p>Error loading content</p>' // Return a default error message
-  }
-}
+import ky from 'ky'
 
 function validatePasswordConfirmation(form) {
   const passwordInput = form.querySelector('#password')
@@ -49,29 +34,28 @@ function validateFormFields(form) {
   })
 }
 
-async function submitForm({ form, actionUrl, method, processData, submitText, callback, client }) {
+async function submitForm({ form, actionUrl, processData, callback, client }) {
   const formData = new FormData(form)
   const body = processData ? processData(formData) : formData
+  let result
   try {
-    const response = await fetch(actionUrl, {
-      method,
+    result = await ky.post(actionUrl, {
       body,
       headers: processData ? { 'Content-Type': 'application/json' } : {},
       credentials: 'include',
-    })
-    const result = await response.json()
-    if (callback)
-      await callback(client, result, response.ok)
-    else
-      console.log(`${submitText} successful:`, result)
+    }).json()
   }
-  catch (error) {
-    console.error(`Error during ${submitText.toLowerCase()}:`, error)
+  catch {
+    // console.clear()
+  }
+  finally {
+    if (callback)
+      await callback(client, result)
   }
 }
 
-export function handleForm({ form, actionUrl, method, submitText, processData, callback, client, enableValidation = false, enablePasswordConfirmation = false }) {
-  form.addEventListener('submit', async (event) => {
+export function handleForm({ form, actionUrl, method, processData, callback, client, enableValidation = false, enablePasswordConfirmation = false }) {
+  client.router.addEvent(form, 'submit', async (event) => {
     event.preventDefault()
     if (enablePasswordConfirmation) {
       const passwordInput = form.querySelector('#password')
@@ -94,13 +78,25 @@ export function handleForm({ form, actionUrl, method, submitText, processData, c
         return
       }
     }
-    await submitForm({ form, actionUrl, method, processData, submitText, callback, client })
+    await submitForm({ form, actionUrl, method, processData, callback, client })
   })
   if (enableValidation) {
     validateFormFields(form)
     if (enablePasswordConfirmation)
       validatePasswordConfirmation(form)
   }
+}
+
+export function loadPageStyle(page) {
+  const existingStyle = document.getElementById('page-style')
+  if (existingStyle)
+    existingStyle.remove()
+
+  const styleSheet = document.createElement('link')
+  styleSheet.rel = 'stylesheet'
+  styleSheet.href = `../css/${page}.css`
+  styleSheet.id = 'page-style'
+  document.head.appendChild(styleSheet)
 }
 
 export function processLoginData(formData) {

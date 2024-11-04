@@ -36,6 +36,7 @@ ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 # Application definition
 
 INSTALLED_APPS = [
+    "corsheaders",
     "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -53,6 +54,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -61,6 +63,12 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = ["https://transcendence.fr"]
+
+CSRF_TRUSTED_ORIGINS = ["https://transcendence.fr"]
 
 ROOT_URLCONF = "core.urls"
 

@@ -15,9 +15,9 @@ else
     crl_distribution_points="https://vault:8200/v1/pki/crl"
   vault secrets enable -path=pki_int pki
   vault secrets tune -max-lease-ttl=876000h pki_int
-  vault pki issue -issuer_name="transcendence-local-intermediate" \
+  vault pki issue -issuer_name="transcendence-fr-intermediate" \
     /pki/issuer/"$(vault list -format=json pki/issuers/ | jq -r '.[]')" /pki_int/ \
-    common_name="TranscendenceLocalIntermediateAuthority" \
+    common_name="Transcendence FR Intermediate Authority" \
     o="Transcendence" ou="Ecole42" key_type="rsa" key_bits="4096" max_depth_len=1 \
     permitted_dns_domains="${HOSTNAME},*.${HOSTNAME}" ttl="876000h"
   vault write pki_int/roles/domain issuer_ref="$(vault read -field=default pki_int/config/issuers)" \
