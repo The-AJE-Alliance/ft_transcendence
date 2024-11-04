@@ -36,6 +36,7 @@ services:
     container_name: nginx
     build:
       context: frontend
+      dockerfile: Dockerfile.nginx
     depends_on:
       auth:
         condition: service_started
@@ -51,6 +52,18 @@ services:
     ports:
       - "80:8080"
       - "443:8443"
+  vite-builder:
+    <<: *base
+    container_name: vite-builder
+    build:
+      context: frontend
+      dockerfile: Dockerfile.vite
+    depends_on:
+      nginx:
+        condition: service_started
+    volumes:
+      - ./frontend/static:/app
+      - /app/node_modules
   vault:
     <<: *base
     container_name: vault
