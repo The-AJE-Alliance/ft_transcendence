@@ -43,4 +43,4 @@ done
 
 init_db &> /dev/null
 
-env "${ENVS[@]}" docker compose up -d
+env "${ENVS[@]}" docker compose up --watch
