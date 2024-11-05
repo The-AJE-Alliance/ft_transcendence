@@ -17,6 +17,9 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.pong_game = PongGame()
         self.game_loop_task = None
         self.connected = False
+        self.mode = None
+        self.host = None
+        self.opponent_id = None
 
     async def connect(self):
         await self.accept()
@@ -39,11 +42,18 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        player = data.get("player")
-        action = data.get("action")
-        self.pong_game.update_player_position(player, action)
+        type = data.get("type")
 
-        await self.send_game_state()
+        if type == "move":
+            player = data.get("player")
+            action = data.get("action")
+            self.pong_game.update_player_position(player, action)
+            await self.send_game_state()
+        
+        elif type == "init_game":
+            self.mode = data.get("mode")
+            self.host = data.get("host")
+            self.opponent_id = data.get("opponentId")
 
     async def send_game_state(self):
         game_state = {
