@@ -166,3 +166,6 @@ node_modules
 
 *.crt
 init
+
+backend/media/avatars/*.png
+!backend/media/avatars/default_avatar.png
