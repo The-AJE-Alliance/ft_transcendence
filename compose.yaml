@@ -12,20 +12,9 @@ x-base: &base
 
 x-micro: &micro
   <<: *base
-  # healthcheck:
-  #   test: [ "CMD-SHELL", "python manage.py health_check || exit 1" ]
-  #   interval: 5s
-  #   timeout: 2s
-  #   retries: 20
-  #   start_period: 5s
 
 x-db: &db
   <<: *base
-  healthcheck:
-    test: [ "CMD-SHELL", "pg_isready" ]
-    interval: 10s
-    timeout: 5s
-    retries: 5
   build:
     context: db
   shm_size: 128mb
@@ -165,6 +154,11 @@ volumes:
   auth-db:
   auth-ssl:
   media-files:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: "backend/media"
   nginx-ssl:
   pong-db:
   pong-ssl:
