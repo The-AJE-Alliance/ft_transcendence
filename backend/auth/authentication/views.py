@@ -1,6 +1,9 @@
 from rest_framework.decorators import action
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import (
+    IsAuthenticated,
+    AllowAny,
+)
 from rest_framework.authentication import SessionAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
@@ -11,12 +14,14 @@ from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import get_user_model
 from .models import User, FriendRequest
 from .serializers import UserSerializer
 from .permissions import IsOwner
 import requests
 from .serializers import FriendRequestSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PendingFriendRequestsView(APIView):
@@ -93,12 +98,14 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     authentication_classes = [JWTAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def get_permissions(self):
         if self.action in ["update", "destroy", "partial_update", "retrieve"]:
-            permission_classes = [IsAdminUser]
+            logger.info("Entered case IsOwner")
+            permission_classes = [IsOwner]
         else:
+            logger.info("Entered case IsAuthenticated")
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
@@ -254,15 +261,33 @@ class UserViewSet(viewsets.ModelViewSet):
             username=username, defaults={"email": email}
         )
 
-        # Gérer la connexion de l'utilisateur et la création de JWT
-        refresh = RefreshToken.for_user(user)
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_path="change-password",
+    )
+    def change_password(self, request):
+        user = request.user
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+
+        if not user.check_password(current_password):
+            return Response(
+                {"error": "Current password is incorrect"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if current_password == new_password:
+            return Response(
+                {"error": "New password cannot be the same as the current password"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(new_password)
+        user.save()
         return Response(
-            {
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-                "user": UserSerializer(user).data,
-            },
-            status=status.HTTP_200_OK,
+            {"message": "Password updated successfully"}, status=status.HTTP_200_OK
         )
 
 
