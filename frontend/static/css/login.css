@@ -1,5 +1,12 @@
-body {
-  margin-top: 50px;
+.container {
+  text-align: center;
+}
+
+.login-card {
+  width: 500px;
+  height: 500px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 #login-form .form-control {
@@ -17,19 +24,13 @@ body {
 }
 
 #login-form .mb-3 {
-  margin-bottom: 15px !important;
+  margin-bottom: 15px;
 }
 
 #login-form label {
   display: block;
   margin-bottom: 20px;
-  color: #00cc99 !important;
-}
-
-.card {
-  padding: 30px;
-  margin: 0 auto;
-  max-width: 600px;
+  color: #00cc99;
 }
 
 #invalid-login {

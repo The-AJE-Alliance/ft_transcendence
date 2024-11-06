@@ -9,6 +9,7 @@ export async function choosePongMode(client) {
 }
 
 export async function remotePong(client) {
+  client.redirectToFriends = true
   if (await client.isLoggedIn())
     client.router.redirect('/pong/remote/setup')
   else
@@ -32,8 +33,6 @@ export async function remoteSetup(client) {
       friendUsernameInput.value = ''
     }
   })
-
-  // Charger la liste d'amis dès le chargement de la page
   await loadFriends(client)
   await loadPendingFriendRequests(client)
 }

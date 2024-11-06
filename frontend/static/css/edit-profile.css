@@ -1,0 +1,54 @@
+.edit-control.is-valid {
+  color: #00cc99;
+}
+
+.edit-control {
+  background-color: #262626;
+  color: #00cc99;
+  border: 1px solid #00cc99;
+}
+
+.edit-card {
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.edit-content {
+  color: #00cc99;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-info {
+  background-color: #1a1a1a;
+  color: #00cc99;
+  text-align: left;
+  flex: 1;
+  margin-right: 20px;
+}
+
+.edit-info input {
+  background-color: #262626;
+  color: #00cc99;
+  border: 1px solid #00cc99;
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+.edit-avatar {
+  text-align: center;
+}
+
+#avatar {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #00cc99;
+}

@@ -1,30 +1,82 @@
-export function initializeProfilePage(client) {
-  const editButton = document.getElementById('edit-profile-btn')
-  const deleteButton = document.getElementById('delete-profile-btn')
+import ky from 'ky'
+import editProfilePage from '../pages/edit-profile.html?raw'
+import { getUserProfile } from './auth.js'
+import { validateEmailField } from './utils.js'
+import '../css/edit-profile.css'
 
-  editButton.addEventListener('click', () => editProfile(client))
-  deleteButton.addEventListener('click', () => deleteProfile(client))
+export async function editProfile(client) {
+  client.app.innerHTML = editProfilePage
+  const user = await getUserProfile(client)
+
+  if (user) {
+    document.getElementById('username').value = user.username
+    document.getElementById('email').value = user.email
+    document.getElementById('nickname').value = user.nickname
+    document.getElementById('status').textContent = user.is_online ? 'Online' : 'Offline'
+  }
+  const emailField = document.getElementById('email')
+  validateEmailField(emailField)
 }
 
-export async function updateProfile(client, updatedData) {
+async function changePassword(client, currentPassword, newPassword) {
   try {
-    const response = await fetch(`https://auth.api.transcendence.local/users/${client.userId}/`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${client.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringigit fy(updatedData),
+    await ky.post(`https://auth.api.transcendence.fr/users/change-password/`, {
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+      json: { current_password: currentPassword, new_password: newPassword },
     })
-    if (response.ok) {
-      console.log('Profile updated successfully.')
-    }
-    else {
-      console.error('Failed to update profile:', response.statusText)
-    }
+  }
+  catch (error) {
+    console.error('Error changing password:', error)
+  }
+}
+
+function updateProfileFields() {
+  const usernameField = document.getElementById('username')
+  const emailField = document.getElementById('email')
+  const nicknameField = document.getElementById('nickname')
+  const avatarInput = document.getElementById('new-avatar')
+
+  const formData = new FormData()
+  formData.append('username', usernameField.value)
+  formData.append('email', emailField.value)
+  formData.append('nickname', nicknameField.value)
+  if (avatarInput.files.length > 0) {
+    formData.append('avatar', avatarInput.files[0])
+  }
+  return formData
+}
+
+async function updatePasswordField(client) {
+  const currentPassword = document.getElementById('current-password').value
+  const newPassword = document.getElementById('new-password').value
+  const confirmPassword = document.getElementById('confirm-new-password').value
+
+  if (newPassword && newPassword !== confirmPassword) {
+    document.getElementById('confirm-new-password').classList.add('is-invalid')
+    return false
+  }
+  if (currentPassword && newPassword) {
+    await changePassword(client, currentPassword, newPassword)
+  }
+  return true
+}
+
+export async function updateProfile(client) {
+  const formData = updateProfileFields(client)
+  try {
+    await ky.patch(`https://auth.api.transcendence.fr/users/${client.userId}/`, {
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+      body: formData,
+    })
   }
   catch (error) {
     console.error('Error updating profile:', error)
+  }
+  const passwordUpdated = await updatePasswordField(client)
+  if (passwordUpdated) {
+    client.router.redirect('/profile')
   }
 }
 
@@ -33,29 +85,13 @@ export async function deleteProfile(client) {
     return
 
   try {
-    const response = await fetch(`https://auth.api.transcendence.local/users/${client.userId}/`, {
-      method: 'DELETE',
+    await ky.delete(`https://auth.api.transcendence.fr/users/${client.userId}/`, {
       headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
     })
-    if (response.ok) {
-      console.log('Profile deleted successfully.')
-      // Redirige l'utilisateur après la suppression
-      client.router.redirect('/login')
-    }
-    else {
-      console.error('Failed to delete profile:', response.statusText)
-    }
+    client.router.redirect('/login')
   }
   catch (error) {
     console.error('Error deleting profile:', error)
   }
-}
-
-export function editProfile(client) {
-  const updatedData = {
-    username: prompt('Enter new username:'),
-    email: prompt('Enter new email:'),
-    nickname: prompt('Enter new nickname:'),
-  }
-  updateProfile(client, updatedData)
 }

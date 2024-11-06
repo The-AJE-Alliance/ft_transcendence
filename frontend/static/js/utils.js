@@ -1,5 +1,27 @@
 import ky from 'ky'
 
+export function validateEmailField(emailField) {
+  const emailFeedback = emailField.nextElementSibling
+
+  emailField.addEventListener('input', () => {
+    if (isValidEmail(emailField.value)) {
+      emailField.classList.add('is-valid')
+      emailField.classList.remove('is-invalid')
+      emailFeedback.style.display = 'none'
+    }
+    else {
+      emailField.classList.add('is-invalid')
+      emailField.classList.remove('is-valid')
+      emailFeedback.style.display = 'block'
+    }
+  })
+}
+
+export function isValidEmail(email) {
+  const emailPattern = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
+  return emailPattern.test(email)
+}
+
 function validatePasswordConfirmation(form) {
   const passwordInput = form.querySelector('#password')
   const confirmPasswordInput = form.querySelector('#confirm-password')
@@ -14,27 +36,14 @@ function validatePasswordConfirmation(form) {
       else {
         confirmPasswordInput.classList.remove('is-invalid')
         confirmPasswordInput.classList.add('is-valid')
+        confirmPasswordInput.nextElementSibling.textContent = ''
       }
     })
   }
 }
 
-function validateFormFields(form) {
-  form.querySelectorAll('.form-control').forEach((input) => {
-    input.addEventListener('input', () => {
-      if (input.checkValidity()) {
-        input.classList.remove('is-invalid')
-        input.classList.add('is-valid')
-      }
-      else {
-        input.classList.remove('is-valid')
-        input.classList.add('is-invalid')
-      }
-    })
-  })
-}
-
 async function submitForm({ form, actionUrl, processData, callback, client }) {
+  const errorAlert = document.getElementById('error-alert')
   const formData = new FormData(form)
   const body = processData ? processData(formData) : formData
   let result
@@ -45,8 +54,9 @@ async function submitForm({ form, actionUrl, processData, callback, client }) {
       credentials: 'include',
     }).json()
   }
-  catch {
-    // console.clear()
+  catch (error) {
+    console.error('Error during form submission:', error)
+    errorAlert.classList.remove('d-none')
   }
   finally {
     if (callback)
@@ -72,19 +82,11 @@ export function handleForm({ form, actionUrl, method, processData, callback, cli
     }
     if (enableValidation) {
       form.classList.add('was-validated')
-      if (!form.checkValidity()) {
-        console.log('Form is invalid.')
-        form.reportValidity()
-        return
-      }
     }
     await submitForm({ form, actionUrl, method, processData, callback, client })
   })
-  if (enableValidation) {
-    validateFormFields(form)
-    if (enablePasswordConfirmation)
-      validatePasswordConfirmation(form)
-  }
+  if (enablePasswordConfirmation)
+    validatePasswordConfirmation(form)
 }
 
 export function loadPageStyle(page) {

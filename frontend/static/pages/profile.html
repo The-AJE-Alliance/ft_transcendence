@@ -6,12 +6,21 @@
         <p><strong>Username:</strong> <span id="username"></span></p>
         <p><strong>Email:</strong> <span id="email"></span></p>
         <p><strong>Nickname:</strong> <span id="nickname"></span></p>
-        <p><strong>Status:</strong> <span id="status"></span></p>
+        <p><strong>Status:</strong> <span id="status" ></span></p>
       </div>
       <div id="profile-avatar">
         <p><strong>Avatar:</strong></p>
         <img id="avatar" src="" alt="Avatar" />
+        <input type="file" id="new-avatar" name="avatar" accept="image/*" class="d-none"><br>
       </div>
     </div>
+    <div class="mt-3" id="action-buttons">
+      <a href="/profile/edit" class="btn btn-primary">Edit Profile</a>
+      <a href="/profile/delete" class="btn btn-primary">Delete Profile</a>
+    </div>
+  </div>
+  <div id="friends-section" class="card mt-4">
+            <h2 class="mb-3">Friends</h2>
+            <ul id="friends-list" class="list-unstyled"></ul>
   </div>
 </div>

@@ -6,7 +6,7 @@ import profilePage from '../pages/profile.html?raw'
 import registerPage from '../pages/register.html?raw'
 import { getFriends } from './friends.js'
 import { updateNavbar } from './navbar.js'
-import { handleForm, loadPageStyle, processLoginData } from './utils.js'
+import { handleForm, loadPageStyle, processLoginData, validateEmailField } from './utils.js'
 import '../css/login.css'
 import '../css/profile.css'
 import '../css/register.css'
@@ -31,7 +31,13 @@ async function loginPostProcess(client, result) {
   if (result) {
     client.token = result.access
     await updateNavbar(client)
-    client.router.redirect('/')
+    if (client.redirectToFriends) {
+      client.router.redirect('/pong/remote/setup')
+      client.redirectToFriends = false
+    }
+    else {
+      client.router.redirect('/')
+    }
   }
   else {
     document.getElementById('username').value = ''
@@ -45,6 +51,8 @@ export async function register(client) {
   loadPageStyle('register')
   client.app.innerHTML = registerPage
   const form = document.getElementById('register-form')
+  const emailField = document.getElementById('email')
+  validateEmailField(emailField)
   await handleForm({
     form,
     actionUrl: 'https://auth.api.transcendence.fr/register/',
@@ -56,14 +64,15 @@ export async function register(client) {
 }
 
 async function registerPostProcess(client, result) {
-  const errorAlert = document.getElementById('error-alert')
   if (result) {
-    errorAlert.classList.add('d-none')
+    if (client.redirectToFriends) {
+      client.router.redirect('/pong/remote/setup')
+      client.redirectToFriends = true
+    }
     client.router.redirect('/login')
   }
   else {
     console.error('Registration failed:', result)
-    errorAlert.classList.remove('d-none')
   }
 }
 
@@ -102,10 +111,12 @@ export async function profile(client) {
 
 export async function getUserProfile(client) {
   try {
-    return await ky.get('https://auth.api.transcendence.fr/users/me/', {
+    const userProfile = await ky.get('https://auth.api.transcendence.fr/users/me/', {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
     }).json()
+    client.userId = userProfile.id
+    return userProfile
   }
   catch (error) {
     console.error('Error while trying to get user:', error)
