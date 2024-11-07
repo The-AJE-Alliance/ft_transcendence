@@ -15,6 +15,7 @@ init_db () {
   for app in "${apps[@]}"; do
     if [[ ${SERVICE_APPS[*]} =~ ${app} ]]; then
       docker --log-level ERROR compose run --rm vault-init "bash" "-c" "/vault/scripts/databases.sh $app"
+      docker --log-level ERROR compose run --rm vault-init "bash" "-c" "/vault/scripts/rabbitmq.sh $app"
     fi
   done
 }
@@ -29,6 +30,13 @@ db_isready() {
   return 1
 }
 
+rmq_isready() {
+  if docker logs rabbitmq |& grep -Pzl 'Time to start RabbitMQ'; then
+    return 0
+  fi
+  return 1
+}
+
 IFS=' ' read -r -a apps <<< "$1"
 
 for app in "${apps[@]}"; do
@@ -36,8 +44,9 @@ for app in "${apps[@]}"; do
 done
 
 docker --log-level ERROR compose up -d auth-db pong-db
+docker --log-level ERROR compose up -d rabbitmq
 
-until db_isready auth-db &> /dev/null && db_isready pong-db &>/dev/null; do
+until db_isready auth-db &> /dev/null && db_isready pong-db &>/dev/null && rmq_isready &>/dev/null; do
   true
 done
 

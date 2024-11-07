@@ -2,11 +2,11 @@ import pongPage from '../pages/pong.html?raw'
 import '../css/pong.css'
 
 export async function pong(client, options = {}) {
-  const { mode, host, opponentId } = options;
+  const { mode, host, room_id } = options
 
   client.app.innerHTML = pongPage
 
-  client.socket = new WebSocket('wss://pong.api.transcendence.fr/ws/')
+  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?mode=${mode}&host=${host}&room_id=${room_id}`)
 
   const canvas = document.getElementById('pongCanvas')
   if (!canvas) {
@@ -21,12 +21,12 @@ export async function pong(client, options = {}) {
   client.socket.onopen = () => {
     console.log('WebSocket connected.')
     const initMessage = JSON.stringify({
-      type: "init_game",
+      type: 'init_game',
       mode: options.mode,
       host: options.host,
       opponentId: options.opponentId,
-    });
-    client.socket.send(initMessage);
+    })
+    client.socket.send(initMessage)
   }
 
   client.router.addEvent(document, 'keyup', async (event) => {
@@ -109,7 +109,7 @@ async function handleKeyPress(event, socket) {
     return
 
   console.log(`Key pressed: ${event.key}`)
-  let type = 'move'
+  const type = 'move'
   let action = ''
   let player = 0
 

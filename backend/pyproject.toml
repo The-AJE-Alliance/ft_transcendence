@@ -18,6 +18,7 @@ pillow = "^10.4.0"
 requests = "^2.32.3"
 django-cors-headers = "^4.5.0"
 channels = "^4.1.0"
+aio-pika = "^9.4.3"
 
 
 [tool.poetry.group.dev.dependencies]

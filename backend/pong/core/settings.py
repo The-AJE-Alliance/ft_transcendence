@@ -100,6 +100,17 @@ CREDS = VaultCredentialProvider(
     DEBUG,
 )
 
+RMQ_CREDS = VaultCredentialProvider(
+    os.getenv("VAULT_ADDR"),
+    VAULT,
+    "rabbitmq/creds/pong",
+    os.getenv("VAULT_CACERT", None),
+    True,
+    DEBUG,
+)
+
+RMQ_ADDR = f"amqp://{RMQ_CREDS.username}:{RMQ_CREDS.password}@{os.getenv("RMQ_ADDR")}"
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 

@@ -1,12 +1,18 @@
+import json
 import logging
 import asyncio
 import random
+
+import aio_pika
+from aio_pika import ExchangeType
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
 
 class PongGame:
-    def __init__(self):
+    def __init__(self, room_id):
+        self.room_id = room_id
         self.ball = self.Ball()
         self.ball_velocity = self.ball.randomize_velocity()
         self.player1 = self.Pad(True)
@@ -16,8 +22,60 @@ class PongGame:
         self.width = 1.0
         self.height = 1.0
         self.scored = False
+        self.connection = None
+        self.channel = None
+        self.exchange = None
+        self.queue = None
+        self.task = None
 
-    def update_player_position(self, player, action):
+    async def start(self):
+        try:
+            self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
+            self.channel = await self.connection.channel()
+            self.exchange = await self.channel.declare_exchange(
+                f"pong-{self.room_id}", ExchangeType.DIRECT, auto_delete=True
+            )
+            self.queue = await self.channel.declare_queue(auto_delete=True)
+            await self.queue.bind(self.exchange, "loop")
+            await self.consume_paddle_movement()
+            self.task = asyncio.create_task(self.game_loop())
+        except Exception as e:
+            logger.error(f"{str(e)}")
+
+    async def game_loop(self):
+        while True:
+            try:
+                self.update_ball_position()
+                await self.publish_game_state()
+                if self.scored:
+                    await asyncio.sleep(1)
+                    self.scored = False
+                await asyncio.sleep(1 / 60)
+            except Exception as e:
+                logger.error(f"{str(e)}")
+                break
+
+    async def publish_game_state(self):
+        game_state = {
+            "player1": self.player1.__dict__,
+            "player2": self.player2.__dict__,
+            "ball": self.ball.__dict__,
+            "player1_score": self.player1_score,
+            "player2_score": self.player2_score,
+        }
+
+        await self.exchange.publish(
+            aio_pika.Message(json.dumps(game_state).encode()), routing_key="players"
+        )
+
+    async def consume_paddle_movement(self):
+        async with self.queue.iterator() as iterator:
+            async for message in iterator:
+                async with message.process():
+                    self.update_player_position(message.decode())
+
+    def update_player_position(self, message):
+        player, action = json.loads(message)
         pad = self.player1 if player == 1 else self.player2
         step = pad.step if action == "move_down" else -pad.step
         pad.y = min(max(pad.y + step, 0), 1 - pad.height)
@@ -55,7 +113,10 @@ class PongGame:
         # ) and self.player1_position <= self.ball.y <= (
         #     self.player1_position + (self.player_height / self.height)
         # )
-        collision_player1 = self.ball.x <= self.player1.width and self.player1.y <= self.ball.y <= self.player1.y + self.player1.height
+        collision_player1 = (
+            self.ball.x <= self.player1.width
+            and self.player1.y <= self.ball.y <= self.player1.y + self.player1.height
+        )
         if collision_player1:
             return False, True, True, False
 
@@ -64,7 +125,10 @@ class PongGame:
         # ) and self.player2_position <= self.ball.y <= (
         #     self.player2_position + (self.player_height / self.height)
         # )
-        collision_player2 = self.ball.x >= 1 - self.player2.width and self.player2.y <= self.ball.y <= self.player2.y + self.player2.height
+        collision_player2 = (
+            self.ball.x >= 1 - self.player2.width
+            and self.player2.y <= self.ball.y <= self.player2.y + self.player2.height
+        )
         if collision_player2:
             return False, True, False, True
 
@@ -105,13 +169,19 @@ class PongGame:
         self.player1.reset()
         self.player2.reset()
         self.ball_velocity = self.ball.randomize_velocity()
-    
+
     class Pad:
         def __init__(self, left, width=0.02, height=0.2, color="white"):
             self.left = left
             self.color = color
+            self.width = width
+            self.height = height
+            self.x = None
+            self.y = None
+            self.step = None
+            self.move = None
             self.reset(width=width, height=height)
-        
+
         def reset(self, width=0.02, height=0.2):
             self.width = width
             self.height = height
@@ -119,10 +189,12 @@ class PongGame:
             self.y = 0.4
             self.step = 0.08
             self.move = 0
-        
+
     class Ball:
         def __init__(self, x=0.5, radius=0.022, color="white"):
             self.x = x
+            self.y = None
+            self.radius = radius
             self.color = color
             self.reset(radius=radius)
 
@@ -141,4 +213,3 @@ class PongGame:
             if random.randint(0, 1):
                 velocity[1] *= -1
             return velocity
-
