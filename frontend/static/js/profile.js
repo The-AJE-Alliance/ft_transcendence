@@ -1,8 +1,26 @@
 import ky from 'ky'
 import editProfilePage from '../pages/edit-profile.html?raw'
 import { getUserProfile } from './auth.js'
-import { validateEmailField } from './utils.js'
+import { handleForm, validateEmailField, validatePasswordConfirmation } from './utils.js'
 import '../css/edit-profile.css'
+
+function validateFormFields() {
+  const currentPasswordField = document.getElementById('current-password')
+  const newPasswordField = document.getElementById('new-password')
+  const confirmPasswordField = document.getElementById('confirm-new-password')
+
+  if (!currentPasswordField.value || !newPasswordField.value || !confirmPasswordField.value) {
+    showAlert('Please fill in all fields.')
+    return false
+  }
+  return true
+}
+
+function showAlert(message) {
+  const errorAlert = document.getElementById('error-alert')
+  errorAlert.textContent = message
+  errorAlert.classList.remove('d-none')
+}
 
 export async function editProfile(client) {
   client.app.innerHTML = editProfilePage
@@ -12,23 +30,50 @@ export async function editProfile(client) {
     document.getElementById('username').value = user.username
     document.getElementById('email').value = user.email
     document.getElementById('nickname').value = user.nickname
-    document.getElementById('status').textContent = user.is_online ? 'Online' : 'Offline'
   }
   const emailField = document.getElementById('email')
   validateEmailField(emailField)
+
+  const passwordForm = document.getElementById('change-password-form')
+  validatePasswordConfirmation(passwordForm)
+  passwordForm.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    if (validateFormFields())
+      await changePassword(client)
+  })
 }
 
-async function changePassword(client, currentPassword, newPassword) {
+export async function changePassword(client) {
+  const currentPassword = document.getElementById('current-password').value
+  const newPassword = document.getElementById('new-password').value
   try {
     await ky.post(`https://auth.api.transcendence.fr/users/change-password/`, {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
       json: { current_password: currentPassword, new_password: newPassword },
     })
+    client.router.redirect('/profile')
   }
   catch (error) {
     console.error('Error changing password:', error)
+    showAlert('An error occurred. Please try again.')
   }
+}
+
+export function handlePasswordForm(client) {
+  const form = document.getElementById('change-password-form')
+  handleForm({
+    form,
+    actionUrl: 'https://auth.api.transcendence.fr/users/change-password/',
+    client,
+    enablePasswordConfirmation: true,
+    callback: async (client, result) => {
+      if (result) {
+        console.log('Password changed successfully')
+        client.router.redirect('/profile')
+      }
+    },
+  })
 }
 
 function updateProfileFields() {
@@ -47,23 +92,10 @@ function updateProfileFields() {
   return formData
 }
 
-async function updatePasswordField(client) {
-  const currentPassword = document.getElementById('current-password').value
-  const newPassword = document.getElementById('new-password').value
-  const confirmPassword = document.getElementById('confirm-new-password').value
-
-  if (newPassword && newPassword !== confirmPassword) {
-    document.getElementById('confirm-new-password').classList.add('is-invalid')
-    return false
-  }
-  if (currentPassword && newPassword) {
-    await changePassword(client, currentPassword, newPassword)
-  }
-  return true
-}
-
 export async function updateProfile(client) {
-  const formData = updateProfileFields(client)
+  const errorAlert = document.getElementById('edit-alert')
+  const formData = updateProfileFields()
+
   try {
     await ky.patch(`https://auth.api.transcendence.fr/users/${client.userId}/`, {
       headers: { Authorization: `Bearer ${client.token}` },
@@ -72,12 +104,10 @@ export async function updateProfile(client) {
     })
   }
   catch (error) {
+    errorAlert.classList.remove('d-none')
     console.error('Error updating profile:', error)
   }
-  const passwordUpdated = await updatePasswordField(client)
-  if (passwordUpdated) {
-    client.router.redirect('/profile')
-  }
+  client.router.redirect('/profile')
 }
 
 export async function deleteProfile(client) {

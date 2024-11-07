@@ -22,7 +22,7 @@ export function isValidEmail(email) {
   return emailPattern.test(email)
 }
 
-function validatePasswordConfirmation(form) {
+export function validateRegistrationPasswordConfirmation(form) {
   const passwordInput = form.querySelector('#password')
   const confirmPasswordInput = form.querySelector('#confirm-password')
 
@@ -42,6 +42,26 @@ function validatePasswordConfirmation(form) {
   }
 }
 
+export function validatePasswordConfirmation(form) {
+  const passwordChange = form.querySelector('#new-password')
+  const confirmPasswordChange = form.querySelector('#confirm-new-password')
+
+  if (passwordChange && confirmPasswordChange) {
+    confirmPasswordChange.addEventListener('input', () => {
+      if (passwordChange.value !== confirmPasswordChange.value) {
+        confirmPasswordChange.classList.remove('is-valid')
+        confirmPasswordChange.classList.add('is-invalid')
+        confirmPasswordChange.nextElementSibling.textContent = 'Passwords do not match.'
+      }
+      else {
+        confirmPasswordChange.classList.remove('is-invalid')
+        confirmPasswordChange.classList.add('is-valid')
+        confirmPasswordChange.nextElementSibling.textContent = ''
+      }
+    })
+  }
+}
+
 async function submitForm({ form, actionUrl, processData, callback, client }) {
   const errorAlert = document.getElementById('error-alert')
   const formData = new FormData(form)
@@ -56,7 +76,8 @@ async function submitForm({ form, actionUrl, processData, callback, client }) {
   }
   catch (error) {
     console.error('Error during form submission:', error)
-    errorAlert.classList.remove('d-none')
+    if (errorAlert)
+      errorAlert.classList.remove('d-none')
   }
   finally {
     if (callback)
@@ -85,8 +106,6 @@ export function handleForm({ form, actionUrl, method, processData, callback, cli
     }
     await submitForm({ form, actionUrl, method, processData, callback, client })
   })
-  if (enablePasswordConfirmation)
-    validatePasswordConfirmation(form)
 }
 
 export function loadPageStyle(page) {

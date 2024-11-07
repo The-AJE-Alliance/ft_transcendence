@@ -5,7 +5,7 @@ import Client from './client.js'
 import { updateNavbar } from './navbar.js'
 import { pong } from './pong.js'
 import { choosePongMode, remotePong, remoteSetup } from './pong-setup.js'
-import { deleteProfile, editProfile, updateProfile } from './profile.js'
+import { deleteProfile, editProfile, handlePasswordForm, updateProfile } from './profile.js'
 import Router from './router.js'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
@@ -47,3 +47,4 @@ router.get('/pong/remote/:id', (client, params) => pong(client, { mode: 'remote'
 router.get('/profile/edit', editProfile)
 router.get('/profile/delete', deleteProfile)
 router.get('/profile/update', updateProfile)
+router.get('/profile/change-password', handlePasswordForm)

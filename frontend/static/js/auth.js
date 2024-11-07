@@ -6,7 +6,13 @@ import profilePage from '../pages/profile.html?raw'
 import registerPage from '../pages/register.html?raw'
 import { getFriends } from './friends.js'
 import { updateNavbar } from './navbar.js'
-import { handleForm, loadPageStyle, processLoginData, validateEmailField } from './utils.js'
+import {
+  handleForm,
+  loadPageStyle,
+  processLoginData,
+  validateEmailField,
+  validateRegistrationPasswordConfirmation,
+} from './utils.js'
 import '../css/login.css'
 import '../css/profile.css'
 import '../css/register.css'
@@ -51,6 +57,7 @@ export async function register(client) {
   loadPageStyle('register')
   client.app.innerHTML = registerPage
   const form = document.getElementById('register-form')
+  validateRegistrationPasswordConfirmation(form)
   const emailField = document.getElementById('email')
   validateEmailField(emailField)
   await handleForm({
