@@ -111,35 +111,26 @@ class PongGame:
             self.ball.x -= 0.005
 
     def check_collisions(self):
-        collision_player1 = (
-            self.ball.x <= self.player1.width
+        if (
+            self.ball.x - self.ball.radius <= self.player1.width
             and self.player1.y <= self.ball.y <= self.player1.y + self.player1.height
-        )
-        if collision_player1:
+        ):
             return False, True, True, False
 
-        collision_player2 = (
-            self.ball.x >= 1 - self.player2.width
+        elif (
+            self.ball.x + self.ball.radius >= 1 - self.player2.width
             and self.player2.y <= self.ball.y <= self.player2.y + self.player2.height
-        )
-        if collision_player2:
+        ):
             return False, True, False, True
-
         # check collisions with walls
-        # upper wall ( y = 0 )
-        if self.ball.y <= 0:
+        # upper wall ( y = 0 ) and lower wall ( y = 1 )
+        if self.ball.y - self.ball.radius <= 0 or self.ball.y + self.ball.radius >= 1:
             return True, False, False, False
-
-        # lower wall ( y = 1 )
-        elif self.ball.y >= 1:
-            return True, False, False, False
-
         # left wall
-        if self.ball.x <= 0:
+        if self.ball.x - self.ball.radius <= 0:
             return True, False, True, False
-
         # right wall
-        elif self.ball.x >= 1:
+        elif self.ball.x + self.ball.radius >= 1:
             return True, False, False, True
 
         return False, False, False, False
