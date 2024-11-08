@@ -96,8 +96,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "core.asgi.application"
-
+# WSGI_APPLICATION = "core.asgi.application"
+# Daphne
+ASGI_APPLICATION = "core.asgi.application"
 
 VAULT = VaultAuth12Factor.fromenv()
 CREDS = VaultCredentialProvider(
