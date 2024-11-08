@@ -20,13 +20,6 @@ export async function pong(client, options = {}) {
 
   client.socket.onopen = () => {
     console.log('WebSocket connected.')
-    const initMessage = JSON.stringify({
-      type: 'init_game',
-      mode: options.mode,
-      host: options.host,
-      opponentId: options.opponentId,
-    })
-    client.socket.send(initMessage)
   }
 
   client.router.addEvent(document, 'keyup', async (event) => {
@@ -109,7 +102,7 @@ async function handleKeyPress(event, socket) {
     return
 
   console.log(`Key pressed: ${event.key}`)
-  const type = 'move'
+  // const type = 'move'
   let action = ''
   let player = 0
 
@@ -136,7 +129,6 @@ async function handleKeyPress(event, socket) {
 
   // event.preventDefault()
   const data = {
-    type,
     player,
     action,
   }

@@ -40,8 +40,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
         await self.queue_handler.start()
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        await self.queue_handler.publish_paddle_movement(data)
+        await self.queue_handler.publish_paddle_movement(text_data)
 
     # async def send_game_state(self):
     #     game_state = {

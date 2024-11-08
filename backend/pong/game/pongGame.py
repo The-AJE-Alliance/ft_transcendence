@@ -14,7 +14,6 @@ class PongGame:
     def __init__(self, room_id):
         self.room_id = room_id
         self.ball = self.Ball()
-        self.ball_velocity = self.ball.randomize_velocity()
         self.player1 = self.Pad(True)
         self.player2 = self.Pad(False)
         self.player1_score = 0
@@ -37,15 +36,15 @@ class PongGame:
             )
             self.queue = await self.channel.declare_queue(auto_delete=True)
             await self.queue.bind(self.exchange, "loop")
-            await self.consume_paddle_movement()
             self.task = asyncio.create_task(self.game_loop())
+            await self.consume_paddle_movement()
         except Exception as e:
             logger.error(f"{str(e)}")
 
     async def game_loop(self):
         while True:
             try:
-                self.update_ball_position()
+                await self.update_ball_position()
                 await self.publish_game_state()
                 if self.scored:
                     await asyncio.sleep(1)
@@ -54,6 +53,10 @@ class PongGame:
             except Exception as e:
                 logger.error(f"{str(e)}")
                 break
+
+    async def stop(self):
+        self.task.cancel()
+        await self.connection.close()
 
     async def publish_game_state(self):
         game_state = {
@@ -72,47 +75,42 @@ class PongGame:
         async with self.queue.iterator() as iterator:
             async for message in iterator:
                 async with message.process():
-                    self.update_player_position(message.decode())
+                    self.update_player_position(message.body.decode())
 
     def update_player_position(self, message):
-        player, action = json.loads(message)
+        data = json.loads(message)
+        player, action = data["player"], data["action"]
         pad = self.player1 if player == 1 else self.player2
         step = pad.step if action == "move_down" else -pad.step
         pad.y = min(max(pad.y + step, 0), 1 - pad.height)
 
-    def update_ball_position(self):
-        self.ball.x += self.ball_velocity[0]
-        self.ball.y += self.ball_velocity[1]
+    async def update_ball_position(self):
+        self.ball.x += self.ball.velocity[0]
+        self.ball.y += self.ball.velocity[1]
 
         wall, player, player1, player2 = self.check_collisions()
         if not wall and not player:
             return
 
-        self.update_score(wall, player, player1, player2)
+        await self.update_score(wall, player, player1, player2)
 
-        self.revert_ball_direction(wall, player, player1, player2)
+        await self.revert_ball_direction(wall, player, player1, player2)
 
-    def revert_ball_direction(self, wall, player, player1, player2):
+    async def revert_ball_direction(self, wall, player, player1, player2):
         if not player1 and not player2:
-            self.ball_velocity[1] *= -1
+            self.ball.velocity[1] *= -1
             if self.ball.y < 0.5:
                 self.ball.y += 0.005
             else:
                 self.ball.y -= 0.005
         elif player1:
-            self.ball_velocity[0] *= -1
+            self.ball.velocity[0] *= -1
             self.ball.x += 0.005
         elif player2:
-            self.ball_velocity[0] *= -1
+            self.ball.velocity[0] *= -1
             self.ball.x -= 0.005
 
     def check_collisions(self):
-        # check collisions with players
-        # collision_player1 = self.ball.x <= (
-        #     self.player_width / self.width
-        # ) and self.player1_position <= self.ball.y <= (
-        #     self.player1_position + (self.player_height / self.height)
-        # )
         collision_player1 = (
             self.ball.x <= self.player1.width
             and self.player1.y <= self.ball.y <= self.player1.y + self.player1.height
@@ -120,11 +118,6 @@ class PongGame:
         if collision_player1:
             return False, True, True, False
 
-        # collision_player2 = self.ball.x >= (
-        #     1 - self.player_width / self.width
-        # ) and self.player2_position <= self.ball.y <= (
-        #     self.player2_position + (self.player_height / self.height)
-        # )
         collision_player2 = (
             self.ball.x >= 1 - self.player2.width
             and self.player2.y <= self.ball.y <= self.player2.y + self.player2.height
@@ -151,24 +144,24 @@ class PongGame:
 
         return False, False, False, False
 
-    def update_score(self, wall, player, player1, player2):
+    async def update_score(self, wall, player, player1, player2):
         # if collision with wall on player1 side
         if wall and player1:
             self.player2_score += 1
             self.scored = True
-            self.reset_game()
+            await self.reset_game()
 
         # if collision with wall on player2 side
         elif wall and player2:
             self.player1_score += 1
             self.scored = True
-            self.reset_game()
+            await self.reset_game()
 
-    def reset_game(self):
+    async def reset_game(self):
         self.ball.reset()
         self.player1.reset()
         self.player2.reset()
-        self.ball_velocity = self.ball.randomize_velocity()
+        await self.queue.purge()
 
     class Pad:
         def __init__(self, left, width=0.02, height=0.2, color="white"):
@@ -187,7 +180,7 @@ class PongGame:
             self.height = height
             self.x = 0 if self.left else 1 - self.width
             self.y = 0.4
-            self.step = 0.08
+            self.step = 0.10
             self.move = 0
 
     class Ball:
@@ -196,16 +189,18 @@ class PongGame:
             self.y = None
             self.radius = radius
             self.color = color
+            self.velocity = None
             self.reset(radius=radius)
 
         def reset(self, x=0.5, radius=0.022):
             self.x = x
             self.y = random.uniform(0.2, 0.8)
             self.radius = radius
+            self.velocity = self.randomize_velocity()
 
         def randomize_velocity(self):
-            speed_x = random.uniform(0.01, 0.015)
-            speed_y = random.uniform(0.01, 0.015)
+            speed_x = random.uniform(0.01, 0.013)
+            speed_y = random.uniform(0.01, 0.013)
 
             velocity = [speed_x, speed_y]
             if random.randint(0, 1):

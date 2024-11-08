@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 
+
 from aio_pika import ExchangeType
 from django.conf import settings
 
@@ -41,15 +42,13 @@ class QueueHandler:
             async with self.queue.iterator() as iterator:
                 async for message in iterator:
                     async with message.process():
-                        await self.websocket.send(
-                            text_data=json.dumps(message.body.decode())
-                        )
+                        await self.websocket.send(text_data=(message.body.decode()))
         except Exception as e:
             logger.error(f"{str(e)}")
 
     async def publish_paddle_movement(self, data):
         await self.exchange.publish(
-            aio_pika.Message(body=json.dumps(data).encode()), routing_key="loop"
+            aio_pika.Message(body=data.encode()), routing_key="loop"
         )
 
     async def stop(self):
