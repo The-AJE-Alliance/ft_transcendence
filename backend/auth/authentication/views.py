@@ -102,10 +102,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action in ["update", "destroy", "partial_update", "retrieve"]:
-            logger.info("Entered case IsOwner")
             permission_classes = [IsOwner]
         else:
-            logger.info("Entered case IsAuthenticated")
             permission_classes = self.permission_classes
         return [permission() for permission in permission_classes]
 
