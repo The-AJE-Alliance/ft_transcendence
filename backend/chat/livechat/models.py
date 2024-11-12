@@ -21,11 +21,14 @@ class User(AbstractUser, PermissionsMixin):
 
     objects = UserManager()
 
+    class Meta:
+        ordering = ["created"]
+
     def __str__(self):
         return self.username
 
 
-class Conversations(models.Model):
+class Conversation(models.Model):
     user1 = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="conversations_as_user1",
@@ -47,6 +50,7 @@ class Conversations(models.Model):
 
     class Meta:
         unique_together = ("user1", "user2")
+        ordering = ["created"]
 
     def save(self, *args, **kwargs):
         if self.user1 > self.user2:
@@ -62,6 +66,9 @@ class Message(models.Model):
         on_delete=models.CASCADE,
     )
     messageContent = models.CharField(
-        max_length=2000, unique=False, blank=False, null=False
+        max_length=20000, unique=False, blank=False, null=False
     )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created"]
