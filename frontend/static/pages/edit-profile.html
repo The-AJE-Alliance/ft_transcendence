@@ -1,27 +1,28 @@
-<div class="container mt-5 text-center">
-  <h1 class="mb-4">Edit Profile</h1>
-  <div id="edit-alert" class="alert alert-danger d-none" role="alert">This user already exists. Please try again.</div>
-  <!-- Section de mise à jour du profil -->
+<div class="container-edit-profile">
   <div id="edit-card" class="card mb-4">
     <div class="edit-content">
       <div class="edit-info">
-        <div class="mb-3 text-start">
+         <h1 class="mb-4">Edit Profile</h1>
+        <div class="mb-3-edit-profile text-start">
           <label for="username"><strong>Username:</strong></label>
           <input type="text" id="username"><br>
+          <div class="invalid-feedback" id="username-feedback">This username is already used.</div>
         </div>
-        <div class="mb-3 text-start">
+        <div class="mb-3-edit-profile text-start">
           <label for="email"><strong>Email:</strong></label>
           <input type="email" id="email" class="edit-control"><br>
-          <div class="invalid-feedback">Please enter a valid email address.</div>
+          <div class="invalid-feedback" id="email-format-feedback">Please enter a valid email address.</div>
+          <div class="invalid-feedback" id="email-exists-feedback" style="display: none;">This email is already used.</div>
         </div>
-        <div class="mb-3 text-start">
+        <div class="mb-3-edit-profile text-start">
           <label for="nickname"><strong>Nickname:</strong></label>
           <input type="text" id="nickname"><br>
         </div>
-        <div id="edit-avatar">
-        <p><strong>Avatar:</strong></p>
-        <input type="file" id="new-avatar" name="avatar" accept="image/*"><br>
+         <div class="mb-3-edit-profile text-start">
+        <label for="new-avatar"><strong>Avatar:</strong></label>
+        <input type="file" id="new-avatar" class="edit-control" accept="image/*"><br>
         </div>
+        <div id="edit-alert" class="alert alert-danger d-none" role="alert"></div>
         <a href="/profile/update" id="save-profile-info-link" class="btn btn-primary">Save Profile Info</a>
       </div>
     </div>
@@ -33,25 +34,21 @@
       <div class="edit-info">
         <h2 class="mt-4">Change Password</h2>
         <form id="change-password-form">
-          <div id="error-alert" class="alert alert-danger d-none" role="alert">
-            An error occurred. Please try again.
-          </div>
-          <div class="mb-3 text-start">
+          <div id="error-alert" class="alert alert-danger d-none" role="alert"></div>
+          <div class="mb-3-edit-profile text-start">
             <label for="current-password"><strong>Current Password:</strong></label>
             <input type="password" id="current-password" class="edit-control" placeholder="Enter current password">
-            <div class="invalid-feedback">Incorrect current password.</div>
           </div>
-          <div class="mb-3 text-start">
+          <div class="mb-3-edit-profile text-start">
             <label for="new-password"><strong>New Password:</strong></label>
             <input type="password" id="new-password" class="edit-control" placeholder="Enter new password">
-            <div class="invalid-feedback">Please enter a new password.</div>
           </div>
-          <div class="mb-3 text-start">
+          <div class="mb-3-edit-profile text-start">
             <label for="confirm-new-password"><strong>Confirm New Password:</strong></label>
             <input type="password" id="confirm-new-password" class="edit-control" placeholder="Confirm new password">
-            <div id="password-mismatch-error" class="invalid-feedback">Passwords do not match.</div>
+            <div class="invalid-feedback">Passwords do not match.</div>
           </div>
-          <button type="submit" class="btn btn-primary">Change Password</button>
+          <button type="submit" id="save-password" class="btn btn-primary">Change Password</button>
         </form>
       </div>
     </div>

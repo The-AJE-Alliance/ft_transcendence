@@ -1,6 +1,5 @@
-<div class="container mt-5 text-center">
+<div class="container-register">
   <h1 class="mb-4">Create an Account</h1>
-  <div id="error-alert" class="alert alert-danger d-none" role="alert">This user already exist. Please try again.</div>
   <div class="card p-4 mx-auto" style="max-width: 500px; background-color: #1a1a1a; border: 1px solid #00cc99">
     <form id="register-form" class="needs-validation" novalidate>
       <div class="mb-3 text-start">
@@ -13,12 +12,14 @@
           placeholder="Enter your username"
           required
         />
-        <div class="invalid-feedback">Please enter a valid username.</div>
+        <div class="invalid-feedback" id="username-exists">Please enter a username.</div>
+        <div class="invalid-feedback" id="username-feedback">This username is already used.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="email" class="form-label">Email:</label>
         <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required />
-        <div class="invalid-feedback">Please enter a valid email address.</div>
+        <div class="invalid-feedback" id="email-format-feedback">Please enter a valid email address.</div>
+        <div class="invalid-feedback" id="email-exists-feedback">This email is already used.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="password" class="form-label">Password:</label>
@@ -58,7 +59,7 @@
       </div>
       <div class="mb-3 text-start">
         <label for="avatar" class="form-label">Avatar:</label>
-        <input type="file" class="form-control" id="avatar" name="avatar" />
+        <input type="file" id="avatar" name="avatar" />
       </div>
       <div class="d-grid">
         <button type="submit" class="btn">Register</button>

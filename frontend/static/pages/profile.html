@@ -16,11 +16,29 @@
     </div>
     <div class="mt-3" id="action-buttons">
       <a href="/profile/edit" class="btn btn-primary">Edit Profile</a>
-      <a href="/profile/delete" class="btn btn-primary">Delete Profile</a>
+      <button class="btn btn-danger" id="deleteProfileButton" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">Delete Profile</button>
     </div>
   </div>
   <div id="friends-section" class="card mt-4">
             <h2 class="mb-3">Friends</h2>
             <ul id="friends-list" class="list-unstyled"></ul>
+  </div>
+  <!-- Modal de confirmation de suppression -->
+  <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content" id="custom-modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Delete Profile</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to delete your profile? This action cannot be undone.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

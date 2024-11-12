@@ -58,3 +58,12 @@ h2 {
   font-size: 1rem;
   margin-bottom: 5px;
 }
+
+#custom-modal-content {
+  background-color: #1a1a1a;
+  color: #00cc99;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.8);
+}

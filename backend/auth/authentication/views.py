@@ -106,7 +106,7 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes = [IsOwner]
         else:
             logger.info("Entered case IsAuthenticated")
-            permission_classes = [IsAuthenticated]
+            permission_classes = self.permission_classes
         return [permission() for permission in permission_classes]
 
     @action(
@@ -170,15 +170,10 @@ class UserViewSet(viewsets.ModelViewSet):
                 {"detail": "Friend request not found or already accepted"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        # Accept the friend request
         friend_request.status = "accepted"
         friend_request.save()
-
-        # Add each other as friends
         request.user.friends.add(friend_request.from_user)
         friend_request.from_user.friends.add(request.user)
-
         return Response(
             {"detail": "Friend request accepted"}, status=status.HTTP_200_OK
         )
@@ -208,6 +203,36 @@ class UserViewSet(viewsets.ModelViewSet):
         friends = user.friends.all()
         serializer = self.get_serializer(friends, many=True)
         return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[AllowAny],
+        authentication_classes=[],
+        url_path="check-email",
+    )
+    def check_email(self, request):
+        email = request.query_params.get("email")
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {"error": "Email already exists"}, status=status.HTTP_409_CONFLICT
+            )
+        return Response({"message": "Email is available"}, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[AllowAny],
+        authentication_classes=[],
+        url_path="check-username",
+    )
+    def check_username(self, request):
+        username = request.query_params.get("username")
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {"error": "Username already exists"}, status=status.HTTP_409_CONFLICT
+            )
+        return Response({"message": "Username is available"}, status=status.HTTP_200_OK)
 
     @action(
         detail=False,

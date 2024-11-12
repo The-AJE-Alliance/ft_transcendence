@@ -1,4 +1,3 @@
-// Importez cette fonction dans votre fichier principal pour l'utiliser avec client
 export async function updateNavbar(client) {
   const signInLink = document.getElementById('sign-in-link')
   const profileLink = document.getElementById('profile-link')

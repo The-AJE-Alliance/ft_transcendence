@@ -6,11 +6,13 @@ import profilePage from '../pages/profile.html?raw'
 import registerPage from '../pages/register.html?raw'
 import { getFriends } from './friends.js'
 import { updateNavbar } from './navbar.js'
+import { setupDeleteProfileButton } from './profile.js'
 import {
   handleForm,
   loadPageStyle,
   processLoginData,
-  validateEmailField,
+  setupRegisterEmailValidation,
+  setupRegisterUsernameValidation,
   validateRegistrationPasswordConfirmation,
 } from './utils.js'
 import '../css/login.css'
@@ -59,7 +61,10 @@ export async function register(client) {
   const form = document.getElementById('register-form')
   validateRegistrationPasswordConfirmation(form)
   const emailField = document.getElementById('email')
-  validateEmailField(emailField)
+  const usernameField = document.getElementById('username')
+  // validateEmailField(emailField, true)
+  setupRegisterEmailValidation(client, emailField)
+  setupRegisterUsernameValidation(client, usernameField)
   await handleForm({
     form,
     actionUrl: 'https://auth.api.transcendence.fr/register/',
@@ -114,6 +119,7 @@ export async function profile(client) {
       }
     }
   }
+  setupDeleteProfileButton(client)
 }
 
 export async function getUserProfile(client) {
