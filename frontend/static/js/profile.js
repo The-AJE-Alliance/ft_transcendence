@@ -1,61 +1,83 @@
-export function initializeProfilePage(client) {
-  const editButton = document.getElementById('edit-profile-btn')
-  const deleteButton = document.getElementById('delete-profile-btn')
+import ky from 'ky'
+import profilePage from '../pages/profile.html?raw'
+import { getFriends } from './friends.js'
+import { updateNavbar } from './navbar.js'
+import { loadPageStyle } from './utils.js'
+import '../css/edit-profile.css'
 
-  editButton.addEventListener('click', () => editProfile(client))
-  deleteButton.addEventListener('click', () => deleteProfile(client))
-}
-
-export async function updateProfile(client, updatedData) {
-  try {
-    const response = await fetch(`https://auth.api.transcendence.local/users/${client.userId}/`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${client.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringigit fy(updatedData),
+function setupDeleteProfileButton(client) {
+  const confirmDeleteButton = document.getElementById('confirmDelete')
+  if (confirmDeleteButton) {
+    confirmDeleteButton.addEventListener('click', async () => {
+      try {
+        await ky.delete(`https://auth.api.transcendence.fr/users/${client.userId}/`, {
+          headers: { Authorization: `Bearer ${client.token}` },
+          credentials: 'include',
+        })
+        const deleteConfirmModal = document.getElementById('deleteConfirmModal')
+        if (deleteConfirmModal) {
+          deleteConfirmModal.classList.remove('show')
+          deleteConfirmModal.style.display = 'none'
+          document.body.classList.remove('modal-open')
+          const modalBackdrop = document.querySelector('.modal-backdrop')
+          if (modalBackdrop) {
+            modalBackdrop.remove()
+          }
+        }
+        client.router.redirect('/')
+      }
+      catch (error) {
+        console.error('Erreur lors de la suppression du profil :', error)
+      }
     })
-    if (response.ok) {
-      console.log('Profile updated successfully.')
-    }
-    else {
-      console.error('Failed to update profile:', response.statusText)
-    }
-  }
-  catch (error) {
-    console.error('Error updating profile:', error)
   }
 }
 
-export async function deleteProfile(client) {
-  if (!confirm('Are you sure you want to delete your profile? This action cannot be undone.'))
-    return
-
+export async function getUserProfile(client) {
   try {
-    const response = await fetch(`https://auth.api.transcendence.local/users/${client.userId}/`, {
-      method: 'DELETE',
+    const userProfile = await ky.get('https://auth.api.transcendence.fr/users/me/', {
       headers: { Authorization: `Bearer ${client.token}` },
-    })
-    if (response.ok) {
-      console.log('Profile deleted successfully.')
-      // Redirige l'utilisateur après la suppression
-      client.router.redirect('/login')
-    }
-    else {
-      console.error('Failed to delete profile:', response.statusText)
-    }
+      credentials: 'include',
+    }).json()
+    client.userId = userProfile.id
+    return userProfile
   }
   catch (error) {
-    console.error('Error deleting profile:', error)
+    console.error('Error while trying to get user:', error)
+    return null
   }
 }
 
-export function editProfile(client) {
-  const updatedData = {
-    username: prompt('Enter new username:'),
-    email: prompt('Enter new email:'),
-    nickname: prompt('Enter new nickname:'),
+export async function profile(client) {
+  loadPageStyle('profile')
+  client.app.innerHTML = profilePage
+  await updateNavbar(client)
+  if (await client.isLoggedIn()) {
+    const user = await getUserProfile(client)
+    if (user) {
+      document.getElementById('username').textContent = user.username
+      document.getElementById('email').textContent = user.email
+      document.getElementById('nickname').textContent = user.nickname
+      document.getElementById('status').textContent = user.is_online ? 'Online' : 'Offline'
+      const avatarElement = document.getElementById('avatar')
+      avatarElement.src = user.avatar
+      avatarElement.alt = `Avatar de ${user.username}`
+
+      const friendsList = document.getElementById('friends-list')
+      const friends = await getFriends(client)
+      friendsList.innerHTML = ''
+
+      if (friends && friends.length > 0) {
+        friends.forEach((friend) => {
+          const friendItem = document.createElement('li')
+          friendItem.textContent = friend.username
+          friendsList.appendChild(friendItem)
+        })
+      }
+      else {
+        friendsList.innerHTML = '<li>No friends found</li>'
+      }
+    }
   }
-  updateProfile(client, updatedData)
+  setupDeleteProfileButton(client)
 }

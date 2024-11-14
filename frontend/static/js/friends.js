@@ -18,7 +18,7 @@ export async function loadFriends(client) {
       listItem.textContent = friend.username
 
       const playButton = document.createElement('button')
-      playButton.textContent = 'Jouer'
+      playButton.textContent = 'Play'
       client.router.addEvent(playButton, 'click', () => startGameWithFriend(client, friend.id))
 
       listItem.appendChild(playButton)
@@ -30,9 +30,7 @@ export async function loadFriends(client) {
   }
 }
 
-// Fonction pour démarrer le jeu avec un ami
 function startGameWithFriend(client, friendId) {
-  // Redirige vers la route de jeu en ligne avec l'ID de l'ami comme adversaire
   client.router.redirect(`/pong/remote/${friendId}`)
 }
 
@@ -46,21 +44,6 @@ export async function getFriends(client) {
   catch {
     console.error('Failed to fetch friends')
     return null
-  }
-}
-
-export async function addFriend(client, friendUsername) {
-  try {
-    await ky.post('https://auth.api.transcendence.fr/send-friend-request/', {
-      headers: { Authorization: `Bearer ${client.token}` },
-      credentials: 'include',
-      json: { username: friendUsername },
-    })
-    console.log(`${friendUsername} has been added as a friend!`)
-    await loadFriends(client)
-  }
-  catch (error) {
-    console.error('Error while trying to add friend:', error)
   }
 }
 
@@ -106,7 +89,7 @@ export async function acceptFriendRequest(client, fromUserId) {
 
 export async function declineFriendRequest(client, fromUserId) {
   try {
-    await ky.post('https://auth.api.transcendence.local/decline-friend-request/', {
+    await ky.post('https://auth.api.transcendence.fr/decline-friend-request/', {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
       json: { from_user_id: fromUserId },
@@ -122,7 +105,7 @@ export async function declineFriendRequest(client, fromUserId) {
 export async function loadPendingFriendRequests(client) {
   const friendRequest = document.getElementById('friend-requests-section')
   try {
-    const pendingRequests = await ky.get('https://auth.api.transcendence.local/pending-friend-requests/', {
+    const pendingRequests = await ky.get('https://auth.api.transcendence.fr/pending-friend-requests/', {
       headers: { Authorization: `Bearer ${client.token}` },
     }).json()
     const pendingList = document.getElementById('pending-requests-list')

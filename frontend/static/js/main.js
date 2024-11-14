@@ -1,10 +1,13 @@
 import authPage from '../pages/auth.html?raw'
 import homePage from '../pages/home.html?raw'
-import { login, login42, logout, profile, register } from './auth.js'
+import { login, login42, logout } from './auth.js'
 import Client from './client.js'
+import { editProfile, updateProfile } from './edit-profile.js'
 import { updateNavbar } from './navbar.js'
 import { pong } from './pong.js'
 import { choosePongMode, remotePong, remoteSetup } from './pong-setup.js'
+import { profile } from './profile.js'
+import { register } from './register.js'
 import Router from './router.js'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
@@ -42,3 +45,6 @@ router.get('/pong/remote/setup', remoteSetup)
 
 router.get('/pong/local', client => pong(client, { mode: 'local' }))
 router.get('/pong/remote/:id', (client, params) => pong(client, { mode: 'remote', opponentId: params.id }))
+
+router.get('/profile/edit', editProfile)
+router.get('/profile/update', updateProfile)
