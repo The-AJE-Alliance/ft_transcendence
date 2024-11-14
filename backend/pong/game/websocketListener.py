@@ -21,36 +21,30 @@ class WebsocketListener(AsyncWebsocketConsumer):
         self.room_id = None
 
     async def connect(self):
-        query_params = dict(parse_qsl(self.scope["query_string"].decode("utf-8")))
-        logger.error(query_params)
-        self.mode = query_params["mode"]
-        self.host = query_params["host"]
-        self.room_id = "room-" + query_params["room_id"]
+        await self.accept()
 
-        logger.info(self.host)
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        match data["type"]:
+            case "move":
+                await self.queue_handler.publish_to_loop(data)
+            case "setup":
+                await self.setup(data)
+
+    async def setup(self, data):
+        content = data["content"]
+        self.mode = content["mode"]
+        self.host = content["host"]
+        self.room_id = "room-" + content["room_id"]
         if self.host:
             if self.room_id in game_tasks:
                 pass  # TODO: problem
             logger.info("Created game")
-            self.pong_game = PongGame(self.room_id)
+            self.pong_game = PongGame(self.room_id, self.mode)
             game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
 
         self.queue_handler = QueueHandler(self, self.room_id, (1 if self.host else 2))
-        await self.accept()
-        await self.queue_handler.start()
-
-    async def receive(self, text_data):
-        await self.queue_handler.publish_paddle_movement(text_data)
-
-    # async def send_game_state(self):
-    #     game_state = {
-    #         "player1": self.pong_game.player1.__dict__,
-    #         "player2": self.pong_game.player2.__dict__,
-    #         "ball": self.pong_game.ball.__dict__,
-    #         "player1_score": self.pong_game.player1_score,
-    #         "player2_score": self.pong_game.player2_score,
-    #     }
-    #     await self.send(text_data=json.dumps(game_state))
+        await self.queue_handler.start(data)
 
     async def disconnect(self, close_code):
         logger.warning("Client déconnecté")

@@ -32,12 +32,13 @@ class QueueHandler:
         await self.queue.bind(self.exchange, "players")
         await self.queue.bind(self.exchange, f"player-{self.player}")
 
-    async def start(self):
+    async def start(self, data):
         await self.setup()
 
-        self.consumer_task = asyncio.create_task(self.consume_ball_updates())
+        self.consumer_task = asyncio.create_task(self.consume_loop_state())
+        await self.publish_to_loop(data)
 
-    async def consume_ball_updates(self):
+    async def consume_loop_state(self):
         try:
             async with self.queue.iterator() as iterator:
                 async for message in iterator:
@@ -46,9 +47,9 @@ class QueueHandler:
         except Exception as e:
             logger.error(f"{str(e)}")
 
-    async def publish_paddle_movement(self, data):
+    async def publish_to_loop(self, data):
         await self.exchange.publish(
-            aio_pika.Message(body=data.encode()), routing_key="loop"
+            aio_pika.Message(body=json.dumps(data).encode()), routing_key="loop"
         )
 
     async def stop(self):

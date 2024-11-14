@@ -11,8 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 class PongGame:
-    def __init__(self, room_id):
+    def __init__(self, room_id, mode):
         self.room_id = room_id
+        self.mode = mode
+        self.timer = 5
+        self.running = False
         self.ball = self.Ball()
         self.player1 = self.Pad(True)
         self.player2 = self.Pad(False)
@@ -36,13 +39,14 @@ class PongGame:
             )
             self.queue = await self.channel.declare_queue(auto_delete=True)
             await self.queue.bind(self.exchange, "loop")
-            self.task = asyncio.create_task(self.game_loop())
-            await self.consume_paddle_movement()
+            await self.consume_data()
         except Exception as e:
             logger.error(f"{str(e)}")
 
     async def game_loop(self):
-        while True:
+        await asyncio.sleep(self.timer)
+        self.running = True
+        while self.running:
             try:
                 await self.update_ball_position()
                 await self.publish_game_state()
@@ -55,33 +59,67 @@ class PongGame:
                 break
 
     async def stop(self):
+        self.running = False
         self.task.cancel()
         await self.connection.close()
 
     async def publish_game_state(self):
-        game_state = {
-            "player1": self.player1.__dict__,
-            "player2": self.player2.__dict__,
-            "ball": self.ball.__dict__,
-            "player1_score": self.player1_score,
-            "player2_score": self.player2_score,
+        data = {
+            "type": "state",
+            "content": {
+                "player1": self.player1.__dict__,
+                "player2": self.player2.__dict__,
+                "ball": self.ball.__dict__,
+                "player1_score": self.player1_score,
+                "player2_score": self.player2_score,
+            },
         }
 
         await self.exchange.publish(
-            aio_pika.Message(json.dumps(game_state).encode()), routing_key="players"
+            aio_pika.Message(json.dumps(data).encode()), routing_key="players"
         )
 
-    async def consume_paddle_movement(self):
+    async def consume_data(self):
         async with self.queue.iterator() as iterator:
             async for message in iterator:
                 async with message.process():
-                    self.update_player_position(message.body.decode())
+                    await self.dispatch(message.body.decode())
 
-    def update_player_position(self, message):
+    async def dispatch(self, message):
         data = json.loads(message)
-        player, action = data["player"], data["action"]
+        if data["type"] == "setup":
+            await self.setup(data["content"])
+        elif data["type"] == "move":
+            self.update_player_position(data["content"])
+
+    async def setup(self, content):
+        response = {"type": "setup", "content": {"ready": False, "timer": self.timer}}
+        if self.running or content["mode"] != self.mode:
+            pass  # TODO: problem
+
+        if self.mode == "local":
+            self.player1 = self.Pad(True)
+            self.player2 = self.Pad(False)
+            response["content"]["ready"] = True
+        else:
+            player = content["player"]
+            if player in [1, 2]:
+                player_attr = f"player{player}"
+                if not getattr(self, player_attr):
+                    setattr(self, player_attr, self.Pad(player == 1))
+            if self.player1 and self.player2:
+                response["content"]["ready"] = True
+
+        if response["content"]["ready"]:
+            self.task = asyncio.create_task(self.game_loop())
+        await self.exchange.publish(
+            aio_pika.Message(json.dumps(response).encode()), routing_key="players"
+        )
+
+    def update_player_position(self, content):
+        player, action = content["player"], content["action"]
         pad = self.player1 if player == 1 else self.player2
-        step = pad.step if action == "move_down" else -pad.step
+        step = pad.step if action == "down" else -pad.step
         pad.y = min(max(pad.y + step, 0), 1 - pad.height)
 
     async def update_ball_position(self):

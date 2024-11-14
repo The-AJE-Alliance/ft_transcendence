@@ -2,11 +2,16 @@ import pongPage from '../pages/pong.html?raw'
 import '../css/pong.css'
 
 export async function pong(client, options = {}) {
-  const { mode, host, room_id } = options
+  const state = {
+    mode: options.mode,
+    player: options.mode === 'remote' && !options.host ? 2 : 1,
+    host: options.host,
+    room_id: options.room_id,
+  }
 
   client.app.innerHTML = pongPage
 
-  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?mode=${mode}&host=${host}&room_id=${room_id}`)
+  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
 
   const canvas = document.getElementById('pongCanvas')
   if (!canvas) {
@@ -14,16 +19,27 @@ export async function pong(client, options = {}) {
     client.router.redirect('/')
   }
   client.router.addEvent(document, 'visibilitychange', () => {
+    // TODO: Pause game for x seconds...
     client.socket.close()
     client.router.redirect('/')
   })
 
   client.socket.onopen = () => {
     console.log('WebSocket connected.')
+    const initMessage = {
+      type: 'setup',
+      content: {
+        mode: state.mode,
+        player: state.player,
+        host: state.host,
+        room_id: state.room_id,
+      },
+    }
+    client.socket.send(JSON.stringify(initMessage))
   }
 
   client.router.addEvent(document, 'keyup', async (event) => {
-    await handleKeyPress(event, client.socket)
+    await handleKeyPress(event, client.socket, state)
   })
 
   // client.router.addEventListener(window, 'resize', () => {
@@ -31,10 +47,21 @@ export async function pong(client, options = {}) {
   // })
 
   client.socket.onmessage = async (event) => {
-    const gameState = JSON.parse(event.data)
-    // console.log('Received game status:', gameState)
+    const data = JSON.parse(event.data)
 
-    await renderGame(gameState, canvas)
+    if (data.type === 'state') {
+      await renderGame(data.content, canvas)
+    }
+
+    else if (data.type === 'setup') {
+      const { ready } = data.content
+      if (ready) {
+        // TODO: Game starting in timer.seconds
+      }
+      else {
+        // TODO: Waiting for player2...
+      }
+    }
   }
 }
 
@@ -97,40 +124,28 @@ function drawPad(ctx, canvas, pad) {
   ctx.fillRect(pad.x * canvas.width, pad.y * canvas.height, pad.width * canvas.width, pad.height * canvas.height)
 }
 
-async function handleKeyPress(event, socket) {
-  if (!socket)
+async function handleKeyPress(event, socket, state) {
+  const keyMap = {
+    ArrowUp: { action: 'up', defaultPlayer: 2 },
+    ArrowDown: { action: 'down', defaultPlayer: 2 },
+    w: { action: 'up', defaultPlayer: 1 },
+    s: { action: 'down', defaultPlayer: 1 },
+  }
+
+  const { action, defaultPlayer } = keyMap[event.key] ?? {}
+  if (!socket || !action)
     return
 
   console.log(`Key pressed: ${event.key}`)
-  // const type = 'move'
-  let action = ''
-  let player = 0
+  const player = state.mode === 'remote' ? state.player : defaultPlayer
 
-  switch (event.key) {
-    case 'ArrowUp':
-      action = 'move_up'
-      player = 2
-      break
-    case 'ArrowDown':
-      action = 'move_down'
-      player = 2
-      break
-    case 'w':
-      action = 'move_up'
-      player = 1
-      break
-    case 's':
-      action = 'move_down'
-      player = 1
-      break
-    default:
-      return
-  }
-
-  // event.preventDefault()
   const data = {
-    player,
-    action,
+    type: 'move',
+    content: {
+      player,
+      action,
+    },
   }
+
   socket.send(JSON.stringify(data))
 }
