@@ -18,11 +18,12 @@ export async function pong(client, options = {}) {
     console.log('No canvas found')
     client.router.redirect('/')
   }
-  client.router.addEvent(document, 'visibilitychange', () => {
-    // TODO: Pause game for x seconds...
-    client.socket.close()
-    client.router.redirect('/')
-  })
+
+  // client.router.addEvent(document, 'visibilitychange', () => {
+  //   // TODO: Pause game for x seconds...
+  //   client.socket.close()
+  //   client.router.redirect('/')
+  // })
 
   client.socket.onopen = () => {
     console.log('WebSocket connected.')
@@ -51,6 +52,14 @@ export async function pong(client, options = {}) {
 
     if (data.type === 'state') {
       await renderGame(data.content, canvas)
+    }
+
+    else if (data.type === 'end') {
+      console.log('game ended')
+      client.socket.close()
+      const { winner } = data.content
+      console.log(winner)
+      // TODO: winner is blabla
     }
 
     else if (data.type === 'setup') {

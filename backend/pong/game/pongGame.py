@@ -14,11 +14,12 @@ class PongGame:
     def __init__(self, room_id, mode):
         self.room_id = room_id
         self.mode = mode
-        self.timer = 5
+        self.timer = 2
         self.running = False
         self.ball = self.Ball()
         self.player1 = self.Pad(True)
         self.player2 = self.Pad(False)
+        self.max_score = 5
         self.player1_score = 0
         self.player2_score = 0
         self.width = 1.0
@@ -185,6 +186,24 @@ class PongGame:
             self.player1_score += 1
             self.scored = True
             await self.reset_game()
+
+        if self.player1_score >= self.max_score or self.player2_score >= self.max_score:
+            await self.end_game()
+
+    async def end_game(self):
+        self.running = False
+        self.ball.y = 0.5
+        await self.publish_game_state()
+        data = {
+            "type": "end",
+            "content": {
+                "winner": 1 if self.player1_score >= self.max_score else 2,
+            },
+        }
+        await self.exchange.publish(
+            aio_pika.Message(json.dumps(data).encode()), routing_key="players"
+        )
+        # TODO: update to db if remote
 
     async def reset_game(self):
         self.ball.reset()

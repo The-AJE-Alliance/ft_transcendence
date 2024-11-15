@@ -5,7 +5,6 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .pongGame import PongGame
 from .queueHandler import QueueHandler
-from urllib.parse import parse_qsl
 
 logger = logging.getLogger(__name__)
 game_tasks = {}
