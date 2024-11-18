@@ -22,6 +22,7 @@ class User(AbstractUser, PermissionsMixin):
         null=False,
         default="avatars/default_avatar.png",
     )
+    avatar_url = models.URLField(max_length=500, blank=True, null=True)
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email", "nickname"]

@@ -60,9 +60,10 @@ export async function profile(client) {
       document.getElementById('nickname').textContent = user.nickname
       document.getElementById('status').textContent = user.is_online ? 'Online' : 'Offline'
       const avatarElement = document.getElementById('avatar')
-      avatarElement.src = user.avatar
+      if (user.avatar_url_full) {
+        avatarElement.src = user.avatar_url_full
+      }
       avatarElement.alt = `Avatar de ${user.username}`
-
       const friendsList = document.getElementById('friends-list')
       const friends = await getFriends(client)
       friendsList.innerHTML = ''
@@ -79,5 +80,13 @@ export async function profile(client) {
       }
     }
   }
-  setupDeleteProfileButton(client)
+  if (client.authMethod === 'oauth42') {
+    const deleteProfileButton = document.getElementById('delete-profile-button')
+    if (deleteProfileButton) {
+      deleteProfileButton.style.display = 'none'
+    }
+  }
+  else {
+    setupDeleteProfileButton(client)
+  }
 }

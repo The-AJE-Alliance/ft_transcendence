@@ -13,6 +13,9 @@ from .views import (
     AcceptFriendRequestView,
     PendingFriendRequestsView,
     DeclineFriendRequestView,
+    RedirectTo42View,
+    AuthCallbackView,
+    Fetch42UserInfoView,
 )
 
 router = DefaultRouter()
@@ -48,13 +51,11 @@ urlpatterns = [
     ),
     # path('verify-email/', send_mymail, name='send_mymail'),
     # path('email-verified/', views.mail_verified),
+    path("login/42/", RedirectTo42View.as_view(), name="login_42"),
+    path("auth/42/callback/", AuthCallbackView.as_view(), name="auth_42_callback"),
     path(
-        "login/42/",
-        UserViewSet.as_view({"post": "login_with_42"}),
-        name="login_with_42",
+        "fetch-42-user-info/", Fetch42UserInfoView.as_view(), name="fetch_42_user_info"
     ),
-    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-    # path('auth/42/callback/', handle_42_callback, name='handle_42_callback'),
 ]
 
 if settings.DEBUG:
