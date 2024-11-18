@@ -20,6 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
             "avatar_url",
             "avatar",
             "avatar_url_full",
+            "auth_method",
             "is_active",
             "is_superuser",
             "is_staff",
@@ -34,6 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_active",
             "date_joined",
             "is_online",
+            "auth_method",
         ]
         extra_kwargs = {
             "password": {"write_only": True, "required": True},

@@ -116,6 +116,33 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes = self.permission_classes
         return [permission() for permission in permission_classes]
 
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user.auth_method == "oauth42":
+            return Response(
+                {"detail": "Cannot delete a profile authenticated via API42."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user.auth_method == "oauth42":
+            return Response(
+                {"detail": "Cannot modify a profile authenticated via API42."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user.auth_method == "oauth42":
+            return Response(
+                {"detail": "Cannot modify a profile authenticated via API42."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().partial_update(request, *args, **kwargs)
+
     @action(
         detail=False,
         methods=["get"],
@@ -475,6 +502,8 @@ class AuthCallbackView(APIView):
                 if avatar_url:
                     user.avatar_url = avatar_url
                     user.save()
+                user.auth_method = "oauth42"
+                user.save()
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
                 # Rediriger vers le frontend avec le token dans l'URL ou via un cookie

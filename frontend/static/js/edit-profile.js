@@ -15,11 +15,6 @@ export async function editProfile(client) {
     document.getElementById('username').value = currentUsername
     document.getElementById('email').value = currentEmail
     document.getElementById('nickname').value = user.nickname
-
-    const passwordForm = document.getElementById('change-password-form')
-    if (client.authMethod === 'oauth42' && passwordForm) {
-      passwordForm.style.display = 'none'
-    }
   }
   const emailField = document.getElementById('email')
   const usernameField = document.getElementById('username')

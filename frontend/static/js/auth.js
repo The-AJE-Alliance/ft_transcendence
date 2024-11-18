@@ -32,6 +32,7 @@ async function loginPostProcess(client, result) {
   if (result) {
     client.token = result.access
     client.authMethod = 'classic'
+    localStorage.setItem('authMethod', 'classic')
     await updateNavbar(client)
     if (client.redirectToFriends) {
       client.router.redirect('/pong/remote/setup')
@@ -55,7 +56,7 @@ async function checkForAccessToken(client) {
     localStorage.setItem('access_token', accessToken)
     client.token = accessToken
     client.authMethod = 'oauth42'
-
+    localStorage.setItem('authMethod', 'classic')
     try {
       const response = await fetch('https://auth.api.transcendence.fr/users/me/', {
         headers: { Authorization: `Bearer ${client.token}` },

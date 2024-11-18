@@ -40,6 +40,10 @@ export async function getUserProfile(client) {
       credentials: 'include',
     }).json()
     client.userId = userProfile.id
+    if (userProfile.auth_method) {
+      client.authMethod = userProfile.auth_method
+      localStorage.setItem('authMethod', userProfile.auth_method)
+    }
     return userProfile
   }
   catch (error) {
@@ -51,7 +55,6 @@ export async function getUserProfile(client) {
 export async function profile(client) {
   loadPageStyle('profile')
   client.app.innerHTML = profilePage
-  await updateNavbar(client)
   if (await client.isLoggedIn()) {
     const user = await getUserProfile(client)
     if (user) {
@@ -64,6 +67,10 @@ export async function profile(client) {
         avatarElement.src = user.avatar_url_full
       }
       avatarElement.alt = `Avatar de ${user.username}`
+      if (client.authMethod === 'oauth42') {
+        const nickname42 = document.getElementById('nickname-container')
+        nickname42.classList.add('d-none')
+      }
       const friendsList = document.getElementById('friends-list')
       const friends = await getFriends(client)
       friendsList.innerHTML = ''
@@ -80,13 +87,12 @@ export async function profile(client) {
       }
     }
   }
-  if (client.authMethod === 'oauth42') {
-    const deleteProfileButton = document.getElementById('delete-profile-button')
-    if (deleteProfileButton) {
-      deleteProfileButton.style.display = 'none'
-    }
-  }
-  else {
+  if (client.authMethod !== 'oauth42') {
     setupDeleteProfileButton(client)
   }
+  else {
+    const actionsButton = document.getElementById('action-buttons')
+    actionsButton.classList.add('d-none')
+  }
+  await updateNavbar(client)
 }
