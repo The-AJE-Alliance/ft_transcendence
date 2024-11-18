@@ -84,6 +84,12 @@ services:
       - ./vault/ca:/export
       - vault-secrets:/vault/secrets
       - vault-ssl:/vault/ssl
+  rabbitmq:
+    <<: *base
+    container_name: rabbitmq
+    image: rabbitmq:management
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
   auth:
     <<: *micro
     container_name: auth
@@ -162,6 +168,7 @@ volumes:
   nginx-ssl:
   pong-db:
   pong-ssl:
+  rabbitmq-data:
   static-files:
   vault-ca:
   vault-config:

@@ -43,7 +43,7 @@ router.get('/pong', choosePongMode)
 router.get('/pong/remote', remotePong)
 router.get('/pong/remote/setup', remoteSetup)
 
-router.get('/pong/local', client => pong(client, { mode: 'local' }))
+router.get('/pong/local', client => pong(client, { mode: 'local', host: true, room_id: '35343' }))
 router.get('/pong/remote/:id', (client, params) => pong(client, { mode: 'remote', opponentId: params.id }))
 
 router.get('/profile/edit', editProfile)
