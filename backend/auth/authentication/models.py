@@ -22,7 +22,17 @@ class User(AbstractUser, PermissionsMixin):
         null=False,
         default="avatars/default_avatar.png",
     )
+    avatar_url = models.URLField(max_length=500, blank=True, null=True)
+    AUTH_METHOD_CHOICES = [
+        ('classic', 'Classic'),
+        ('oauth42', 'OAuth42'),
+    ]
 
+    auth_method = models.CharField(
+        max_length=20,
+        choices=AUTH_METHOD_CHOICES,
+        default='classic',
+    )
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email", "nickname"]
 

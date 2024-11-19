@@ -1,3 +1,6 @@
+from urllib.parse import urlparse
+from django.core.files.base import ContentFile
+import os
 from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework.permissions import (
@@ -5,7 +8,7 @@ from rest_framework.permissions import (
     AllowAny,
 )
 from rest_framework.authentication import SessionAuthentication
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
@@ -14,12 +17,18 @@ from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import redirect
+from django.views import View
+from django.conf import settings
+from django.urls import reverse
+from django.http import JsonResponse, HttpResponseBadRequest
 from .models import User, FriendRequest
 from .serializers import UserSerializer
 from .permissions import IsOwner
 import requests
 from .serializers import FriendRequestSerializer
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +115,38 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = self.permission_classes
         return [permission() for permission in permission_classes]
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user.auth_method == "oauth42":
+            return Response(
+                {"detail": "Cannot delete a profile authenticated via API42."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user.auth_method == "oauth42":
+            if list(request.data.keys()) != ["nickname"]:
+                return Response(
+                    {"detail": "Cannot modify a profile authenticated via API42."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user.auth_method == "oauth42":
+            allowed_fields = {"nickname"}
+            if not set(request.data.keys()).issubset(allowed_fields):
+                return Response(
+                    {
+                        "detail": "Cannot modify a profile authenticated via API42, except the nickname."
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+        return super().partial_update(request, *args, **kwargs)
 
     @action(
         detail=False,
@@ -234,12 +275,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-        methods=["post"],
+        methods=["get"],
         permission_classes=[AllowAny],
-        url_path="login/42",
+        authentication_classes=[],
+        url_path="login_with_42",
     )
     def login_with_42(self, request):
-        code = request.data.get("code")
+        code = request.query_params.get("code")
         if not code:
             return Response(
                 {"error": "Authorization code is required"},
@@ -248,41 +290,42 @@ class UserViewSet(viewsets.ModelViewSet):
 
         # Échange du code contre un token d'accès
         token_url = "https://api.intra.42.fr/oauth/token"
-        client_id = "YOUR_CLIENT_ID"  # Remplacez par votre client_id
-        client_secret = "YOUR_CLIENT_SECRET"  # Remplacez par votre client_secret
-        redirect_uri = "YOUR_REDIRECT_URI"  # Remplacez par votre URI de redirection
+        client_id = settings.CLIENT_ID
+        client_secret = settings.CLIENT_SECRET
+        redirect_uri = settings.REDIRECT_URI
 
         data = {
             "grant_type": "authorization_code",
             "client_id": client_id,
             "client_secret": client_secret,
-            "redirect_uri": redirect_uri,
             "code": code,
+            "redirect_uri": redirect_uri,
         }
-
         response = requests.post(token_url, data=data)
-
         if response.status_code != 200:
-            return Response(response.json(), status=status.HTTP_401_UNAUTHORIZED)
-
+            return Response(response.json(), status=status.HTTP_400_BAD_REQUEST)
         access_token = response.json().get("access_token")
-
-        # Utiliser le token pour obtenir des informations sur l'utilisateur
         user_info_url = "https://api.intra.42.fr/v2/me"
         headers = {"Authorization": f"Bearer {access_token}"}
         user_response = requests.get(user_info_url, headers=headers)
 
         if user_response.status_code != 200:
-            return Response(user_response.json(), status=status.HTTP_401_UNAUTHORIZED)
+            return Response(user_response.json(), status=status.HTTP_400_BAD_REQUEST)
 
         user_data = user_response.json()
         username = user_data.get("login")
         email = user_data.get("email")
 
-        # Vérifier si l'utilisateur existe dans votre base de données
         user, created = User.objects.get_or_create(
             username=username, defaults={"email": email}
         )
+        access_token = str(AccessToken.for_user(user))
+
+        # Rediriger vers le frontend avec le token dans l'URL ou via un cookie
+        response = redirect(
+            f"https://api.auth.transcendence.fr/login/success?token={access_token}"
+        )
+        return response
 
     @action(
         detail=False,
@@ -393,9 +436,120 @@ class LogoutView(APIView):
             user.save()
 
             refresh_token = request.COOKIES.get("refresh_token")
-            token = RefreshToken(refresh_token)
-            token.blacklist()
-
+            if refresh_token:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            response = Response(status=status.HTTP_205_RESET_CONTENT)
+            response.delete_cookie("refresh_token")
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class RedirectTo42View(View):
+    def get(self, request):
+        authorization_url = f"https://api.intra.42.fr/oauth/authorize?client_id={settings.CLIENT_ID}&redirect_uri={settings.REDIRECT_URI}&response_type=code"
+        return redirect(authorization_url)
+
+
+class AuthCallbackView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        code = request.GET.get("code")
+        if not code:
+            return HttpResponseBadRequest("Authorization code not found.")
+
+        token_url = "https://api.intra.42.fr/oauth/token"
+        data = {
+            "grant_type": "authorization_code",
+            "client_id": settings.CLIENT_ID,
+            "client_secret": settings.CLIENT_SECRET,
+            "redirect_uri": settings.REDIRECT_URI,
+            "code": code,
+        }
+
+        response = requests.post(token_url, data=data)
+        if response.status_code == 200:
+            access_token = response.json().get("access_token")
+
+            user_info_url = "https://api.intra.42.fr/v2/me"
+            headers = {"Authorization": f"Bearer {access_token}"}
+            user_response = requests.get(user_info_url, headers=headers)
+
+            if user_response.status_code == 200:
+                user_data = user_response.json()
+                username = user_data.get("login")
+                email = user_data.get("email")
+                avatar_url = user_data.get("image", {}).get("link")
+
+                user, created = User.objects.get_or_create(
+                    username=username, defaults={"email": email}
+                )
+                if created or not user.avatar:
+                    if avatar_url:
+                        try:
+                            image_response = requests.get(
+                                avatar_url, allow_redirects=True
+                            )
+                            image_response.raise_for_status()
+                            parsed_url = urlparse(avatar_url)
+                            file_name = os.path.basename(parsed_url.path)
+                            image_content = ContentFile(image_response.content)
+                            user.avatar.save(file_name, image_content, save=True)
+                        except Exception as e:
+                            user.avatar = "avatars/default_avatar.png"
+                            user.save()
+                    else:
+                        user.avatar = "avatars/default_avatar.png"
+                        user.save()
+                if avatar_url:
+                    user.avatar_url = avatar_url
+                    user.save()
+                user.auth_method = "oauth42"
+                user.save()
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                # Rediriger vers le frontend avec le token dans l'URL ou via un cookie
+                response = redirect(
+                    f"https://transcendence.fr/login/42?token={access_token}"
+                )
+                cookie_max_age = 3600 * 24 * 14  # 14 jours
+                response.set_cookie(
+                    "refresh_token",
+                    str(refresh),
+                    max_age=cookie_max_age,
+                    httponly=True,
+                )
+                user.is_online = True
+                user.save()
+                return response
+            else:
+                return JsonResponse({"error": "Unable to fetch user info"}, status=400)
+        else:
+            return JsonResponse({"error": "Failed to obtain access token"}, status=400)
+
+
+class Fetch42UserInfoView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        access_token = request.GET.get("token")
+        if not access_token:
+            return JsonResponse({"error": "Token is missing"}, status=400)
+        headers = {"Authorization": f"Bearer {access_token}"}
+        try:
+            response = requests.get("https://api.intra.42.fr/v2/me", headers=headers)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            return JsonResponse(
+                {"error": "Failed to fetch user info from 42 API"},
+                status=response.status_code,
+            )
+        user_data = response.json()
+        return JsonResponse(
+            {
+                "image_url": user_data.get("image_url"),
+            }
+        )

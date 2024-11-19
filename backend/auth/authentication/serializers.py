@@ -8,6 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     friends = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), many=True, required=False
     )
+    avatar_url_full = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -16,7 +17,10 @@ class UserSerializer(serializers.ModelSerializer):
             "username",
             "nickname",
             "email",
+            "avatar_url",
             "avatar",
+            "avatar_url_full",
+            "auth_method",
             "is_active",
             "is_superuser",
             "is_staff",
@@ -31,10 +35,19 @@ class UserSerializer(serializers.ModelSerializer):
             "is_active",
             "date_joined",
             "is_online",
+            "auth_method",
         ]
         extra_kwargs = {
             "password": {"write_only": True, "required": True},
         }
+
+    def get_avatar_url_full(self, obj):
+        request = self.context.get("request")
+        if obj.avatar and hasattr(obj.avatar, "url"):
+            return request.build_absolute_uri(obj.avatar.url)
+        elif obj.avatar_url:
+            return obj.avatar_url
+        return None
 
     def create(self, validated_data):
         friends_data = validated_data.pop("friends", [])

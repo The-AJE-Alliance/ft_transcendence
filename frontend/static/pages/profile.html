@@ -1,11 +1,22 @@
-<div class="container mt-5 text-center">
+<div class="container-profile mt-5 text-center">
   <h1 class="mb-4">Profile Page</h1>
   <div id="profile-card" class="card">
     <div class="profile-content">
       <div class="profile-info">
         <p><strong>Username:</strong> <span id="username"></span></p>
         <p><strong>Email:</strong> <span id="email"></span></p>
-        <p><strong>Nickname:</strong> <span id="nickname"></span></p>
+        <p id="nickname-container">
+          <strong>Nickname:</strong>
+          <span id="nickname-display"></span>
+          <button id="edit-nickname-btn" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-pencil"></i></button>
+        </p>
+        <div id="nickname-edit-container" class="d-none">
+          <label for="nickname-input"><strong>Nickname:</strong></label>
+          <input type="text" id="nickname-input" class="form-control mt-2" placeholder="Enter new nickname" />
+          <button id="save-nickname-btn" class="btn btn-primary mt-2">Save</button>
+          <button id="cancel-nickname-btn" class="btn btn-secondary mt-2">Cancel</button>
+        </div>
         <p><strong>Status:</strong> <span id="status" ></span></p>
       </div>
       <div id="profile-avatar">
@@ -18,10 +29,13 @@
       <a href="/profile/edit" class="btn btn-primary">Edit Profile</a>
       <button class="btn btn-danger" id="deleteProfileButton" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">Delete Profile</button>
     </div>
-  </div>
-  <div id="friends-section" class="card mt-4">
-            <h2 class="mb-3">Friends</h2>
-            <ul id="friends-list" class="list-unstyled"></ul>
+    </div>
+      <h2 class="mb-3">Friends</h2>
+      <div id="friends-card" class="card">
+        <div class="profile-content">
+          <ul id="friends-list" class="list-unstyled"></ul>
+        </div>
+      </div>
   </div>
   <!-- Modal de confirmation de suppression -->
   <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
@@ -41,4 +55,4 @@
       </div>
     </div>
   </div>
-</div>
+

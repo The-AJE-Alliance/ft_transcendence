@@ -1,7 +1,7 @@
 import * as bootstrap from 'bootstrap'
 import ky from 'ky'
 import loginPage from '../pages/login.html?raw'
-import login42Page from '../pages/login42.html?raw'
+import logoutPage from '../pages/logout.html?raw'
 import { updateNavbar } from './navbar.js'
 import {
   handleForm,
@@ -31,6 +31,8 @@ export async function login(client) {
 async function loginPostProcess(client, result) {
   if (result) {
     client.token = result.access
+    client.authMethod = 'classic'
+    localStorage.setItem('authMethod', 'classic')
     await updateNavbar(client)
     if (client.redirectToFriends) {
       client.router.redirect('/pong/remote/setup')
@@ -47,28 +49,72 @@ async function loginPostProcess(client, result) {
   }
 }
 
+async function checkForAccessToken(client) {
+  const urlParams = new URLSearchParams(window.location.search)
+  const accessToken = urlParams.get('token')
+  if (accessToken) {
+    localStorage.setItem('access_token', accessToken)
+    client.token = accessToken
+    client.authMethod = 'oauth42'
+    localStorage.setItem('authMethod', 'classic')
+    try {
+      const response = await fetch('https://auth.api.transcendence.fr/users/me/', {
+        headers: { Authorization: `Bearer ${client.token}` },
+        credentials: 'include',
+      })
+      const userData = await response.json()
+      client.avatarUrl = userData.avatar_url
+      window.history.replaceState({}, document.title, '/')
+      client.router.redirect('/')
+    }
+    catch (error) {
+      console.error('Failed to fetch user info:', error)
+      console.error('Access token used:', client.token)
+    }
+  }
+}
+
 export async function login42(client) {
-  loadPageStyle('login42')
-  client.app.innerHTML = login42Page
-  await updateNavbar(client)
-  const oauthButton = document.getElementById('login42Button')
-  oauthButton.textContent = 'Log in with 42'
-  client.router.addEvent(oauthButton, 'click', () => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const accessToken = urlParams.get('token')
+  if (accessToken) {
+    await checkForAccessToken(client)
+  }
+  else {
+    await updateNavbar(client)
     window.location.href = 'https://auth.api.transcendence.fr/login/42/'
-  })
+  }
 }
 
 export async function logout(client) {
   try {
-    await ky.post('https://auth.api.transcendence.fr/logout/', {
-      credentials: 'include',
-      headers: { Authorization: `Bearer ${client.token}` },
-    })
-    client.token = ''
-    await updateNavbar(client)
-    client.router.redirect('/')
-    const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
-    toastSuccess.show()
+    if (client.authMethod === 'oauth42') {
+      await ky.post('https://auth.api.transcendence.fr/logout/', {
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${client.token}` },
+      })
+      client.token = ''
+      client.authMethod = ''
+      localStorage.removeItem('access_token')
+      await updateNavbar(client)
+      client.app.innerHTML = logoutPage
+      const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'))
+      logoutModal.show()
+      client.router.redirect('/')
+    }
+    else {
+      await ky.post('https://auth.api.transcendence.fr/logout/', {
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${client.token}` },
+      })
+      client.token = ''
+      client.authMethod = ''
+      localStorage.removeItem('access_token')
+      await updateNavbar(client)
+      client.router.redirect('/')
+      const toastSuccess = new bootstrap.Toast(document.getElementById('logout-toast'))
+      toastSuccess.show()
+    }
   }
   catch {
     client.router.redirect('/')
