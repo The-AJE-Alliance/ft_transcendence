@@ -42,7 +42,7 @@ export async function editProfile(client) {
       await changePassword(client)
   })
 }
-/*
+
 function updateProfileFields() {
   const usernameField = document.getElementById('username')
   const emailField = document.getElementById('email')
@@ -55,29 +55,6 @@ function updateProfileFields() {
   formData.append('nickname', nicknameField.value)
   if (avatarInput.files.length > 0) {
     formData.append('avatar', avatarInput.files[0])
-  }
-  return formData
-}
-*/
-
-function updateProfileFields(client) {
-  const nicknameField = document.getElementById('nickname')
-  const formData = new FormData()
-
-  if (client.authMethod === 'oauth42') {
-    formData.append('nickname', nicknameField.value)
-  }
-  else {
-    const usernameField = document.getElementById('username')
-    const emailField = document.getElementById('email')
-    const avatarInput = document.getElementById('new-avatar')
-
-    formData.append('username', usernameField.value)
-    formData.append('email', emailField.value)
-    formData.append('nickname', nicknameField.value)
-    if (avatarInput.files.length > 0) {
-      formData.append('avatar', avatarInput.files[0])
-    }
   }
   return formData
 }

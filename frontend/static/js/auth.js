@@ -2,6 +2,7 @@ import * as bootstrap from 'bootstrap'
 import ky from 'ky'
 import loginPage from '../pages/login.html?raw'
 import logoutPage from '../pages/logout.html?raw'
+import { showTwoFactorForm } from './2FA.js'
 import { updateNavbar } from './navbar.js'
 import {
   handleForm,
@@ -28,8 +29,8 @@ export async function login(client) {
   })
 }
 
-async function loginPostProcess(client, result) {
-  if (result) {
+async function loginPostProcess(client, result, responseStatus) {
+  if (responseStatus === 200 && result) {
     client.token = result.access
     client.authMethod = 'classic'
     localStorage.setItem('authMethod', 'classic')
@@ -41,6 +42,14 @@ async function loginPostProcess(client, result) {
     else {
       client.router.redirect('/')
     }
+  }
+  else if (responseStatus === 403 && result.detail === '2FA required') {
+    // 2FA requis
+    // Afficher le formulaire pour le code OTP
+    showTwoFactorForm(client)
+    // Stocker temporairement le nom d'utilisateur et le mot de passe
+    client.tempUsername = document.getElementById('username').value
+    client.tempPassword = document.getElementById('password').value
   }
   else {
     document.getElementById('username').value = ''

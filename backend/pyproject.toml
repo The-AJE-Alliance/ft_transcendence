@@ -19,6 +19,8 @@ requests = "^2.32.3"
 django-cors-headers = "^4.5.0"
 channels = "^4.1.0"
 aio-pika = "^9.4.3"
+pyotp = "^2.9.0"
+qrcode = {extras = ["pil"], version = "^8.0"}
 
 
 [tool.poetry.group.dev.dependencies]

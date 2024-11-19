@@ -49,8 +49,6 @@ urlpatterns = [
         PendingFriendRequestsView.as_view(),
         name="pending_friend_requests",
     ),
-    # path('verify-email/', send_mymail, name='send_mymail'),
-    # path('email-verified/', views.mail_verified),
     path("login/42/", RedirectTo42View.as_view(), name="login_42"),
     path("auth/42/callback/", AuthCallbackView.as_view(), name="auth_42_callback"),
     path(

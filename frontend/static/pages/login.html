@@ -16,7 +16,7 @@
   </symbol>
 </svg>
 
-<div class="container mt-5 text-center">
+<div class="login-container">
   <h1 class="mb-4">Login</h1>
   <div class="card login-card">
     <form id="login-form">
@@ -32,6 +32,10 @@
         <button type="submit" class="btn">Log In</button>
       </div>
     </form>
+       <!-- Conteneur pour le formulaire du 2FA, caché par défaut -->
+    <div id="two-factor-form-container" class="d-none">
+      <!-- Le formulaire du 2FA sera inséré ici -->
+    </div>
     <div
       id="invalid-login"
       class="alert alert-danger d-none d-flex align-items-center"

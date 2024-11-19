@@ -1,9 +1,43 @@
 import ky from 'ky'
+
 import profilePage from '../pages/profile.html?raw'
 import { getFriends } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { loadPageStyle } from './utils.js'
 import '../css/edit-profile.css'
+
+export async function enableTwoFactor(client) {
+  try {
+    const response = await fetch('https://auth.api.transcendence.fr/users/enable-two-factor/', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${client.token}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    // Récupérer le blob de l'image
+    const blob = await response.blob()
+
+    // Créer une URL pour le blob
+    const imageUrl = URL.createObjectURL(blob)
+
+    // Afficher l'image dans le conteneur
+    const qrcodeContainer = document.getElementById('qrcode-container')
+    qrcodeContainer.innerHTML = ''
+    const imgElement = document.createElement('img')
+    imgElement.src = imageUrl
+    imgElement.alt = 'QR Code for 2FA'
+    imgElement.classList.add('qrcode-image') // Optionnel : ajouter une classe CSS
+    qrcodeContainer.appendChild(imgElement)
+  }
+  catch (error) {
+    console.error('Error enabling 2FA:', error)
+  }
+}
 
 function setupDeleteProfileButton(client) {
   const confirmDeleteButton = document.getElementById('confirmDelete')
@@ -52,14 +86,13 @@ export async function getUserProfile(client) {
   }
 }
 
-function handleNicknameEdit(client) {
+async function handleNicknameEdit(client) {
   const nicknameDisplay = document.getElementById('nickname-display')
   const nicknameEditContainer = document.getElementById('nickname-edit-container')
   const editButton = document.getElementById('edit-nickname-btn')
   const nicknameInput = document.getElementById('nickname-input')
   const saveButton = document.getElementById('save-nickname-btn')
   const cancelButton = document.getElementById('cancel-nickname-btn')
-
   if (!nicknameDisplay || !nicknameEditContainer || !editButton || !nicknameInput || !saveButton || !cancelButton) {
     console.error('Nickname elements not found in DOM.')
     return
@@ -113,6 +146,12 @@ export async function profile(client) {
         avatarElement.src = user.avatar_url_full
       }
       avatarElement.alt = `Avatar de ${user.username}`
+      const enable2FAButton = document.getElementById('enable-2fa-button')
+      if (enable2FAButton) {
+        enable2FAButton.addEventListener('click', () => {
+          enableTwoFactor(client)
+        })
+      }
 
       const editElement = document.getElementById('edit-nickname-btn')
       if (user.auth_method === 'oauth42') {
