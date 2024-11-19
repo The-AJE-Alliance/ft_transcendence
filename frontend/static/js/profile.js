@@ -52,6 +52,52 @@ export async function getUserProfile(client) {
   }
 }
 
+function handleNicknameEdit(client) {
+  const nicknameDisplay = document.getElementById('nickname-display')
+  const nicknameEditContainer = document.getElementById('nickname-edit-container')
+  const editButton = document.getElementById('edit-nickname-btn')
+  const nicknameInput = document.getElementById('nickname-input')
+  const saveButton = document.getElementById('save-nickname-btn')
+  const cancelButton = document.getElementById('cancel-nickname-btn')
+
+  if (!nicknameDisplay || !nicknameEditContainer || !editButton || !nicknameInput || !saveButton || !cancelButton) {
+    console.error('Nickname elements not found in DOM.')
+    return
+  }
+  editButton.addEventListener('click', () => {
+    nicknameDisplay.parentElement.classList.add('d-none')
+    nicknameEditContainer.classList.remove('d-none')
+    nicknameInput.value = nicknameDisplay.textContent.trim()
+  })
+
+  saveButton.addEventListener('click', async () => {
+    const newNickname = nicknameInput.value.trim()
+    if (newNickname) {
+      try {
+        await ky.patch(
+          `https://auth.api.transcendence.fr/users/${client.userId}/`,
+          {
+            headers: { Authorization: `Bearer ${client.token}` },
+            json: { nickname: newNickname },
+            credentials: 'include',
+          },
+        )
+        nicknameDisplay.textContent = newNickname
+        nicknameDisplay.parentElement.classList.remove('d-none')
+        nicknameEditContainer.classList.add('d-none')
+      }
+      catch (error) {
+        console.error('Error updating nickname:', error)
+      }
+    }
+  })
+
+  cancelButton.addEventListener('click', () => {
+    nicknameDisplay.parentElement.classList.remove('d-none')
+    nicknameEditContainer.classList.add('d-none')
+  })
+}
+
 export async function profile(client) {
   loadPageStyle('profile')
   client.app.innerHTML = profilePage
@@ -60,17 +106,23 @@ export async function profile(client) {
     if (user) {
       document.getElementById('username').textContent = user.username
       document.getElementById('email').textContent = user.email
-      document.getElementById('nickname').textContent = user.nickname
+      document.getElementById('nickname-display').textContent = user.nickname
       document.getElementById('status').textContent = user.is_online ? 'Online' : 'Offline'
       const avatarElement = document.getElementById('avatar')
       if (user.avatar_url_full) {
         avatarElement.src = user.avatar_url_full
       }
       avatarElement.alt = `Avatar de ${user.username}`
-      if (client.authMethod === 'oauth42') {
-        const nickname42 = document.getElementById('nickname-container')
-        nickname42.classList.add('d-none')
+
+      const editElement = document.getElementById('edit-nickname-btn')
+      if (user.auth_method === 'oauth42') {
+        editElement.classList.remove('d-none')
+        handleNicknameEdit(client)
       }
+      else {
+        editElement.classList.add('d-none')
+      }
+
       const friendsList = document.getElementById('friends-list')
       const friends = await getFriends(client)
       friendsList.innerHTML = ''

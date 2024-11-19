@@ -98,6 +98,9 @@ export async function logout(client) {
       localStorage.removeItem('access_token')
       await updateNavbar(client)
       client.app.innerHTML = logoutPage
+      const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'))
+      logoutModal.show()
+      client.router.redirect('/')
     }
     else {
       await ky.post('https://auth.api.transcendence.fr/logout/', {

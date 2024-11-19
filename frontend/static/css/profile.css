@@ -2,15 +2,29 @@ h2 {
   color: #00cc99;
   text-shadow: 2px 2px 5px rgba(0, 204, 153, 0.3);
 }
+.container-profile {
+  margin-top: 50px;
+  text-align: center;
+}
 
-#profile-card {
+.container-friends {
+  margin-top: 50px;
+  text-align: center;
+}
+
+#profile-card #friends-card {
   background-color: #1a1a1a;
   border: 1px solid #00cc99;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
   max-width: 600px;
-  margin: 0 auto;
+  margin: 20px auto;
+}
+
+#profile-card input {
+  background-color: #262626;
+  color: #00cc99;
 }
 
 .profile-content {
@@ -20,19 +34,19 @@ h2 {
   align-items: center;
 }
 
-#profile-info {
+.profile-info {
   text-align: left;
   flex: 1;
   margin-right: 20px;
 }
 
-#profile-info p {
+.profile-info p {
   font-size: 18px;
   color: #00cc99;
   margin: 10px 0;
 }
 
-#profile-avatar {
+.profile-avatar {
   text-align: center;
 }
 
@@ -44,7 +58,7 @@ h2 {
   border: 2px solid #00cc99;
 }
 
-#friends-section {
+.friends-section {
   background-color: #1a1a1a;
   border: 1px solid #00cc99;
   border-radius: 10px;
@@ -64,6 +78,6 @@ h2 {
   color: #00cc99;
 }
 
-.modal-backdrop {
+#modal-backdrop {
   background-color: rgba(0, 0, 0, 0.8);
 }
