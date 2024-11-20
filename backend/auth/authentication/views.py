@@ -25,10 +25,11 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from .models import User, FriendRequest
 from .serializers import UserSerializer
 from .permissions import IsOwner
-import requests
 from .serializers import FriendRequestSerializer
 import logging
 import requests
+from .publisher import publish_message
+from asgiref.sync import async_to_sync
 
 logger = logging.getLogger(__name__)
 
