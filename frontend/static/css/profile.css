@@ -7,12 +7,17 @@ h2 {
   text-align: center;
 }
 
-.container-friends {
-  margin-top: 50px;
-  text-align: center;
+#profile-card #friends-card {
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
+  max-width: 600px;
+  margin: 20px auto;
 }
 
-#profile-card #friends-card {
+#two-factor-section {
   background-color: #1a1a1a;
   border: 1px solid #00cc99;
   padding: 20px;

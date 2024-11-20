@@ -1,6 +1,6 @@
 import ky from 'ky'
-
 import profilePage from '../pages/profile.html?raw'
+import { disableTwoFactor, showTwoFactorActivationForm } from './2FA.js'
 import { getFriends } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { loadPageStyle } from './utils.js'
@@ -8,31 +8,23 @@ import '../css/edit-profile.css'
 
 export async function enableTwoFactor(client) {
   try {
-    const response = await fetch('https://auth.api.transcendence.fr/users/enable-two-factor/', {
-      method: 'POST',
+    const response = await ky.post('https://auth.api.transcendence.fr/users/enable-two-factor/', {
+      credentials: 'include',
       headers: {
         Authorization: `Bearer ${client.token}`,
       },
     })
-
+    const data = await response.json()
     if (!response.ok) {
+      console.error('Server response:', data)
       throw new Error(`HTTP error! Status: ${response.status}`)
     }
-
-    // Récupérer le blob de l'image
-    const blob = await response.blob()
-
-    // Créer une URL pour le blob
-    const imageUrl = URL.createObjectURL(blob)
-
-    // Afficher l'image dans le conteneur
+    const qrCodeImageBase64 = data.qr_code
     const qrcodeContainer = document.getElementById('qrcode-container')
-    qrcodeContainer.innerHTML = ''
-    const imgElement = document.createElement('img')
-    imgElement.src = imageUrl
-    imgElement.alt = 'QR Code for 2FA'
-    imgElement.classList.add('qrcode-image') // Optionnel : ajouter une classe CSS
-    qrcodeContainer.appendChild(imgElement)
+    const qrcodeImage = document.getElementById('qrcode-image')
+    qrcodeImage.src = `data:image/png;base64,${qrCodeImageBase64}`
+    qrcodeContainer.classList.remove('d-none')
+    showTwoFactorActivationForm(client)
   }
   catch (error) {
     console.error('Error enabling 2FA:', error)
@@ -146,13 +138,38 @@ export async function profile(client) {
         avatarElement.src = user.avatar_url_full
       }
       avatarElement.alt = `Avatar de ${user.username}`
-      const enable2FAButton = document.getElementById('enable-2fa-button')
-      if (enable2FAButton) {
-        enable2FAButton.addEventListener('click', () => {
-          enableTwoFactor(client)
-        })
+      const twoFactorSection = document.getElementById('two-factor-section')
+      if (user.auth_method === 'oauth42') {
+        if (twoFactorSection) {
+          twoFactorSection.classList.add('d-none') // Masquer la section 2FA
+        }
       }
-
+      else {
+        const enable2FAButton = document.getElementById('enable-2fa-button')
+        if (enable2FAButton) {
+          const newEnable2FAButton = enable2FAButton.cloneNode(true)
+          enable2FAButton.parentNode.replaceChild(newEnable2FAButton, enable2FAButton)
+          function enableTwoFactorHandler(event) {
+            enableTwoFactor(client)
+          }
+          async function disableTwoFactorHandler(event) {
+            const success = await disableTwoFactor(client)
+            if (success) {
+              newEnable2FAButton.textContent = 'Enable 2FA'
+              newEnable2FAButton.removeEventListener('click', disableTwoFactorHandler)
+              newEnable2FAButton.addEventListener('click', enableTwoFactorHandler)
+            }
+          }
+          if (user.two_factor_enabled) {
+            newEnable2FAButton.textContent = 'Disable 2FA'
+            newEnable2FAButton.addEventListener('click', disableTwoFactorHandler)
+          }
+          else {
+            newEnable2FAButton.textContent = 'Enable 2FA'
+            newEnable2FAButton.addEventListener('click', enableTwoFactorHandler)
+          }
+        }
+      }
       const editElement = document.getElementById('edit-nickname-btn')
       if (user.auth_method === 'oauth42') {
         editElement.classList.remove('d-none')

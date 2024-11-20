@@ -27,6 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
             "friends",
             "is_online",
             "password",
+            "two_factor_enabled",
         )
         read_only_fields = [
             "is_superuser",
@@ -44,7 +45,10 @@ class UserSerializer(serializers.ModelSerializer):
     def get_avatar_url_full(self, obj):
         request = self.context.get("request")
         if obj.avatar and hasattr(obj.avatar, "url"):
-            return request.build_absolute_uri(obj.avatar.url)
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            else:
+                return obj.avatar.url
         elif obj.avatar_url:
             return obj.avatar_url
         return None

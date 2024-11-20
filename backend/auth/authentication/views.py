@@ -1,3 +1,4 @@
+import base64
 from urllib.parse import urlparse
 from django.core.files.base import ContentFile
 import os
@@ -43,12 +44,9 @@ class PendingFriendRequestsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Get all pending friend requests where the authenticated user is the recipient
         pending_requests = FriendRequest.objects.filter(
-            to_user=request.user, status="pending"
+            to_user=request.user, status="pending", context={"request": request}
         )
-
-        # Serialize the pending friend requests
         serializer = FriendRequestSerializer(pending_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -379,7 +377,17 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def enable_two_factor(self, request):
         user = request.user
-        user.enable_two_factor()
+        if user.two_factor_enabled:
+            return Response(
+                {"detail": "2FA is already enabled."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Générer un nouveau secret
+        user.two_factor_secret = pyotp.random_base32()
+        user.save()
+
+        # Générer l'URI TOTP
         totp_uri = pyotp.totp.TOTP(user.two_factor_secret).provisioning_uri(
             name=user.email, issuer_name="Transcendence"
         )
@@ -390,13 +398,39 @@ class UserViewSet(viewsets.ModelViewSet):
         qr.make(fit=True)
         img = qr.make_image(fill="black", back_color="white")
 
-        # Convertir l'image en bytes
+        # Convertir l'image en base64 pour l'envoyer au frontend
         buffer = io.BytesIO()
         img.save(buffer, format="PNG")
-        buffer.seek(0)
+        img_str = base64.b64encode(buffer.getvalue()).decode()
 
-        # Renvoyer l'image en réponse HTTP
-        return HttpResponse(buffer, content_type="image/png")
+        return Response({"qr_code": img_str}, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_path="confirm-two-factor",
+    )
+    def confirm_two_factor(self, request):
+        user = request.user
+        otp_code = request.data.get("otp_code")
+
+        if not otp_code:
+            return Response(
+                {"detail": "OTP code is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        totp = pyotp.TOTP(user.two_factor_secret)
+        if totp.verify(otp_code):
+            user.two_factor_enabled = True
+            user.save()
+            return Response(
+                {"detail": "2FA enabled successfully."}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"detail": "Invalid OTP code."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(
         detail=False,
@@ -413,18 +447,42 @@ class UserViewSet(viewsets.ModelViewSet):
         if user and user.two_factor_enabled:
             totp = pyotp.TOTP(user.two_factor_secret)
             if totp.verify(otp_code):
-                # Générer et renvoyer le token JWT
                 refresh = RefreshToken.for_user(user)
-                return Response(
-                    {
-                        "access": str(refresh.access_token),
-                        "refresh": str(refresh),
-                    }
+                access_token = str(refresh.access_token)
+                user.is_online = True
+                user.save()
+                response = Response({"access": access_token}, status=status.HTTP_200_OK)
+                cookie_max_age = 3600 * 24 * 14  # 14 jours
+                response.set_cookie(
+                    "refresh_token",
+                    str(refresh),
+                    max_age=cookie_max_age,
+                    httponly=True,
                 )
+
+                return response
             else:
                 return Response({"error": "Invalid OTP code"}, status=400)
         else:
             return Response({"error": "Invalid credentials"}, status=400)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_path="disable-two-factor",
+    )
+    def disable_two_factor(self, request):
+        user = request.user
+        if not user.two_factor_enabled:
+            return Response(
+                {"detail": "2FA is not enabled."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.two_factor_enabled = False
+        user.two_factor_secret = ""
+        user.save()
+        return Response({"detail": "2FA has been disabled."}, status=status.HTTP_200_OK)
 
 
 class RegisterView(CreateAPIView):
@@ -463,47 +521,22 @@ class CookieTokenRefreshSerializer(TokenRefreshSerializer):
 
 
 class CookieTokenObtainPairView(TokenObtainPairView):
-    # def finalize_response(self, request, response, *args, **kwargs):
-    # if response.status_code == 200:
-    #   user = User.objects.get(username=request.data["username"])
-    #  user.is_online = True  # Met à jour le statut en ligne lors de la connexion
-    # user.save()
-    #
-    #       if response.data.get("refresh"):
-    #          cookie_max_age = 3600 * 24 * 14  # 14 days
-    #         response.set_cookie(
-    #            "refresh_token",
-    #           response.data["refresh"],
-    #          max_age=cookie_max_age,
-    #         httponly=True,
-    #    )
-    #   del response.data["refresh"]
-    # return super().finalize_response(request, response, *args, **kwargs)
     def post(self, request, *args, **kwargs):
-        # Authentification de l'utilisateur
         username = request.data.get("username")
         password = request.data.get("password")
         user = authenticate(username=username, password=password)
 
         if user:
             if user.two_factor_enabled:
-                # 2FA requis
                 return Response(
                     {"detail": "2FA required"}, status=status.HTTP_403_FORBIDDEN
                 )
             else:
-                # Générer les tokens JWT
                 refresh = RefreshToken.for_user(user)
                 access_token = str(refresh.access_token)
-
-                # Mettre à jour le statut en ligne
                 user.is_online = True
                 user.save()
-
-                # Préparer la réponse
                 response = Response({"access": access_token}, status=status.HTTP_200_OK)
-
-                # Configurer le cookie du refresh token
                 cookie_max_age = 3600 * 24 * 14  # 14 jours
                 response.set_cookie(
                     "refresh_token",
@@ -511,7 +544,6 @@ class CookieTokenObtainPairView(TokenObtainPairView):
                     max_age=cookie_max_age,
                     httponly=True,
                 )
-
                 return response
         else:
             return Response(
@@ -537,6 +569,7 @@ class CookieTokenRefreshView(TokenRefreshView):
 
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
+    authentication_classes = (JWTAuthentication,)
 
     def post(self, request):
         try:
@@ -550,9 +583,10 @@ class LogoutView(APIView):
                 token.blacklist()
             response = Response(status=status.HTTP_205_RESET_CONTENT)
             response.delete_cookie("refresh_token")
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            return response
+        # return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RedirectTo42View(View):
@@ -596,6 +630,7 @@ class AuthCallbackView(APIView):
                 user, created = User.objects.get_or_create(
                     username=username, defaults={"email": email}
                 )
+
                 if created or not user.avatar:
                     if avatar_url:
                         try:

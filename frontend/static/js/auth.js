@@ -44,10 +44,7 @@ async function loginPostProcess(client, result, responseStatus) {
     }
   }
   else if (responseStatus === 403 && result.detail === '2FA required') {
-    // 2FA requis
-    // Afficher le formulaire pour le code OTP
     showTwoFactorForm(client)
-    // Stocker temporairement le nom d'utilisateur et le mot de passe
     client.tempUsername = document.getElementById('username').value
     client.tempPassword = document.getElementById('password').value
   }
@@ -65,7 +62,7 @@ async function checkForAccessToken(client) {
     localStorage.setItem('access_token', accessToken)
     client.token = accessToken
     client.authMethod = 'oauth42'
-    localStorage.setItem('authMethod', 'classic')
+    localStorage.setItem('authMethod', 'oauth42')
     try {
       const response = await fetch('https://auth.api.transcendence.fr/users/me/', {
         headers: { Authorization: `Bearer ${client.token}` },

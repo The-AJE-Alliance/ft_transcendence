@@ -11,16 +11,13 @@ async function submitForm({ form, actionUrl, processData, callback, client }) {
       body,
       headers: processData ? { 'Content-Type': 'application/json' } : {},
       credentials: 'include',
+      throwHttpErrors: false,
     })
     responseStatus = response.status
     result = await response.json()
   }
   catch (error) {
     console.error('Error during form submission:', error)
-    if (error.response) {
-      responseStatus = error.response.status
-      result = await error.response.json()
-    }
     if (errorAlert)
       errorAlert.classList.remove('d-none')
   }

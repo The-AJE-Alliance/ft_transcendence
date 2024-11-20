@@ -33,9 +33,15 @@
       </div>
     </form>
        <!-- Conteneur pour le formulaire du 2FA, caché par défaut -->
-    <div id="two-factor-form-container" class="d-none">
-      <!-- Le formulaire du 2FA sera inséré ici -->
-    </div>
+    <form id="two-factor-form" class="d-none">
+       <div class="mb-3 text-start">
+        <label for="otp_code" class="form-label">Enter your 2FA code:</label>
+        <input type="text" class="form-control" id="otp_code" name="otp_code" placeholder="Enter 2FA code" />
+      </div>
+      <div class="d-grid">
+        <button type="submit" class="btn">Verify</button>
+      </div>
+    </form>
     <div
       id="invalid-login"
       class="alert alert-danger d-none d-flex align-items-center"
