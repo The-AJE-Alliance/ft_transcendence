@@ -10,9 +10,6 @@ x-base: &base
   restart: unless-stopped
   init: true
 
-x-micro: &micro
-  <<: *base
-
 x-db: &db
   <<: *base
   build:
@@ -91,10 +88,35 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
   auth:
-    <<: *micro
+    <<: *base
     container_name: auth
     build:
       context: backend
+      dockerfile: Dockerfile.app
+      args:
+        APP_NAME: auth
+        HOST: ${HOSTNAME}
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./backend/auth/
+          target: /auth/
+    environment:
+      - VAULT_ROLEID=${AUTH_RID}
+      - VAULT_SECRETID=${AUTH_SID}
+    env_file:
+      - .env
+    volumes:
+      - auth-ssl:/etc/ssl
+      - media-files:/media
+      - static-files:/static
+      - vault-ca:/ca
+  auth-worker:
+    <<: *base
+    container_name: auth-worker
+    build:
+      context: backend
+      dockerfile: Dockerfile.worker
       args:
         APP_NAME: auth
         HOST: ${HOSTNAME}
@@ -121,10 +143,11 @@ services:
     volumes:
       - auth-db:/var/lib/postgresql/data
   pong:
-    <<: *micro
+    <<: *base
     container_name: pong
     build:
       context: backend
+      dockerfile: Dockerfile.app
       args:
         APP_NAME: pong
         HOST: ${HOSTNAME}
@@ -141,6 +164,30 @@ services:
     volumes:
       - media-files:/media
       - pong-ssl:/etc/ssl
+      - static-files:/static
+      - vault-ca:/ca
+  pong-worker:
+    <<: *base
+    container_name: pong-worker
+    build:
+      context: backend
+      dockerfile: Dockerfile.worker
+      args:
+        APP_NAME: pong
+        HOST: ${HOSTNAME}
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./backend/pong/
+          target: /pong/
+    environment:
+      - VAULT_ROLEID=${PONG_RID}
+      - VAULT_SECRETID=${PONG_SID}
+    env_file:
+      - .env
+    volumes:
+      - auth-ssl:/etc/ssl
+      - media-files:/media
       - static-files:/static
       - vault-ca:/ca
   pong-db:
