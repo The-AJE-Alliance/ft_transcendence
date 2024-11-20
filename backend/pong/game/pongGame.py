@@ -30,6 +30,7 @@ class PongGame:
         self.exchange = None
         self.queue = None
         self.task = None
+        self.winner = None
 
     async def start(self):
         try:
@@ -197,6 +198,7 @@ class PongGame:
     async def end_game(self):
         self.running = False
         self.ball.y = 0.5
+        self.winner = 1 if self.player1_score >= self.max_score else 2
         await self.publish_game_state()
         data = {
             "type": "end",
