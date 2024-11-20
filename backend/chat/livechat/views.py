@@ -7,10 +7,9 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from django.db.models import Q
 from .serializers import ConversationSerializer, UserSerializer, MessageSerializer
+from .queueHandler import QueueHandler
 from django.db import transaction
-
-
-# todo: 2/ When a new message is received while the logged user is not on the chat page
+import asyncio
 
 
 class IngestUsers(APIView):
@@ -115,7 +114,6 @@ class LiveChatBlockUser(APIView):
         )
 
 
-# TODO: Mesages should be sent & received via a websocket
 class LiveChatSendMessage(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -141,12 +139,21 @@ class LiveChatSendMessage(APIView):
                 {"error": "Conversation not found or access denied."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        # TODO: Send the message to web socket
         message = Message.objects.create(
             conversation=conversation,
             sentFromUser=request.user,
             messageContent=message_content,
         )
+
+        queue_handler = QueueHandler(None, conversation_id, request.user.id)
+        message_data = {
+            "type": "chat_message",
+            "content": message_content,
+            "sender_id": request.user.id,
+            "conversation_id": conversation_id,
+            "timestamp": str(message.created_at),
+        }
+        asyncio.run(queue_handler.publish_message(message_data))
 
         # Update unread messages status for the other user
         if conversation.user1 == request.user:
@@ -160,7 +167,6 @@ class LiveChatSendMessage(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# TODO: Mesages should be sent & received via a websocket
 class LiveChatSendInvitation(APIView):
     permission_classes = [IsAuthenticated]
 
