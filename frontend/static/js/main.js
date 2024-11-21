@@ -10,6 +10,7 @@ import { friends } from './friends.js'
 import { matchHistory } from './match-history.js'
 import { updateNavbar } from './navbar.js'
 import { choosePongMode, joinGame, localGame, remotePong, remoteSetup } from './pong-setup.js'
+import { initTournament } from './tournament.js'
 import { profile } from './profile.js'
 import { register } from './register.js'
 import Router from './router.js'
@@ -49,6 +50,7 @@ router.get('/pong/remote', remotePong)
 router.get('/pong/remote/setup', remoteSetup)
 router.get('/pong/remote/join/:id', (client, params) => joinGame(client, params.id))
 router.get('/pong/local', localGame)
+router.get('/pong/tournament', (client) => initTournament(client));
 
 router.get('/profile/edit', editProfile)
 router.get('/friends', friends)

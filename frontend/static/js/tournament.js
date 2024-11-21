@@ -1,5 +1,5 @@
-import tournamentPage from '../pages/tournament.html?raw';
-import '../css/tournament.css';
+import tournamentPage from '../pages/tournaments.html?raw';
+// import '../css/tournament.css';
 
 export async function initTournament(client) {
   client.app.innerHTML = tournamentPage;
