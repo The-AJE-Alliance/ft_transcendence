@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Chat</title>
+  <link rel="stylesheet" href="chat.css">
+</head>
+<body>
+  <div id="chat-container">
+    <div id="friends-list">
+      <h3>Friends List</h3>
+      <ul id="friends">
+        <!-- Friends will be dynamically loaded -->
+      </ul>
+    </div>
+    <div id="chat-window">
+      <div id="chat-header">
+        <span id="chat-user">FRIEND-NAME</span>
+        <div id="chat-actions">
+          <button id="block-user">🚫 Block</button>
+          <button id="profile-user">👤 Profile</button>
+          <button id="invite-game">🚀 Invite to Game</button>
+        </div>
+      </div>
+      <div id="chat-messages">
+        <!-- Messages will be dynamically loaded -->
+      </div>
+      <div id="chat-input">
+        <textarea id="message-input" placeholder="Type here your message"></textarea>
+        <button id="send-message">➤</button>
+      </div>
+    </div>
+  </div>
+  <script src="chat.js"></script>
+</body>
+</html>
