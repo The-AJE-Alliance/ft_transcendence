@@ -1,4 +1,5 @@
 <div class="container-profile">
+  <div id="alert-container"></div>
   <div id="profile-card" class="card">
     <h1 class="mb-4">Profile Page</h1>
     <div class="profile-content">
@@ -41,10 +42,11 @@
         <form id="two-factor-activation-form">
           <div class="mb-3 text-start">
             <label for="otp_code" class="form-label">Enter your 2FA code:</label>
-            <input type="text" class="form-control" id="otp_code" name="otp_code" placeholder="Enter 2FA code" required />
+            <input type="text" class="form-control" id="otp_code" name="otp_code" placeholder="Enter 2FA code"/>
           </div>
-         <div class="d-grid">
+         <div class="d-flex gap-2">
            <button type="submit" class="btn btn-primary">Confirm</button>
+            <button type="button" id="cancel-2fa-activation-btn" class="btn btn-secondary">Cancel</button>
           </div>
         </form>
         <div id="activation-error" class="alert alert-danger d-none mt-2"></div>

@@ -3,7 +3,7 @@ h2 {
   text-shadow: 2px 2px 5px rgba(0, 204, 153, 0.3);
 }
 .container-profile {
-  margin-top: 50px;
+  padding-top: 200px;
   text-align: center;
 }
 
@@ -25,6 +25,11 @@ h2 {
   box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
   max-width: 600px;
   margin: 20px auto;
+}
+
+#otp_code {
+  background-color: #1a1a1a;
+  color: #00cc99;
 }
 
 #profile-card input {

@@ -1,6 +1,20 @@
 import ky from 'ky'
 import { updateNavbar } from './navbar.js'
 
+export function showAlert(message, type = 'success') {
+  const alertContainer = document.getElementById('alert-container')
+  if (!alertContainer)
+    return
+  const wrapper = document.createElement('div')
+  wrapper.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `
+  alertContainer.appendChild(wrapper)
+}
+
 export async function disableTwoFactor(client) {
   try {
     const response = await ky.post('https://auth.api.transcendence.fr/users/disable-two-factor/', {
@@ -14,15 +28,15 @@ export async function disableTwoFactor(client) {
     if (!response.ok) {
       const result = await response.json()
       console.error('Server response:', result)
-      alert(result.detail || 'An error occurred while disabling 2FA.')
+      showAlert(result.detail || 'An error occurred while disabling 2FA.', 'danger')
       return false
     }
-    alert('Two-Factor Authentication has been disabled.')
+    showAlert('Two-Factor Authentication has been disabled.', 'success')
     return true
   }
   catch (error) {
     console.error('Error disabling 2FA:', error)
-    alert('An error occurred while disabling 2FA.')
+    showAlert('An error occurred while disabling 2FA.', 'danger')
     return false
   }
 }
@@ -30,6 +44,7 @@ export async function disableTwoFactor(client) {
 export function showTwoFactorActivationForm(client) {
   const activationForm = document.getElementById('two-factor-activation-form')
   const activationError = document.getElementById('activation-error')
+  const cancelBtn = document.getElementById('cancel-2fa-activation-btn')
 
   if (!activationForm.dataset.listenerAdded) {
     activationForm.addEventListener('submit', async (event) => {
@@ -48,7 +63,7 @@ export function showTwoFactorActivationForm(client) {
         const result = await response.json()
 
         if (response.ok) {
-          alert('Two-Factor Authentication has been enabled successfully.')
+          showAlert('Two-Factor Authentication has been enabled successfully.', 'success')
           const qrcodeContainer = document.getElementById('qrcode-container')
           qrcodeContainer.innerHTML = ''
           const enable2FAButton = document.getElementById('enable-2fa-button')
@@ -75,6 +90,15 @@ export function showTwoFactorActivationForm(client) {
       }
     })
     activationForm.dataset.listenerAdded = 'true'
+  }
+  if (cancelBtn && !cancelBtn.dataset.listenerAdded) {
+    cancelBtn.addEventListener('click', () => {
+      const qrcodeContainer = document.getElementById('qrcode-container')
+      qrcodeContainer.classList.add('d-none')
+      activationForm.reset()
+      activationError.classList.add('d-none')
+    })
+    cancelBtn.dataset.listenerAdded = 'true'
   }
 }
 
