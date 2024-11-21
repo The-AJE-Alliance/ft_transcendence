@@ -369,12 +369,6 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated],
         url_path="enable-two-factor",
     )
-    @action(
-        detail=False,
-        methods=["post"],
-        permission_classes=[IsAuthenticated],
-        url_path="enable-two-factor",
-    )
     def enable_two_factor(self, request):
         user = request.user
         if user.two_factor_enabled:
