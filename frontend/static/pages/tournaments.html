@@ -1,0 +1,35 @@
+<div class="tournament-container">
+    <h1 class="tournament-title">Tournament Mode</h1>
+    <p class="tournament-instructions">
+      Welcome to the tournament! Players will be matched automatically. Stay tuned for updates.
+    </p>
+  
+    <!-- Player List Section -->
+    <div class="player-list">
+      <h2>Players</h2>
+      <ul id="playerList">
+        <!-- Dynamically populated list of players -->
+      </ul>
+    </div>
+  
+    <!-- Bracket Section -->
+    <div class="bracket-container">
+      <h2>Bracket</h2>
+      <div id="tournamentBracket">
+        <p>Waiting for players to join...</p>
+      </div>
+    </div>
+  
+    <!-- Match Status Section -->
+    <div class="match-status">
+      <h2>Match Status</h2>
+      <p id="currentMatch">No matches in progress.</p>
+    </div>
+  
+    <!-- Tournament Controls (for host) -->
+    <div class="tournament-controls">
+      <button id="lockTournament" class="btn btn-danger">Lock Tournament</button>
+      <button id="startTournament" class="btn btn-success" disabled>Start Tournament</button>
+    </div>
+  </div>
+  

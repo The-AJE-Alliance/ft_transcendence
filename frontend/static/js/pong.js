@@ -16,6 +16,7 @@ export async function pong(client, state) {
   //   canvasResize(canvas)
   // })
 
+
   // client.router.addEvent(document, 'visibilitychange', () => {
   //   // TODO: Pause game for x seconds...
   //   client.socket.close()
