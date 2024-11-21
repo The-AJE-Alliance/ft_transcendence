@@ -5,12 +5,16 @@ async function submitForm({ form, actionUrl, processData, callback, client }) {
   const formData = new FormData(form)
   const body = processData ? processData(formData) : formData
   let result
+  let responseStatus
   try {
-    result = await ky.post(actionUrl, {
+    const response = await ky.post(actionUrl, {
       body,
       headers: processData ? { 'Content-Type': 'application/json' } : {},
       credentials: 'include',
-    }).json()
+      throwHttpErrors: false,
+    })
+    responseStatus = response.status
+    result = await response.json()
   }
   catch (error) {
     console.error('Error during form submission:', error)
@@ -19,7 +23,7 @@ async function submitForm({ form, actionUrl, processData, callback, client }) {
   }
   finally {
     if (callback)
-      await callback(client, result)
+      await callback(client, result, responseStatus)
   }
 }
 

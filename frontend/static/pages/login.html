@@ -16,7 +16,7 @@
   </symbol>
 </svg>
 
-<div class="container mt-5 text-center">
+<div class="login-container">
   <h1 class="mb-4">Login</h1>
   <div class="card login-card">
     <form id="login-form">
@@ -30,6 +30,16 @@
       </div>
       <div class="d-grid">
         <button type="submit" class="btn">Log In</button>
+      </div>
+    </form>
+       <!-- Conteneur pour le formulaire du 2FA, caché par défaut -->
+    <form id="two-factor-form" class="d-none">
+       <div class="mb-3 text-start">
+        <label for="otp_code" class="form-label">Enter your 2FA code:</label>
+        <input type="text" class="form-control" id="otp_code" name="otp_code" placeholder="Enter 2FA code" />
+      </div>
+      <div class="d-grid">
+        <button type="submit" class="btn">Verify</button>
       </div>
     </form>
     <div

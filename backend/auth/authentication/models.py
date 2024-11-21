@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from .validators import validate_alnum
 from .manager import UserManager
 from django.conf import settings
+import pyotp
 
 
 class User(AbstractUser, PermissionsMixin):
@@ -23,15 +24,17 @@ class User(AbstractUser, PermissionsMixin):
         default="avatars/default_avatar.png",
     )
     avatar_url = models.URLField(max_length=500, blank=True, null=True)
+    two_factor_enabled = models.BooleanField(default=False)
+    two_factor_secret = models.CharField(max_length=64, blank=True, null=True)
     AUTH_METHOD_CHOICES = [
-        ('classic', 'Classic'),
-        ('oauth42', 'OAuth42'),
+        ("classic", "Classic"),
+        ("oauth42", "OAuth42"),
     ]
 
     auth_method = models.CharField(
         max_length=20,
         choices=AUTH_METHOD_CHOICES,
-        default='classic',
+        default="classic",
     )
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email", "nickname"]
@@ -43,6 +46,11 @@ class User(AbstractUser, PermissionsMixin):
 
     def get_full_name(self):
         return self.nickname
+
+    def enable_two_factor(self):
+        self.two_factor_secret = pyotp.random_base32(length=32)
+        self.two_factor_enabled = True
+        self.save()
 
 
 class FriendRequest(models.Model):

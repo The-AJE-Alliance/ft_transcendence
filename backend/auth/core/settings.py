@@ -38,6 +38,7 @@ VAULT_CACERT = "/ca/ca.pem"
 DATABASE_URL = "postgres://auth-db:5432/auth"
 DATABASE_OWNERROLE = "auth"
 
+
 # Application definition
 
 INSTALLED_APPS = [

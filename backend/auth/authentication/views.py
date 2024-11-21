@@ -1,3 +1,4 @@
+import base64
 from urllib.parse import urlparse
 from django.core.files.base import ContentFile
 import os
@@ -7,6 +8,10 @@ from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny,
 )
+from django.http import HttpResponse
+import qrcode
+import io
+from django.contrib.auth import authenticate
 from rest_framework.authentication import SessionAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
@@ -30,6 +35,7 @@ import logging
 import requests
 from .publisher import publish_message
 from asgiref.sync import async_to_sync
+import pyotp
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +44,9 @@ class PendingFriendRequestsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Get all pending friend requests where the authenticated user is the recipient
         pending_requests = FriendRequest.objects.filter(
-            to_user=request.user, status="pending"
+            to_user=request.user, status="pending", context={"request": request}
         )
-
-        # Serialize the pending friend requests
         serializer = FriendRequestSerializer(pending_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -111,7 +114,10 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get_permissions(self):
-        if self.action in ["update", "destroy", "partial_update", "retrieve"]:
+        action = getattr(self, self.action, None)
+        if action and hasattr(action, "permission_classes"):
+            return [permission() for permission in action.permission_classes]
+        elif self.action in ["update", "destroy", "partial_update", "retrieve"]:
             permission_classes = [IsOwner]
         else:
             permission_classes = self.permission_classes
@@ -357,28 +363,144 @@ class UserViewSet(viewsets.ModelViewSet):
             {"message": "Password updated successfully"}, status=status.HTTP_200_OK
         )
 
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_path="enable-two-factor",
+    )
+    def enable_two_factor(self, request):
+        user = request.user
+        if user.two_factor_enabled:
+            return Response(
+                {"detail": "2FA is already enabled."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Générer un nouveau secret
+        user.two_factor_secret = pyotp.random_base32()
+        user.save()
+
+        # Générer l'URI TOTP
+        totp_uri = pyotp.totp.TOTP(user.two_factor_secret).provisioning_uri(
+            name=user.email, issuer_name="Transcendence"
+        )
+
+        # Générer le QR code
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(totp_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill="black", back_color="white")
+
+        # Convertir l'image en base64 pour l'envoyer au frontend
+        buffer = io.BytesIO()
+        img.save(buffer, format="PNG")
+        img_str = base64.b64encode(buffer.getvalue()).decode()
+
+        return Response({"qr_code": img_str}, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_path="confirm-two-factor",
+    )
+    def confirm_two_factor(self, request):
+        user = request.user
+        otp_code = request.data.get("otp_code")
+
+        if not otp_code:
+            return Response(
+                {"detail": "OTP code is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        totp = pyotp.TOTP(user.two_factor_secret)
+        if totp.verify(otp_code):
+            user.two_factor_enabled = True
+            user.save()
+            return Response(
+                {"detail": "2FA enabled successfully."}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"detail": "Invalid OTP code."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[AllowAny],
+        url_path="verify-two-factor",
+    )
+    def verify_two_factor(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        otp_code = request.data.get("otp_code")
+
+        user = authenticate(username=username, password=password)
+        if user and user.two_factor_enabled:
+            totp = pyotp.TOTP(user.two_factor_secret)
+            if totp.verify(otp_code):
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                user.is_online = True
+                user.save()
+                response = Response({"access": access_token}, status=status.HTTP_200_OK)
+                cookie_max_age = 3600 * 24 * 14  # 14 jours
+                response.set_cookie(
+                    "refresh_token",
+                    str(refresh),
+                    max_age=cookie_max_age,
+                    httponly=True,
+                )
+
+                return response
+            else:
+                return Response({"error": "Invalid OTP code"}, status=400)
+        else:
+            return Response({"error": "Invalid credentials"}, status=400)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        url_path="disable-two-factor",
+    )
+    def disable_two_factor(self, request):
+        user = request.user
+        if not user.two_factor_enabled:
+            return Response(
+                {"detail": "2FA is not enabled."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.two_factor_enabled = False
+        user.two_factor_secret = ""
+        user.save()
+        return Response({"detail": "2FA has been disabled."}, status=status.HTTP_200_OK)
+
 
 class RegisterView(CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+    def post(self, request):
+        data = request.data
+        avatar = request.FILES.get("avatar")
 
-def post(self, request):
-    data = request.data
-    avatar = request.FILES.get("avatar")
+        user = User.objects.create_user(
+            username=data["username"],
+            email=data["email"],
+            password=data["password"],
+            nickname=data["nickname"],
+        )
+        if avatar:
+            user.avatar = avatar
 
-    user = User.objects.create_user(
-        username=data["username"],
-        email=data["email"],
-        password=data["password"],
-        nickname=data["nickname"],
-        avatar=avatar,
-    )
-    user.save()
-    return Response(
-        {"message": "User created successfully"},
-        status=status.HTTP_201_CREATED,
-    )
+        user.save()
+        return Response(
+            {"message": "User created successfully"},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CookieTokenRefreshSerializer(TokenRefreshSerializer):
@@ -393,22 +515,34 @@ class CookieTokenRefreshSerializer(TokenRefreshSerializer):
 
 
 class CookieTokenObtainPairView(TokenObtainPairView):
-    def finalize_response(self, request, response, *args, **kwargs):
-        if response.status_code == 200:
-            user = User.objects.get(username=request.data["username"])
-            user.is_online = True  # Met à jour le statut en ligne lors de la connexion
-            user.save()
+    def post(self, request, *args, **kwargs):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(username=username, password=password)
 
-        if response.data.get("refresh"):
-            cookie_max_age = 3600 * 24 * 14  # 14 days
-            response.set_cookie(
-                "refresh_token",
-                response.data["refresh"],
-                max_age=cookie_max_age,
-                httponly=True,
+        if user:
+            if user.two_factor_enabled:
+                return Response(
+                    {"detail": "2FA required"}, status=status.HTTP_403_FORBIDDEN
+                )
+            else:
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+                user.is_online = True
+                user.save()
+                response = Response({"access": access_token}, status=status.HTTP_200_OK)
+                cookie_max_age = 3600 * 24 * 14  # 14 jours
+                response.set_cookie(
+                    "refresh_token",
+                    str(refresh),
+                    max_age=cookie_max_age,
+                    httponly=True,
+                )
+                return response
+        else:
+            return Response(
+                {"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST
             )
-            del response.data["refresh"]
-        return super().finalize_response(request, response, *args, **kwargs)
 
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -429,6 +563,7 @@ class CookieTokenRefreshView(TokenRefreshView):
 
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
+    authentication_classes = (JWTAuthentication,)
 
     def post(self, request):
         try:
@@ -442,9 +577,10 @@ class LogoutView(APIView):
                 token.blacklist()
             response = Response(status=status.HTTP_205_RESET_CONTENT)
             response.delete_cookie("refresh_token")
-            return Response(status=status.HTTP_205_RESET_CONTENT)
+            return response
+        # return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RedirectTo42View(View):
@@ -488,6 +624,7 @@ class AuthCallbackView(APIView):
                 user, created = User.objects.get_or_create(
                     username=username, defaults={"email": email}
                 )
+
                 if created or not user.avatar:
                     if avatar_url:
                         try:

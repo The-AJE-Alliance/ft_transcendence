@@ -1,4 +1,4 @@
-.container {
+.login-container {
   text-align: center;
 }
 
@@ -7,6 +7,24 @@
   height: 500px;
   margin: 0 auto;
   padding: 20px;
+}
+
+.two-factor-form {
+  background-color: #262626;
+  color: #00cc99;
+  border: 1px solid #00cc99;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+}
+
+#two-factor-form label {
+  color: #00cc99;
+}
+
+#two-factor-form input {
+  background-color: #262626;
+  color: #00cc99;
 }
 
 #login-form .form-control {
