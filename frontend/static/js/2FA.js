@@ -104,7 +104,6 @@ export function showTwoFactorForm(client) {
             password: client.tempPassword,
             otp_code: otpCode,
           },
-          throwHttpErrors: false,
         }).json()
 
         client.token = data.access
