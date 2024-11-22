@@ -25,11 +25,11 @@ export async function checkNicknameExists(client, nickname, currentNickname) {
   }
 }
 
-export function validateEmailField(emailField, useEmailExistsFeedback = false) {
+export function validateEmailField(client, emailField, useEmailExistsFeedback = false) {
   const emailFormatFeedback = document.getElementById('email-format-feedback')
   const emailExistsFeedback = useEmailExistsFeedback ? document.getElementById('email-exists-feedback') : null
 
-  emailField.addEventListener('input', () => {
+  client.router.addEvent(emailField, 'input', () => {
     if (emailExistsFeedback) {
       emailExistsFeedback.style.display = 'none'
     }
@@ -71,17 +71,16 @@ async function checkEmailExists(client, email, currentEmail) {
   }
   try {
     await ky.get(`https://auth.api.transcendence.fr/users/check-email/?email=${email}`, {
-      headers: {
-        Authorization: `Bearer ${client.token}`,
-      },
-    }).json()
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+    })
   }
   catch (error) {
     if (error.response && error.response.status === 409) {
       return true
     }
     else {
-      console.error('Erreur lors de la vérification de l\'email:', error)
+      console.error('Error during email check: ', error)
       return false
     }
   }
@@ -94,24 +93,23 @@ async function checkUsernameExists(client, username, currentUsername) {
   }
   try {
     await ky.get(`https://auth.api.transcendence.fr/users/check-username/?username=${username}`, {
-      headers: {
-        Authorization: `Bearer ${client.token}`,
-      },
-    }).json()
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
+    })
   }
   catch (error) {
     if (error.response && error.response.status === 409) {
       return true
     }
     else {
-      console.error('Erreur lors de la vérification du username:', error)
+      console.error('Error during username verification: ', error)
       return false
     }
   }
 }
 
 export function setupEmailValidation(client, emailField, currentEmail) {
-  validateEmailField(emailField)
+  validateEmailField(client, emailField)
   emailField.addEventListener('input', async () => {
     const emailExistsFeedback = document.getElementById('email-exists-feedback')
     const emailFormatFeedback = document.getElementById('email-format-feedback')
@@ -139,7 +137,7 @@ export function setupEmailValidation(client, emailField, currentEmail) {
 }
 
 export function setupUsernameValidation(client, usernameField, currentUsername) {
-  usernameField.addEventListener('input', async () => {
+  client.router.addEvent(usernameField, 'input', async () => {
     const usernameExistsFeedback = document.getElementById('username-feedback')
     const username = usernameField.value
     const validUsernamePattern = /^[a-z0-9]+$/i

@@ -64,11 +64,10 @@ async function checkForAccessToken(client) {
     client.authMethod = 'oauth42'
     localStorage.setItem('authMethod', 'oauth42')
     try {
-      const response = await fetch('https://auth.api.transcendence.fr/users/me/', {
+      const userData = await ky.get('https://auth.api.transcendence.fr/users/me/', {
         headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
-      })
-      const userData = await response.json()
+      }).json()
       client.avatarUrl = userData.avatar_url
       window.history.replaceState({}, document.title, '/')
       client.router.redirect('/')

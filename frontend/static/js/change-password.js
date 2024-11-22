@@ -1,12 +1,12 @@
 import ky from 'ky'
 import { showAlert } from './check-profile.js'
 
-export function validatePasswordConfirmation(form) {
+export function validatePasswordConfirmation(client, form) {
   const passwordChange = form.querySelector('#new-password')
   const confirmPasswordChange = form.querySelector('#confirm-new-password')
 
   if (passwordChange && confirmPasswordChange) {
-    confirmPasswordChange.addEventListener('input', () => {
+    client.router.addEvent(confirmPasswordChange, 'input', () => {
       if (passwordChange.value !== confirmPasswordChange.value) {
         confirmPasswordChange.classList.remove('is-valid')
         confirmPasswordChange.classList.add('is-invalid')

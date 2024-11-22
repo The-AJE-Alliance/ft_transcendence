@@ -9,17 +9,10 @@ import '../css/edit-profile.css'
 
 export async function enableTwoFactor(client) {
   try {
-    const response = await ky.post('https://auth.api.transcendence.fr/users/enable-two-factor/', {
+    const data = await ky.post('https://auth.api.transcendence.fr/users/enable-two-factor/', {
       credentials: 'include',
-      headers: {
-        Authorization: `Bearer ${client.token}`,
-      },
-    })
-    const data = await response.json()
-    if (!response.ok) {
-      console.error('Server response:', data)
-      throw new Error(`HTTP error! Status: ${response.status}`)
-    }
+      headers: { Authorization: `Bearer ${client.token}` },
+    }).json()
     const qrCodeImageBase64 = data.qr_code
     const qrcodeContainer = document.getElementById('qrcode-container')
     const qrcodeImage = document.getElementById('qrcode-image')
@@ -35,7 +28,7 @@ export async function enableTwoFactor(client) {
 function setupDeleteProfileButton(client) {
   const confirmDeleteButton = document.getElementById('confirmDelete')
   if (confirmDeleteButton) {
-    confirmDeleteButton.addEventListener('click', async () => {
+    client.router.addEvent(confirmDeleteButton, 'click', async () => {
       try {
         await ky.delete(`https://auth.api.transcendence.fr/users/${client.userId}/`, {
           headers: { Authorization: `Bearer ${client.token}` },
@@ -90,13 +83,13 @@ async function handleNicknameEdit(client) {
     console.error('Nickname elements not found in DOM.')
     return
   }
-  editButton.addEventListener('click', () => {
+  client.router.addEvent(editButton, 'click', () => {
     nicknameDisplay.parentElement.classList.add('d-none')
     nicknameEditContainer.classList.remove('d-none')
     nicknameInput.value = nicknameDisplay.textContent.trim()
   })
 
-  saveButton.addEventListener('click', async () => {
+  client.router.addEvent(saveButton, 'click', async () => {
     const newNickname = nicknameInput.value.trim()
     if (newNickname) {
       try {
@@ -118,7 +111,7 @@ async function handleNicknameEdit(client) {
     }
   })
 
-  cancelButton.addEventListener('click', () => {
+  client.router.addEvent(cancelButton, 'click', () => {
     nicknameDisplay.parentElement.classList.remove('d-none')
     nicknameEditContainer.classList.add('d-none')
   })
@@ -158,26 +151,26 @@ async function setupTwoFactorAuth(client, user) {
     const newEnable2FAButton = enable2FAButton.cloneNode(true)
     enable2FAButton.parentNode.replaceChild(newEnable2FAButton, enable2FAButton)
 
-    function enableTwoFactorHandler(event) {
-      enableTwoFactor(client)
-    }
-
     async function disableTwoFactorHandler(event) {
       const success = await disableTwoFactor(client)
       if (success) {
         newEnable2FAButton.textContent = 'Enable 2FA'
         newEnable2FAButton.removeEventListener('click', disableTwoFactorHandler)
-        newEnable2FAButton.addEventListener('click', enableTwoFactorHandler)
+        client.router.addEvent('click', () => {
+          enableTwoFactor(client)
+        })
       }
     }
 
     if (user.two_factor_enabled) {
       newEnable2FAButton.textContent = 'Disable 2FA'
-      newEnable2FAButton.addEventListener('click', disableTwoFactorHandler)
+      client.router.addEvent(newEnable2FAButton, 'click', disableTwoFactorHandler)
     }
     else {
       newEnable2FAButton.textContent = 'Enable 2FA'
-      newEnable2FAButton.addEventListener('click', enableTwoFactorHandler)
+      client.router.addEvent(newEnable2FAButton, 'click', () => {
+        enableTwoFactor(client)
+      })
     }
   }
 }

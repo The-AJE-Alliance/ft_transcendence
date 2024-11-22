@@ -80,6 +80,7 @@ export function isValidEmail(email) {
   const emailPattern = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
   return emailPattern.test(email)
 }
+
 function setupRegisterEmailValidation(client, emailField) {
   const emailFormatFeedback = document.getElementById('email-format-feedback')
   const emailExistsFeedback = document.getElementById('email-exists-feedback')

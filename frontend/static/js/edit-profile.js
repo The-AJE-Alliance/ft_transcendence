@@ -52,13 +52,9 @@ export async function editProfile(client) {
   const user = await getUserProfile(client)
 
   if (user) {
-    const currentEmail = user.email
-    const currentUsername = user.username
-    const currentNickname = user.nickname
-
-    document.getElementById('username').value = currentUsername
-    document.getElementById('email').value = currentEmail
-    document.getElementById('nickname').value = currentNickname
+    document.getElementById('username').value = user.username
+    document.getElementById('email').value = user.email
+    document.getElementById('nickname').value = user.nickname
   }
   const emailField = document.getElementById('email')
   const usernameField = document.getElementById('username')
@@ -68,7 +64,7 @@ export async function editProfile(client) {
   setupEmailValidation(client, emailField, user.email)
   setupUsernameValidation(client, usernameField, user.username)
   setupNicknameValidation(client, nicknameField, user.nickname)
-  saveProfileButton.addEventListener('click', async (event) => {
+  client.router.addEvent(saveProfileButton, 'click', async (event) => {
     event.preventDefault()
 
     if (!usernameField.value || !emailField.value || !nicknameField.value) {
@@ -81,8 +77,8 @@ export async function editProfile(client) {
       await updateProfile(client)
   })
   const passwordForm = document.getElementById('change-password-form')
-  validatePasswordConfirmation(passwordForm)
-  passwordForm.addEventListener('submit', async (event) => {
+  validatePasswordConfirmation(client, passwordForm)
+  client.router.addEvent(passwordForm, 'submit', async (event) => {
     event.preventDefault()
     if (validateFormFields())
       await changePassword(client)

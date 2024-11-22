@@ -17,20 +17,13 @@ export function showAlert(message, type = 'success') {
 
 export async function disableTwoFactor(client) {
   try {
-    const response = await ky.post('https://auth.api.transcendence.fr/users/disable-two-factor/', {
+    await ky.post('https://auth.api.transcendence.fr/users/disable-two-factor/', {
       headers: {
         'Authorization': `Bearer ${client.token}`,
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({}),
     })
-    if (!response.ok) {
-      const result = await response.json()
-      console.error('Server response:', result)
-      showAlert(result.detail || 'An error occurred while disabling 2FA.', 'danger')
-      return false
-    }
     showAlert('Two-Factor Authentication has been disabled.', 'success')
     return true
   }
@@ -47,52 +40,43 @@ export function showTwoFactorActivationForm(client) {
   const cancelBtn = document.getElementById('cancel-2fa-activation-btn')
 
   if (!activationForm.dataset.listenerAdded) {
-    activationForm.addEventListener('submit', async (event) => {
+    client.router.addEvent(activationForm, 'submit', async (event) => {
       event.preventDefault()
       const otpCode = document.getElementById('otp_code').value
 
       try {
-        const response = await ky.post('https://auth.api.transcendence.fr/users/confirm-two-factor/', {
+        await ky.post('https://auth.api.transcendence.fr/users/confirm-two-factor/', {
           headers: {
             'Authorization': `Bearer ${client.token}`,
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ otp_code: otpCode }),
         })
 
-        const result = await response.json()
-
-        if (response.ok) {
-          showAlert('Two-Factor Authentication has been enabled successfully.', 'success')
-          const qrcodeContainer = document.getElementById('qrcode-container')
-          qrcodeContainer.innerHTML = ''
-          const enable2FAButton = document.getElementById('enable-2fa-button')
-          if (enable2FAButton) {
-            const newEnable2FAButton = enable2FAButton.cloneNode(true)
-            enable2FAButton.parentNode.replaceChild(newEnable2FAButton, enable2FAButton)
-            function disableTwoFactorHandler(event) {
-              disableTwoFactor(client)
-            }
-            newEnable2FAButton.textContent = 'Disable 2FA'
-            newEnable2FAButton.addEventListener('click', disableTwoFactorHandler)
-          }
-          activationForm.classList.add('d-none')
+        showAlert('Two-Factor Authentication has been enabled successfully.', 'success')
+        const qrcodeContainer = document.getElementById('qrcode-container')
+        qrcodeContainer.innerHTML = ''
+        const enable2FAButton = document.getElementById('enable-2fa-button')
+        if (enable2FAButton) {
+          const newEnable2FAButton = enable2FAButton.cloneNode(true)
+          enable2FAButton.parentNode.replaceChild(newEnable2FAButton, enable2FAButton)
+          newEnable2FAButton.textContent = 'Disable 2FA'
+          client.router.addEvent(newEnable2FAButton, 'click', () => {
+            disableTwoFactor(client)
+          })
         }
-        else {
-          activationError.textContent = result.detail || 'Invalid 2FA code, please try again.'
-          activationError.classList.remove('d-none')
-        }
+        activationForm.classList.add('d-none')
       }
-      catch (error) {
-        console.error('Error confirming 2FA activation:', error)
-        activationError.textContent = 'An error occurred during 2FA activation.'
+      catch {
+        activationError.textContent = 'Invalid 2FA code, please try again.'
         activationError.classList.remove('d-none')
       }
     })
     activationForm.dataset.listenerAdded = 'true'
   }
   if (cancelBtn && !cancelBtn.dataset.listenerAdded) {
-    cancelBtn.addEventListener('click', () => {
+    client.router.addEvent(cancelBtn, 'click', () => {
       const qrcodeContainer = document.getElementById('qrcode-container')
       qrcodeContainer.classList.add('d-none')
       activationForm.reset()
@@ -110,40 +94,28 @@ export function showTwoFactorForm(client) {
   if (loginForm && twoFactorForm) {
     loginForm.classList.add('d-none')
     twoFactorForm.classList.remove('d-none')
-    twoFactorForm.addEventListener('submit', async (event) => {
+    client.router.addEvent(twoFactorForm, 'submit', async (event) => {
       event.preventDefault()
       const otpCode = document.getElementById('otp_code').value
       try {
-        const response = await ky.post('https://auth.api.transcendence.fr/users/verify-two-factor/', {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+        const data = await ky.post('https://auth.api.transcendence.fr/users/verify-two-factor/', {
           json: {
             username: client.tempUsername,
             password: client.tempPassword,
             otp_code: otpCode,
           },
           throwHttpErrors: false,
-        })
+        }).json()
 
-        if (response.ok) {
-          const data = await response.json()
-          client.token = data.access
-          client.authMethod = 'classic'
-          localStorage.setItem('authMethod', 'classic')
-          await updateNavbar(client)
-          client.router.redirect('/')
-        }
-        else {
-          const result = await response.json()
-          invalidLoginAlert.classList.remove('d-none')
-          invalidLoginAlert.querySelector('div').textContent = result.error || 'Invalid 2FA code, please try again.'
-        }
+        client.token = data.access
+        client.authMethod = 'classic'
+        localStorage.setItem('authMethod', 'classic')
+        await updateNavbar(client)
+        client.router.redirect('/')
       }
-      catch (error) {
-        console.error('Erreur lors de la vérification du code 2FA :', error)
+      catch {
         invalidLoginAlert.classList.remove('d-none')
-        invalidLoginAlert.querySelector('div').textContent = 'An error occurred during 2FA verification.'
+        invalidLoginAlert.querySelector('div').textContent = 'Invalid 2FA code, please try again.'
       }
     })
   }
