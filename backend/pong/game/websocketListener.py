@@ -33,6 +33,16 @@ class WebsocketListener(AsyncWebsocketConsumer):
                 await self.queue_handler.publish_to_loop(data)
             case "setup":
                 await self.setup(data)
+            case "setup_tournament":
+                # logger.info("Created TOURNAMENT")
+                await self.setup_tournament(data)
+
+    async def setup_tournament(self, data):
+        content = data["content"]
+        self.mode = content["mode"]
+        self.host = content["host"]
+        self.tournament = TournamentManager(self.room_id)
+        await self.tournament.start()
 
     async def setup(self, data):
         user = self.scope["user"]
@@ -53,11 +63,12 @@ class WebsocketListener(AsyncWebsocketConsumer):
             self.pong_game = PongGame(self.room_id, self.mode)
             game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
 
-        if self.mode == "tournament":
-            logger.error("SETUP MESSAGE SENT")
-            self.room_id = "tournament-" + content["room_id"]
-            self.tournament = TournamentManager(self.room_id)
-            await self.tournament.start()
+        if self.host:
+            if self.room_id in game_tasks:
+                pass  # TODO: problem
+            logger.info("Created game")
+            self.pong_game = PongGame(self.room_id, self.mode)
+            game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
 
         else:
             if self.host:

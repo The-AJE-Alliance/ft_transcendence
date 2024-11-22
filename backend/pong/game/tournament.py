@@ -1,6 +1,9 @@
 import json
 import aio_pika
 from aio_pika import ExchangeType
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TournamentManager:
     def __init__(self, tournament_id):
