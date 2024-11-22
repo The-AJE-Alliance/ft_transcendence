@@ -13,13 +13,13 @@
           required
         />
         <div class="invalid-feedback" id="username-exists">Please enter a username.</div>
-        <div class="invalid-feedback" id="username-feedback">This username is already used.</div>
+        <div id="username-feedback">This username is already used.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="email" class="form-label">Email:</label>
         <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required />
         <div class="invalid-feedback" id="email-format-feedback">Please enter a valid email address.</div>
-        <div class="invalid-feedback" id="email-exists-feedback">This email is already used.</div>
+        <div id="email-exists-feedback">This email is already used.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="password" class="form-label">Password:</label>
@@ -43,7 +43,7 @@
           placeholder="Confirm your password"
           required
         />
-        <div class="invalid-feedback">Passwords do not match.</div>
+         <div class="invalid-feedback">Passwords do not match.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="nickname" class="form-label">Nickname:</label>
@@ -56,6 +56,7 @@
           required
         />
         <div class="invalid-feedback">Please enter a nickname.</div>
+        <div id="nickname-exists-feedback">This nickname is already used.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="avatar" class="form-label">Avatar:</label>

@@ -11,7 +11,7 @@ class User(AbstractUser, PermissionsMixin):
     username = models.CharField(
         max_length=15, unique=True, validators=[MinLengthValidator(3), validate_alnum]
     )
-    nickname = models.CharField(max_length=30, unique=False, blank=False, null=False)
+    nickname = models.CharField(max_length=30, unique=True, blank=False, null=False)
     email = models.EmailField(unique=True, blank=False, null=False)
     friends = models.ManyToManyField(
         "self", related_name="friend_set", symmetrical=False, blank=True

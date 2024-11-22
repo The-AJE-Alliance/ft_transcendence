@@ -1,6 +1,30 @@
 import ky from 'ky'
 import { isValidEmail } from './register.js'
 
+export async function checkNicknameExists(client, nickname, currentNickname) {
+  if (!nickname || nickname === currentNickname) {
+    return false
+  }
+  try {
+    const response = await ky.get(`https://auth.api.transcendence.fr/users/check-nickname/?nickname=${encodeURIComponent(nickname)}`, {
+      headers: {
+        'Authorization': `Bearer ${client.token}`,
+        'Content-Type': 'application/json',
+      },
+    }).json()
+    return response.exists
+  }
+  catch (error) {
+    if (error.response && error.response.status === 409) {
+      return true
+    }
+    else {
+      console.error('Erreur lors de la vérification du nickname:', error)
+      return false
+    }
+  }
+}
+
 export function validateEmailField(emailField, useEmailExistsFeedback = false) {
   const emailFormatFeedback = document.getElementById('email-format-feedback')
   const emailExistsFeedback = useEmailExistsFeedback ? document.getElementById('email-exists-feedback') : null

@@ -72,6 +72,12 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    def validate_nickname(self, value):
+        user = self.context["request"].user
+        if User.objects.exclude(pk=user.pk).filter(nickname=value).exists():
+            raise serializers.ValidationError("This nickname is already used.")
+        return value
+
 
 class FriendRequestSerializer(serializers.ModelSerializer):
     from_user = UserSerializer(read_only=True)

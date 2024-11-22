@@ -45,6 +45,9 @@ export function handleForm({ form, actionUrl, method, processData, callback, cli
     }
     if (enableValidation) {
       form.classList.add('was-validated')
+      if (!form.checkValidity()) {
+        return
+      }
     }
     await submitForm({ form, actionUrl, method, processData, callback, client })
   })

@@ -16,13 +16,14 @@
         </div>
         <div class="mb-3-edit-profile text-start">
           <label for="nickname"><strong>Nickname:</strong></label>
-          <input type="text" id="nickname"><br>
+          <input type="text" class="edit-control" id="nickname"><br>
+          <div id="nickname-exists-feedback" class="invalid-feedback">This nickname is already used.</div>
         </div>
          <div class="mb-3-edit-profile text-start">
         <label for="new-avatar"><strong>Avatar:</strong></label>
         <input type="file" id="new-avatar" class="edit-control" accept="image/*"><br>
         </div>
-        <div id="edit-alert" class="alert alert-danger d-none" role="alert"></div>
+        <div id="edit-alert" class="alert alert-danger d-none" role="alert">Please fill all the fields</div>
         <a href="/profile/update" id="save-profile-info-link" class="btn btn-primary">Save Profile Info</a>
       </div>
     </div>
