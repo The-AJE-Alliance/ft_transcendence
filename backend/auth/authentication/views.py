@@ -285,6 +285,21 @@ class UserViewSet(viewsets.ModelViewSet):
         methods=["get"],
         permission_classes=[AllowAny],
         authentication_classes=[],
+        url_path="check-nickname",
+    )
+    def check_nickname(self, request):
+        nickname = request.query_params.get("nickname")
+        if User.objects.filter(nickname=nickname).exists():
+            return Response(
+                {"error": "Nickname already exists"}, status=status.HTTP_409_CONFLICT
+            )
+        return Response({"message": "Nickname is available"}, status=status.HTTP_200_OK)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=[AllowAny],
+        authentication_classes=[],
         url_path="login_with_42",
     )
     def login_with_42(self, request):

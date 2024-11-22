@@ -10,6 +10,15 @@ h1 {
   color: #00cc99;
 }
 
+#username-feedback,
+#email-exists-feedback,
+#nickname-exists-feedback {
+  color: #ff0000;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  display: none;
+}
+
 #register-form .form-control {
   background-color: #262626;
   color: #00cc99;
