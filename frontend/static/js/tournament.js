@@ -2,28 +2,35 @@ import tournamentPage from '../pages/tournaments.html?raw';
 // import '../css/tournament.css';
 
 export async function initTournament(client) {
+
   client.app.innerHTML = tournamentPage;
 
   // State to track the tournament
-  const state = {
+  const tournamentState = {
     players: [],
     isLocked: false,
     matches: [],
     currentMatch: null,
   };
 
-  // WebSocket connection
-  if (!client.socket) {
-    client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`);
-  }
+  
+  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`);
+  
+
+  
+ 
 
   client.socket.onopen = () => {
     console.log('WebSocket for tournament connected.');
 
-    // Notify server to create a tournament
     const initMessage = {
-      type: 'create_tournament',
-      content: { host: client.user, room_id: 'tournament-123' },
+      type: 'setup',
+      content: {
+        mode: 'tournament',
+        player: 1,
+        host: True,
+        room_id: '123', //find appropriate room_id
+         }, 
     };
     client.socket.send(JSON.stringify(initMessage));
   };
@@ -58,18 +65,20 @@ export async function initTournament(client) {
   };
 
   // Lock tournament
-  document.getElementById('lockTournament').addEventListener('click', () => {
+  const lockTournamentBtn = document.getElementById('lock-tournament')
+  client.router.addEvent(lockTournamentBtn, 'click', () => {
     client.socket.send(JSON.stringify({ type: 'lock_tournament' }));
   });
 
   // Start tournament
-  document.getElementById('startTournament').addEventListener('click', () => {
+  const startTournamentBtn = document.getElementById('start-tournament')
+  client.router.addEvent(startTournamentBtn, 'click', () => {
     client.socket.send(JSON.stringify({ type: 'start_tournament' }));
   });
 
   // Helper functions
   function updatePlayerList(player) {
-    state.players.push(player);
+    tournamentState.players.push(player);
     const playerList = document.getElementById('playerList');
     const newPlayer = document.createElement('li');
     newPlayer.textContent = player;
@@ -77,14 +86,14 @@ export async function initTournament(client) {
   }
 
   function handleTournamentLocked() {
-    state.isLocked = true;
+    tournamentState.isLocked = true;
     document.getElementById('lockTournament').disabled = true;
     document.getElementById('startTournament').disabled = false;
     console.log('Tournament locked! Ready to start.');
   }
 
   function startMatch(match) {
-    state.currentMatch = match;
+    tournamentState.currentMatch = match;
     console.log(`Starting match: ${match.player1} vs ${match.player2}`);
     pong(client, {
       mode: 'tournament',

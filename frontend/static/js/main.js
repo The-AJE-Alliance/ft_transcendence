@@ -50,7 +50,7 @@ router.get('/pong/remote', remotePong)
 router.get('/pong/remote/setup', remoteSetup)
 router.get('/pong/remote/join/:id', (client, params) => joinGame(client, params.id))
 router.get('/pong/local', localGame)
-router.get('/pong/tournament', (client) => initTournament(client));
+router.get('/pong/tournament', initTournament);
 
 router.get('/profile/edit', editProfile)
 router.get('/friends', friends)

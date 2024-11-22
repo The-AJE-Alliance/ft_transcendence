@@ -6,6 +6,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 
 from .pongGame import PongGame
+from .tournament import TournamentManager
 from .queueHandler import QueueHandler
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pong_game = None
+        self.tournament = None
         self.queue_handler = None
         self.mode = None
         self.host = None
@@ -37,8 +39,9 @@ class WebsocketListener(AsyncWebsocketConsumer):
         content = data["content"]
         self.mode = content["mode"]
         self.host = content["host"]
+
         self.room_id = "room-" + content["room_id"]
-        if self.mode == "remote" and type(user) is AnonymousUser:
+        if self.mode != "local" and type(user) is AnonymousUser:
             data["type"] = "unauthorized"
             await self.send(json.dumps(data))
             await self.close()
@@ -50,8 +53,24 @@ class WebsocketListener(AsyncWebsocketConsumer):
             self.pong_game = PongGame(self.room_id, self.mode)
             game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
 
-        self.queue_handler = QueueHandler(self, self.room_id, (1 if self.host else 2))
-        await self.queue_handler.start(data)
+        if self.mode == "tournament":
+            logger.error("SETUP MESSAGE SENT")
+            self.room_id = "tournament-" + content["room_id"]
+            self.tournament = TournamentManager(self.room_id)
+            await self.tournament.start()
+
+        else:
+            if self.host:
+                if self.room_id in game_tasks:
+                    pass  # TODO: problem
+                logger.info("Created game")
+                self.pong_game = PongGame(self.room_id, self.mode)
+                game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
+
+            self.queue_handler = QueueHandler(
+                self, self.room_id, (1 if self.host else 2)
+            )
+            await self.queue_handler.start(data)
 
     async def disconnect(self, close_code):
         logger.warning("Client déconnecté")

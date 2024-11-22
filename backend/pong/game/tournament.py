@@ -11,7 +11,6 @@ class TournamentManager:
         self.exchange = None
 
     async def start(self):
-        
         self.connection = await aio_pika.connect_robust("amqp://localhost/")
         self.channel = await self.connection.channel()
         self.exchange = await self.channel.declare_exchange(
