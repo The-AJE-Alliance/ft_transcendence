@@ -114,8 +114,7 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get_permissions(self):
-        action = getattr(self, self.action, None)
-        if action and hasattr(action, "permission_classes"):
+        if self.action and hasattr(action, "permission_classes"):
             return [permission() for permission in action.permission_classes]
         elif self.action in ["update", "destroy", "partial_update", "retrieve"]:
             permission_classes = [IsOwner]
