@@ -8,7 +8,7 @@ import { getUserProfile } from './profile.js'
 function setupNicknameValidation(client, nicknameField, currentNickname) {
   const nicknameExistsFeedback = document.getElementById('nickname-exists-feedback')
 
-  nicknameField.addEventListener('input', async () => {
+  client.router.addEvent(nicknameField, 'input', async () => {
     nicknameExistsFeedback.style.display = 'none'
     nicknameField.classList.remove('is-invalid', 'is-valid')
 

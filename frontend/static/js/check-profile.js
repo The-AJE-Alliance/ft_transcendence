@@ -7,10 +7,8 @@ export async function checkNicknameExists(client, nickname, currentNickname) {
   }
   try {
     const response = await ky.get(`https://auth.api.transcendence.fr/users/check-nickname/?nickname=${encodeURIComponent(nickname)}`, {
-      headers: {
-        'Authorization': `Bearer ${client.token}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
     }).json()
     return response.exists
   }
@@ -19,7 +17,7 @@ export async function checkNicknameExists(client, nickname, currentNickname) {
       return true
     }
     else {
-      console.error('Erreur lors de la vérification du nickname:', error)
+      console.error('Error during nickname verification: ', error)
       return false
     }
   }
@@ -80,7 +78,7 @@ async function checkEmailExists(client, email, currentEmail) {
       return true
     }
     else {
-      console.error('Error during email check: ', error)
+      console.error('Error during email verification: ', error)
       return false
     }
   }
