@@ -167,5 +167,5 @@ node_modules
 *.crt
 init
 
-backend/media/avatars/*.png
+backend/media/avatars/*[.png, .jpg, .jpeg, .webp, .gif]
 !backend/media/avatars/default_avatar.png

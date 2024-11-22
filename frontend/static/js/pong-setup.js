@@ -1,6 +1,6 @@
-import chooseFriendsPage from '../pages/pong-friends.html?raw'
 import chooseModePage from '../pages/pong-mode.html?raw'
-import { loadFriends, loadPendingFriendRequests, sendFriendRequest } from './friends'
+import pongRemotePage from '../pages/pong-remote.html?raw'
+import { pong } from './pong.js'
 import '../css/pong-friends.css'
 import '../css/pong-mode.css'
 
@@ -22,17 +22,55 @@ export async function remoteSetup(client) {
     client.router.redirect('/login')
     return
   }
-  client.app.innerHTML = chooseFriendsPage
-  const addFriendBtn = document.getElementById('add-friend-btn')
-  const friendUsernameInput = document.getElementById('friend-username')
 
-  client.router.addEvent(addFriendBtn, 'click', async () => {
-    const friendUsername = friendUsernameInput.value.trim()
-    if (friendUsername) {
-      await sendFriendRequest(client, friendUsername)
-      friendUsernameInput.value = ''
+  client.app.innerHTML = pongRemotePage
+  const createGameBtn = document.getElementById('host-create-btn')
+
+  client.router.addEvent(createGameBtn, 'click', async () => {
+    client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+
+    const state = {
+      mode: 'remote',
+      player: 1,
+      host: true,
+      room_id: globalThis.crypto.randomUUID().split('-')[0],
     }
+    createGameBtn.classList.add('d-none')
+
+    await pong(client, state)
   })
-  await loadFriends(client)
-  await loadPendingFriendRequests(client)
+}
+
+export async function joinGame(client, uuid) {
+  if (!await client.isLoggedIn()) {
+    await client.refresh()
+    client.router.redirect('/login')
+    return
+  }
+
+  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+
+  const state = {
+    mode: 'remote',
+    player: 2,
+    host: false,
+    room_id: uuid,
+  }
+
+  // TODO: potentially create a waiting page for player2
+
+  await pong(client, state)
+}
+
+export async function localGame(client) {
+  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+
+  const state = {
+    mode: 'local',
+    player: 1,
+    host: true,
+    room_id: globalThis.crypto.randomUUID(),
+  }
+
+  await pong(client, state)
 }

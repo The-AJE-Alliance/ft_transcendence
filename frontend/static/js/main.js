@@ -4,8 +4,7 @@ import { login, login42, logout } from './auth.js'
 import Client from './client.js'
 import { editProfile, updateProfile } from './edit-profile.js'
 import { updateNavbar } from './navbar.js'
-import { pong } from './pong.js'
-import { choosePongMode, remotePong, remoteSetup } from './pong-setup.js'
+import { choosePongMode, joinGame, localGame, remotePong, remoteSetup } from './pong-setup.js'
 import { profile } from './profile.js'
 import { register } from './register.js'
 import Router from './router.js'
@@ -42,9 +41,8 @@ router.get('/profile', profile)
 router.get('/pong', choosePongMode)
 router.get('/pong/remote', remotePong)
 router.get('/pong/remote/setup', remoteSetup)
-
-router.get('/pong/local', client => pong(client, { mode: 'local', host: true, room_id: '35343' }))
-router.get('/pong/remote/:id', (client, params) => pong(client, { mode: 'remote', opponentId: params.id }))
+router.get('/pong/remote/join/:id', (client, params) => joinGame(client, params.id))
+router.get('/pong/local', localGame)
 
 router.get('/profile/edit', editProfile)
 router.get('/profile/update', updateProfile)

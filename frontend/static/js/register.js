@@ -80,6 +80,7 @@ export function isValidEmail(email) {
   const emailPattern = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
   return emailPattern.test(email)
 }
+
 function setupRegisterEmailValidation(client, emailField) {
   const emailFormatFeedback = document.getElementById('email-format-feedback')
   const emailExistsFeedback = document.getElementById('email-exists-feedback')
@@ -126,7 +127,7 @@ async function checkEmailExistsForRegister(client, email) {
       return true
     }
     else {
-      console.error('Erreur lors de la vérification de l\'email:', error)
+      console.error('Error during email verification:', error)
       return false
     }
   }
@@ -173,7 +174,7 @@ async function checkUsernameExistsForRegister(client, username) {
       return true
     }
     else {
-      console.error('Erreur lors de la vérification du username:', error)
+      console.error('Error during username verification:', error)
       return false
     }
   }

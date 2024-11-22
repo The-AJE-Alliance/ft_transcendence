@@ -56,4 +56,5 @@ class QueueHandler:
         if self.consumer_task:
             self.consumer_task.cancel()
         if self.connection:
+            await self.channel.close()
             await self.connection.close()

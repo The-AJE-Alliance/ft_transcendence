@@ -17,8 +17,8 @@ class PongGame:
         self.timer = 2
         self.running = False
         self.ball = self.Ball()
-        self.player1 = self.Pad(True)
-        self.player2 = self.Pad(False)
+        self.player1 = None
+        self.player2 = None
         self.max_score = 5
         self.player1_score = 0
         self.player2_score = 0
@@ -61,7 +61,9 @@ class PongGame:
 
     async def stop(self):
         self.running = False
-        self.task.cancel()
+        if self.task:
+            self.task.cancel()
+        await self.channel.close()
         await self.connection.close()
 
     async def publish_game_state(self):
@@ -97,6 +99,8 @@ class PongGame:
         response = {"type": "setup", "content": {"ready": False, "timer": self.timer}}
         if self.running or content["mode"] != self.mode:
             pass  # TODO: problem
+
+        logger.error(self.mode)
 
         if self.mode == "local":
             self.player1 = self.Pad(True)
