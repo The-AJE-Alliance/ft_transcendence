@@ -1,7 +1,8 @@
 import json
 import aio_pika
-from aio_pika import ExchangeType
 import logging
+from aio_pika import ExchangeType
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ class TournamentManager:
         self.exchange = None
 
     async def start(self):
-        self.connection = await aio_pika.connect_robust("amqp://localhost/")
+        self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
         self.channel = await self.connection.channel()
         self.exchange = await self.channel.declare_exchange(
             f"tournament-{self.tournament_id}", ExchangeType.FANOUT

@@ -34,7 +34,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
             case "setup":
                 await self.setup(data)
             case "setup_tournament":
-                # logger.info("Created TOURNAMENT")
+                # logger.error("Created TOURNAMENT")
                 await self.setup_tournament(data)
 
     async def setup_tournament(self, data):
