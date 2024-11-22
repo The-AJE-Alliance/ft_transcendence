@@ -1,6 +1,6 @@
-import pongPage from '../pages/pong.html?raw'
 import chooseModePage from '../pages/pong-mode.html?raw'
 import pongRemotePage from '../pages/pong-remote.html?raw'
+import { pong } from './pong.js'
 import '../css/pong-friends.css'
 import '../css/pong-mode.css'
 
@@ -28,46 +28,20 @@ export async function remoteSetup(client) {
 
   client.router.addEvent(createGameBtn, 'click', async () => {
     client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
-  })
 
-  const state = {
-    mode: 'remote',
-    player: 1,
-    host: true,
-    room_id: globalThis.crypto.randomUUID(),
-  }
+    const state = {
+      mode: 'remote',
+      player: 1,
+      host: true,
+      room_id: globalThis.crypto.randomUUID(),
+    }
+    createGameBtn.classList.add('d-none')
 
-  client.router.addEvent(client.socket, 'open', () => {
-    console.log('WebSocket connected.')
-    const initMessage = {
-      type: 'setup',
-      content: {
-        state,
-      },
-    }
-    client.socket.send(JSON.stringify(initMessage))
-  })
-
-  client.router.addEvent(client.socket, 'message', async (event) => {
-    const data = JSON.parse(event.data)
-    if (data.type === 'setup') {
-      const { ready } = data.content
-      if (ready) {
-        client.app.innerHTML = pongPage
-        // TODO: game starting soon
-      }
-      else {
-        // TODO: waiting for other player
-        // TODO: create button to copy link and invite them
-      }
-    }
-    else {
-      // TODO: pong game send data, state
-    }
+    await pong(client, state)
   })
 }
 
-export async function joinGame(client) {
+export async function joinGame(client, uuid) {
   if (!await client.isLoggedIn()) {
     await client.refresh()
     client.router.redirect('/login')
@@ -80,34 +54,23 @@ export async function joinGame(client) {
     mode: 'remote',
     player: 2,
     host: false,
-    room_id: 'a', // TODO: gret from url,
+    room_id: uuid,
   }
 
-  client.router.addEvent(client.socket, 'open', () => {
-    console.log('WebSocket connected.')
-    const initMessage = {
-      type: 'setup',
-      content: {
-        state,
-      },
-    }
-    client.socket.send(JSON.stringify(initMessage))
-  })
+  // TODO: potentially create a waiting page for player2
 
-  client.router.addEvent(client.socket, 'message', async (event) => {
-    const data = JSON.parse(event.data)
-    if (data.type === 'setup') {
-      const { ready } = data.content
-      if (ready) {
-        client.app.innerHTML = pongPage
-        // TODO: game starting soon
-      }
-      else {
-        // TODO: waiting for host to start the game
-      }
-    }
-    else {
-      // TODO: pong game send data, state
-    }
-  })
+  await pong(client, state)
+}
+
+export async function localGame(client) {
+  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+
+  const state = {
+    mode: 'local',
+    player: 1,
+    host: true,
+    room_id: globalThis.crypto.randomUUID(),
+  }
+
+  await pong(client, state)
 }

@@ -1,23 +1,20 @@
 import pongPage from '../pages/pong.html?raw'
 import '../css/pong.css'
 
-export async function pong(client, options = {}) {
-  const state = {
-    mode: options.mode,
-    player: options.mode === 'remote' && !options.host ? 2 : 1,
-    host: options.host,
-    room_id: options.room_id,
+export async function pong(client, state) {
+  client.socket.onopen = () => {
+    console.log('WebSocket connected.')
+    const initMessage = {
+      type: 'setup',
+      content: { ...state },
+    }
+    console.log(initMessage)
+    client.socket.send(JSON.stringify(initMessage))
   }
 
-  client.app.innerHTML = pongPage
-
-  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
-
-  const canvas = document.getElementById('pongCanvas')
-  if (!canvas) {
-    console.log('No canvas found')
-    client.router.redirect('/')
-  }
+  // client.router.addEventListener(window, 'resize', () => {
+  //   canvasResize(canvas)
+  // })
 
   // client.router.addEvent(document, 'visibilitychange', () => {
   //   // TODO: Pause game for x seconds...
@@ -25,51 +22,45 @@ export async function pong(client, options = {}) {
   //   client.router.redirect('/')
   // })
 
-  client.socket.onopen = () => {
-    console.log('WebSocket connected.')
-    const initMessage = {
-      type: 'setup',
-      content: {
-        mode: state.mode,
-        player: state.player,
-        host: state.host,
-        room_id: state.room_id,
-      },
-    }
-    client.socket.send(JSON.stringify(initMessage))
-  }
-
-  client.router.addEvent(document, 'keyup', async (event) => {
-    await handleKeyPress(event, client.socket, state)
-  })
-
-  // client.router.addEventListener(window, 'resize', () => {
-  //   canvasResize(canvas)
-  // })
-
   client.socket.onmessage = async (event) => {
     const data = JSON.parse(event.data)
+    console.log(data)
 
-    if (data.type === 'state') {
-      await renderGame(data.content, canvas)
+    if (data.type === 'setup') {
+      const { ready } = data.content
+      if (ready) {
+        client.app.innerHTML = pongPage
+        state.canvas = document.getElementById('pongCanvas')
+        client.router.addEvent(document, 'keyup', async (event) => {
+          await handleKeyPress(event, client.socket, state)
+        })
+        // TODO: Game starting in timer.seconds
+      }
+      else {
+        if (state.host) {
+          // TODO: Waiting for player 2, create a button to copy link
+          const copyLinkBtn = document.getElementById('host-copy-btn')
+          copyLinkBtn.classList.remove('d-none')
+          client.router.addEvent(copyLinkBtn, 'click', async () => {
+            await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
+            // TODO: inform the user that the link was copied
+          })
+        }
+        else {
+          // TODO: Waiting for the host to start the game
+        }
+      }
+    }
+
+    else if (data.type === 'state') {
+      await renderGame(data.content, state.canvas)
     }
 
     else if (data.type === 'end') {
-      console.log('game ended')
       client.socket.close()
       const { winner } = data.content
       console.log(winner)
       // TODO: winner is blabla
-    }
-
-    else if (data.type === 'setup') {
-      const { ready } = data.content
-      if (ready) {
-        // TODO: Game starting in timer.seconds
-      }
-      else {
-        // TODO: Waiting for player2...
-      }
     }
   }
 }
@@ -82,7 +73,6 @@ export async function pong(client, options = {}) {
 //   // canvas.height = Number.parseInt(style.height)
 // }
 
-// fonction pr initialiser canvas puis une autre qui render
 async function renderGame(gameState, canvas) {
   const ctx = canvas.getContext('2d')
 
