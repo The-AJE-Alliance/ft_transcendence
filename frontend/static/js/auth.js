@@ -74,7 +74,6 @@ async function checkForAccessToken(client) {
     }
     catch (error) {
       console.error('Failed to fetch user info:', error)
-      console.error('Access token used:', client.token)
     }
   }
 }

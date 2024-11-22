@@ -127,7 +127,7 @@ async function checkEmailExistsForRegister(client, email) {
       return true
     }
     else {
-      console.error('Erreur lors de la vérification de l\'email:', error)
+      console.error('Error during email verification:', error)
       return false
     }
   }
@@ -174,7 +174,7 @@ async function checkUsernameExistsForRegister(client, username) {
       return true
     }
     else {
-      console.error('Erreur lors de la vérification du username:', error)
+      console.error('Error during username verification:', error)
       return false
     }
   }

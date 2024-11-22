@@ -33,7 +33,7 @@ export async function remoteSetup(client) {
       mode: 'remote',
       player: 1,
       host: true,
-      room_id: globalThis.crypto.randomUUID(),
+      room_id: globalThis.crypto.randomUUID().split('-')[0],
     }
     createGameBtn.classList.add('d-none')
 
