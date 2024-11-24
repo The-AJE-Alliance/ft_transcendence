@@ -75,16 +75,6 @@ class IngestUsers(APIView):
             status=status.HTTP_200_OK,
         )
 
-
-class LiveChatPage(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        # Returns the page html & format
-        # TODO: Template does not exist yet
-        return render(request, "livechat/live_chat.html")
-
-
 class LiveChatFriends(APIView):
     permission_classes = [IsAuthenticated]
 

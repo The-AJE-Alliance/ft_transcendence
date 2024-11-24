@@ -38,8 +38,6 @@ from .views import (
     LiveChatSendInvitation,
 )
 
-# TODO: decide if I should include LiveChatPage
-# path('chatpage', TemplateView.as_view(template_name='chatpage.html'), name='livechat-page')
 urlpatterns = [
     path("friends/", LiveChatFriends.as_view(), name="livechat-friends"),
     path(
