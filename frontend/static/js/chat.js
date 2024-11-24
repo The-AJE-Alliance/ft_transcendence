@@ -21,60 +21,60 @@ export async function chat(client) {
 
   // Données de test
   const testFriends = [
-    { name: 'Elodie', unread: true },
-    { name: 'User B', unread: true },
-    { name: 'User C', unread: false },
-    { name: 'User E', unread: false },
-    { name: 'User F', unread: false },
-    { name: 'User G', unread: false },
-    { name: 'User H', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User B', unread: false },
-    { name: 'User C', unread: false },
+    { nickname: 'Elodie', unread: true },
+    { nickname: 'User B', unread: true },
+    { nickname: 'User C', unread: false },
+    { nickname: 'User E', unread: false },
+    { nickname: 'User F', unread: false },
+    { nickname: 'User G', unread: false },
+    { nickname: 'User H', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User B', unread: false },
+    { nickname: 'User C', unread: false },
   ]
   const testMessages = [
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { name: 'Me' }, messageContent: 'Comment ça va ?' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
+    { sentFromUser: { nickname: 'Me' }, messageContent: 'Comment ça va ?' },
   ]
 
   // Charger la liste des amis
@@ -95,7 +95,7 @@ export async function chat(client) {
     friendsList.innerHTML = ''
     friends.forEach((friend) => {
       const li = document.createElement('li')
-      li.textContent = friend.name
+      li.textContent = friend.nickname
       if (friend.unread) {
         const unread = document.createElement('span')
         unread.textContent = '●'
@@ -108,7 +108,8 @@ export async function chat(client) {
   }
 
   async function selectConversation(friend) {
-    document.getElementById('chat-user').innerText = friend.name
+    document.getElementById('chat-user').textContent = friend.nickname
+    updateReadStatus(friend.nickname, false)
     if (isTesting) {
       chatMessages.innerHTML = ''
       renderMessages(testMessages)
@@ -164,8 +165,8 @@ export async function chat(client) {
     chatMessages.innerHTML = ''
     messages.forEach((message) => {
       const div = document.createElement('div')
-      div.textContent = `${message.sentFromUser.name}: ${message.messageContent}`
-      if (message.sentFromUser.name === 'Me') {
+      div.textContent = `${message.sentFromUser.nickname}: ${message.messageContent}`
+      if (message.sentFromUser.nickname === 'Me') {
         div.classList.add('sent-by-me')
       }
       chatMessages.appendChild(div)
@@ -182,9 +183,32 @@ export async function chat(client) {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data)
       const div = document.createElement('div')
-      div.textContent = `${data.sender.name}: ${data.content}`
+      div.textContent = `${data.sender.nickname}: ${data.content}`
       chatMessages.appendChild(div)
       chatMessages.scrollTop = chatMessages.scrollHeight // Auto-scroll
+    }
+  }
+
+  function updateReadStatus(friendNickame, isUnread) {
+    const friendItem = [...friendsList.children].find(li => li.textContent.trim().startsWith(friendNickame))
+
+    if (!friendItem) {
+      console.error('Conversation introuvable dans la liste.')
+      return
+    }
+    const unreadIndicator = friendItem.querySelector('.unread')
+    if (isUnread) {
+      if (!unreadIndicator) {
+        const newIndicator = document.createElement('span')
+        newIndicator.textContent = '●'
+        newIndicator.className = 'unread'
+        friendItem.appendChild(newIndicator)
+      }
+    }
+    else {
+      if (unreadIndicator) {
+        unreadIndicator.remove()
+      }
     }
   }
 
@@ -194,7 +218,7 @@ export async function chat(client) {
     if (messageContent) {
       if (isTesting) {
         const newMessage = {
-          sentFromUser: { name: 'Me' },
+          sentFromUser: { nickname: 'Me' },
           messageContent,
         }
         renderMessages([...testMessages, newMessage]) // Simuler l'ajout de message
@@ -215,7 +239,7 @@ export async function chat(client) {
       if (messageContent) {
         if (isTesting) {
           const newMessage = {
-            sentFromUser: { name: 'Me' },
+            sentFromUser: { nickname: 'Me' },
             messageContent,
           }
           renderMessages([...testMessages, newMessage]) // Simuler l'ajout de message
@@ -273,7 +297,7 @@ export async function chat(client) {
     if (isTesting) {
       const messageContent = 'Join me at Pong party! Here\'s the link: https://transcendence.fr/pong/remote/join/XXX'
       const newMessage = {
-        sentFromUser: { name: 'Me' },
+        sentFromUser: { nickname: 'Me' },
         messageContent,
       }
       renderMessages([...testMessages, newMessage]) // Simuler l'ajout de message
