@@ -59,7 +59,7 @@ class Conversation(models.Model):
 
 
 class Message(models.Model):
-    conversation = models.ForeignKey(Conversations, on_delete=models.CASCADE)
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
     sentFromUser = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="author",

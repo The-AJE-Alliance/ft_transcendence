@@ -1,164 +1,151 @@
-body {
-	font-family: Arial, sans-serif;
-	margin: 0;
-	padding: 0;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	height: 100vh;
-	background-color: #262626; /* Matches your provided design */
-	color: #00cc99; /* Text color for better visibility */
-  }
-  
-  #chat-container {
-	display: flex;
-	width: 80%;
-	height: 90%;
-	background: #1a1a1a; /* Darker background */
-	border: 1px solid #00cc99;
-	border-radius: 10px;
-	overflow: hidden;
-	box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3); /* Glowing effect */
-  }
-  
-  #friends-list {
-	width: 25%;
-	border-right: 1px solid #00cc99;
-	padding: 10px;
-	overflow-y: auto; /* Enable scrolling for many friends */
-	background-color: #262626;
-  }
-  
-  #friends-list h3 {
-	margin: 0;
-	padding: 10px 0;
-	border-bottom: 1px solid #00cc99;
-  }
-  
-  #friends {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-  }
-  
-  #friends li {
-	padding: 10px;
-	cursor: pointer;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	border-bottom: 1px solid #1a1a1a;
-  }
-  
-  #friends li:hover {
-	background-color: #1a1a1a; /* Highlight on hover */
-  }
-  
-  #friends .unread {
-	color: #ff4d4d; /* Red for unread notifications */
-  }
-  
-  #chat-window {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	background-color: #262626;
-  }
-  
-  #chat-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 10px;
-	border-bottom: 1px solid #00cc99;
-  }
-  
-  #chat-actions button {
-	margin-left: 10px;
-	padding: 5px 10px;
-	background-color: #1a1a1a;
-	border: 1px solid #00cc99;
-	border-radius: 5px;
-	color: #00cc99;
-	cursor: pointer;
-  }
-  
-  #chat-actions button:hover {
-	background-color: #00cc99;
-	color: #1a1a1a;
-  }
-  
-  #chat-messages {
-	flex: 1;
-	padding: 10px;
-	overflow-y: auto; /* Scrollable message area */
-  }
-  #chat-messages div {
-    text-align: left;
-    background-color: #4b4a4a; /* Fond sombre */
-    color: #00cc99; /* Texte clair */
-    padding: 10px;
-    border-radius: 10px;
-    max-width: 70%;
+#chat-container {
+  display: flex;
+  width: 1200px;
+  height: 575px;
+  background: #1a1a1a; /* Darker background */
+  border: 1px solid #00cc99;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3); /* Glowing effect */
 }
-  #chat-messages .sent-by-me {
-    text-align: right; /* Aligne le texte à droite */
-    margin-left: auto; /* Pousse le contenu vers la droite */
-    background-color: #00cc99; /* Couleur de fond pour différencier les messages */
-    color: #1a1a1a; /* Contraste de texte */
-    padding: 10px; /* Espacement interne */
-    border-radius: 10px; /* Coins arrondis */
-    max-width: 70%; /* Limite la largeur pour une bonne lisibilité */
+
+#friends-list {
+  width: 25%;
+  border-right: 1px solid #00cc99;
+  padding: 10px;
+  overflow-y: auto; /* Enable scrolling for many friends */
+  background-color: #262626;
 }
-  
-  #chat-messages div {
-	margin: 5px 0;
-  }
-  
-  #chat-input {
-	display: flex;
-	padding: 10px;
-	border-top: 1px solid #00cc99;
-  }
-  
-  #message-input {
-	flex: 1;
-	padding: 10px;
-	border: 1px solid #00cc99;
-	background-color: #1a1a1a;
-	color: #00cc99;
-	border-radius: 4px;
-	resize: none;
-  }
-  
-  #send-message {
-	margin-left: 10px;
-	padding: 10px 15px;
-	border: none;
-	background-color: #00cc99;
-	color: #1a1a1a;
-	border-radius: 4px;
-	cursor: pointer;
-  }
-  
-  #send-message:hover {
-	background-color: #00ffb3;
-  }
-  
-  /* Add a scrollbar style */
-  #friends-list::-webkit-scrollbar,
-  #chat-messages::-webkit-scrollbar {
-	width: 8px;
-  }
-  
-  #friends-list::-webkit-scrollbar-thumb,
-  #chat-messages::-webkit-scrollbar-thumb {
-	background-color: #00cc99;
-	border-radius: 4px;
-  }
-  
-  #friends-list::-webkit-scrollbar-track,
-  #chat-messages::-webkit-scrollbar-track {
-	background-color: #1a1a1a;
-  }
-  
+
+#friends-list h3 {
+  margin: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid #00cc99;
+}
+
+#friends {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#friends li {
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+#friends li:hover {
+  background-color: #1a1a1a; /* Highlight on hover */
+}
+
+#friends .unread {
+  color: #ff4d4d; /* Red for unread notifications */
+}
+
+#chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #262626;
+}
+
+#chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #00cc99;
+}
+
+#chat-actions button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  border-radius: 5px;
+  color: #00cc99;
+  cursor: pointer;
+}
+
+#chat-actions button:hover {
+  background-color: #00cc99;
+  color: #1a1a1a;
+}
+
+#chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto; /* Scrollable message area */
+}
+#chat-messages div {
+  text-align: left;
+  background-color: #4b4a4a; /* Fond sombre */
+  color: #00cc99; /* Texte clair */
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 70%;
+}
+#chat-messages .sent-by-me {
+  text-align: right; /* Aligne le texte à droite */
+  margin-left: auto; /* Pousse le contenu vers la droite */
+  background-color: #00cc99; /* Couleur de fond pour différencier les messages */
+  color: #1a1a1a; /* Contraste de texte */
+  padding: 10px; /* Espacement interne */
+  border-radius: 10px; /* Coins arrondis */
+  max-width: 70%; /* Limite la largeur pour une bonne lisibilité */
+}
+
+#chat-messages div {
+  margin: 5px 0;
+}
+
+#chat-input {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid #00cc99;
+}
+
+#message-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #00cc99;
+  background-color: #1a1a1a;
+  color: #00cc99;
+  border-radius: 4px;
+  resize: none;
+}
+
+#send-message {
+  margin-left: 10px;
+  padding: 10px 25px;
+  border: none;
+  color: #1a1a1a !important;
+  background-color: #00cc99;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#send-message:hover {
+  background-color: #00ffb3;
+}
+
+/* Add a scrollbar style */
+#friends-list::-webkit-scrollbar,
+#chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+#friends-list::-webkit-scrollbar-thumb,
+#chat-messages::-webkit-scrollbar-thumb {
+  background-color: #00cc99;
+  border-radius: 4px;
+}
+
+#friends-list::-webkit-scrollbar-track,
+#chat-messages::-webkit-scrollbar-track {
+  background-color: #1a1a1a;
+}

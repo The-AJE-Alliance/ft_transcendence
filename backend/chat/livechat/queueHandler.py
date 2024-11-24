@@ -2,8 +2,6 @@ import aio_pika
 import asyncio
 import json
 import logging
-
-
 from aio_pika import ExchangeType
 from django.conf import settings
 
@@ -12,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class QueueHandler:
-    def __init__(self, websocket, room_id, player_id):
+    def __init__(self, websocket, conversation_id, user_id):
         self.websocket = websocket
         self.conversation_id = conversation_id
         self.user_id = user_id
@@ -35,7 +33,7 @@ class QueueHandler:
             self.exchange, routing_key=f"conversation-{self.conversation_id}"
         )
 
-    async def start(self, data):
+    async def start(self):
         await self.setup()
         self.consumer_task = asyncio.create_task(self.consume_messages())
 
@@ -63,4 +61,5 @@ class QueueHandler:
         if self.consumer_task:
             self.consumer_task.cancel()
         if self.connection:
+            await self.channel.close()
             await self.connection.close()

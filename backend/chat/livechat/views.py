@@ -8,17 +8,18 @@ from rest_framework.test import APIRequestFactory
 from django.db.models import Q
 from .serializers import ConversationSerializer, UserSerializer, MessageSerializer
 from .queueHandler import QueueHandler
+from django.shortcuts import get_object_or_404
 from django.db import transaction
 import asyncio
 
 
 class IngestUsers(APIView):
-    def save_user(self, user_data)
+    def save_user(self, user_data):
         user_serializer = UserSerializer(data=user_data)
         if user_serializer.is_valid():
             user_serializer.save()
         else:
-            user = get_object_or_404(User, id=user_data['id'])
+            user = get_object_or_404(User, id=user_data["id"])
             user_serializer = UserSerializer(user, data=user_data, partial=True)
             if user_serializer.is_valid():
                 user_serializer.save()
@@ -27,53 +28,51 @@ class IngestUsers(APIView):
                 return 400
 
     def post(self, request):
-        token = request.headers.get('Authorization')
+        token = request.headers.get("Authorization")
         if not token:
             return Response(
-                {'error': 'No authorization token provided'},
-                status=status.HTTP_401_UNAUTHORIZED
+                {"error": "No authorization token provided"},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        headers = {'Authorization': token}
+        headers = {"Authorization": token}
 
         user_response = requests.get(
-            'https://auth.api.transcendence.fr/users/me/',
-            headers=headers
+            "https://auth.api.transcendence.fr/users/me/", headers=headers
         )
 
         if user_response.status_code != 200:
             return Response(
-                {'error': 'Failed to retrieve user data'},
-                status=user_response.status_code
+                {"error": "Failed to retrieve user data"},
+                status=user_response.status_code,
             )
-        
-        if self.save_user_data(user_response.json()) =! 200
+
+        if self.save_user(user_response.json()) != 200:
             return Response(
-                        {'error': 'Failed to get a valid data format'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
+                {"error": "Failed to get a valid data format"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         friends_response = requests.get(
-            'https://auth.api.transcendence.fr/users/list-friends/',
-            headers=headers
+            "https://auth.api.transcendence.fr/users/list-friends/", headers=headers
         )
         if friends_response.status_code != 200:
             return Response(
-                {'error': 'Failed to retrieve friends list'},
-                status=friends_response.status_code
+                {"error": "Failed to retrieve friends list"},
+                status=friends_response.status_code,
             )
         friends_data = friends_response.json()
 
         for friend_data in friends_data:
-            if self.save_user_data(friend_data) =! 200
+            if self.save_user(friend_data) != 200:
                 return Response(
-                            {'error': 'Failed to get a valid data format'},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-    
+                    {"error": "Failed to get a valid data format"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         return Response(
-            {'message': 'User data and friends ingested successfully'},
-            status=status.HTTP_200_OK
+            {"message": "User data and friends ingested successfully"},
+            status=status.HTTP_200_OK,
         )
 
 
@@ -91,6 +90,7 @@ class LiveChatFriends(APIView):
 
     def get(self, request):
         friends = request.user.friends.all()
+
         serializer = UserSerializer(friends, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -225,13 +225,19 @@ class LiveChatSendInvitation(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        room_id = request.data.get("room_id")
+        conversation_id = request.data.get("conversation_id")
+        if not room_id or not conversation_id:
+            return Response(
+                {"error": "Conversation ID and room id content are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         # TODO: Generate a "Pong" party link or invite link, the link below is a placeholder
-        invite_link = f"http://transendence.com/pongparty?user={request.user.id}"
-
+        invite_link = f"https://transcendence.fr/pong/remote/join/{room_id}"
         # Prepare the message data for the invitation
         message_data = {
             "messageContent": f"Join me at Pong party! Here's the link: {invite_link}",
-            "conversation_id": request.data.get("conversation_id"),
+            "conversation_id": conversation_id,
         }
 
         # Create a simulated POST request with the message data

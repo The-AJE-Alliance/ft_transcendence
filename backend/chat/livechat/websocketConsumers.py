@@ -20,7 +20,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         else:
             self.conversation_id = self.scope["url_route"]["kwargs"]["conversation_id"]
             self.queue_handler = QueueHandler(self, self.conversation_id, self.user.id)
-            await self.queue_handler.start({})
+            await self.queue_handler.start()
             await self.accept()
 
     async def disconnect(self, close_code):
