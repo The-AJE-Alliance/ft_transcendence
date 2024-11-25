@@ -108,7 +108,7 @@ export async function chat(client) {
     if (ws)
       ws.close()
 
-    ws = new WebSocket(`ws://localhost:8000/ws/chat/${conversationId}/`)
+    ws = new WebSocket(`wss://chat.api.transcendence.fr/${conversationId}/`)
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data)
       const div = document.createElement('div')
@@ -160,7 +160,7 @@ export async function chat(client) {
       if (messageContent) {
         if (ws) {
           ws.send(JSON.stringify({ messageContent }))
-          messageInput.value = '' // Clear the input field
+          messageInput.value = ''
         }
       }
     }
@@ -199,7 +199,6 @@ export async function chat(client) {
     // TODO: ADD HERE THE FUNCTION TO LOAD A USER PROFILE
   })
 
-  // Envoyer une invitation
   client.router.addEvent(inviteToGameButton, 'click', async () => {
     if (!selectedConversationId) {
       console.error('Aucune conversation sélectionnée.')
