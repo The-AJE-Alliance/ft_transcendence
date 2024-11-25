@@ -22,7 +22,7 @@ export async function initTournament(client) {
       content: {
         mode: 'tournament',
         host: true,
-       //  room_id necessary ?
+        tournament_id: globalThis.crypto.randomUUID(),
       },
     }
     client.socket.send(JSON.stringify(initMessage))
@@ -80,9 +80,9 @@ export async function initTournament(client) {
 
   function handleTournamentLocked() {
     tournamentState.isLocked = true
+    console.log('Tournament locked! Ready to start.')
     document.getElementById('lockTournament').disabled = true
     document.getElementById('startTournament').disabled = false
-    console.log('Tournament locked! Ready to start.')
   }
 
   function startMatch(match) {

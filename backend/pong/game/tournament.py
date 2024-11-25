@@ -13,13 +13,17 @@ class TournamentManager:
         self.matches = []  # List of matches in the tournament
         self.current_match_index = -1  # Index of the current match
         self.exchange = None
+        self.lock = False
 
     async def start(self):
         self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
         self.channel = await self.connection.channel()
         self.exchange = await self.channel.declare_exchange(
-            f"tournament-{self.tournament_id}", ExchangeType.FANOUT
-        )
+                f"tournament-{self.tournament_id}", ExchangeType.DIRECT, auto_delete=True
+            )
+        self.queue = await self.channel.declare_queue(auto_delete=True)
+        await self.queue.bind(self.exchange, "tournament_loop")
+        await self.consume_data()
 
 
     async def add_player(self, player):
@@ -43,13 +47,14 @@ class TournamentManager:
 
     ### Lock Tournament ###
     async def lock_tournament(self):
-        if len(self.players) < 2:
-            return
+        logger.info("Created TOURNAMENT")
+        response = {"type": "tournament_locked", "content": {"ready": False, "players": self.players}}
+        # if len(self.players) < 2:
+        #     return
+        self.lock = True
         self.generate_bracket()
-        await self.broadcast({
-            "type": "tournament_locked",
-            "content": {"players": self.players}
-        })
+        response["content"]["ready"] = True
+        await self.broadcast(response)
     
 
    

@@ -11,13 +11,14 @@ from .queueHandler import QueueHandler
 
 logger = logging.getLogger(__name__)
 game_tasks = {}
-
+tournaments = {}
 
 class WebsocketListener(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pong_game = None
         self.tournament = None
+        self.tournament_id = None
         self.queue_handler = None
         self.mode = None
         self.host = None
@@ -36,13 +37,18 @@ class WebsocketListener(AsyncWebsocketConsumer):
             case "setup_tournament":
                 # logger.error("Created TOURNAMENT")
                 await self.setup_tournament(data)
+            case "lock_tournament":
+                await self.lock_tournament()
 
     async def setup_tournament(self, data):
         content = data["content"]
         self.mode = content["mode"]
         self.host = content["host"]
-        self.tournament = TournamentManager(self.room_id)
-        await self.tournament.start()
+        self.tournament_id = content["tournament_id"]
+        self.tournament = TournamentManager(self.tournament_id)
+        tournaments[self.tournament_id] = asyncio.create_task(self.tournament.start())
+        self.queue_handler = QueueHandler(self, self.tournament_id, 1)
+        await self.queue_handler.start(data)
 
     async def setup(self, data):
         user = self.scope["user"]
@@ -82,6 +88,13 @@ class WebsocketListener(AsyncWebsocketConsumer):
                 self, self.room_id, (1 if self.host else 2)
             )
             await self.queue_handler.start(data)
+
+    async def lock_tournament(self):
+        tournament = tournaments.get(self.tournament_id) 
+        if not tournament:
+            return
+        await self.tournament.lock_tournament()
+
 
     async def disconnect(self, close_code):
         logger.warning("Client déconnecté")
