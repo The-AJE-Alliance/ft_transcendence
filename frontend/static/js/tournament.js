@@ -30,6 +30,7 @@ export async function initTournament(client) {
 
   client.socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
+    console.log('Message received:', event.data)
 
     switch (data.type) {
       case 'player_joined':
@@ -81,8 +82,8 @@ export async function initTournament(client) {
   function handleTournamentLocked() {
     tournamentState.isLocked = true
     console.log('Tournament locked! Ready to start.')
-    document.getElementById('lockTournament').disabled = true
-    document.getElementById('startTournament').disabled = false
+    document.getElementById('lock-tournament').disabled = true
+    document.getElementById('start-tournament').disabled = false
   }
 
   function startMatch(match) {

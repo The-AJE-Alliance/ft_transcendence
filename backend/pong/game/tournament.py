@@ -14,17 +14,43 @@ class TournamentManager:
         self.current_match_index = -1  # Index of the current match
         self.exchange = None
         self.lock = False
+        self.connection = None
+        self.channel = None
+        self.exchange = None
+        self.queue = None
 
     async def start(self):
         self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
         self.channel = await self.connection.channel()
         self.exchange = await self.channel.declare_exchange(
-                f"tournament-{self.tournament_id}", ExchangeType.DIRECT, auto_delete=True
-            )
+            f"tournament-{self.tournament_id}", ExchangeType.DIRECT, auto_delete=True
+        )
         self.queue = await self.channel.declare_queue(auto_delete=True)
-        await self.queue.bind(self.exchange, "tournament_loop")
+        await self.queue.bind(self.exchange, "tournament")
         await self.consume_data()
 
+    async def consume_data(self):
+        async with self.queue.iterator() as iterator:
+            async for message in iterator:
+                async with message.process():
+                    await self.dispatch(message.body.decode())
+
+    async def dispatch(self, message):
+        data = json.loads(message)
+        match data.get("type"):
+            case "add_player":
+                await self.add_player(data["content"]["player"])
+            case "remove_player":
+                await self.remove_player(data["content"]["player"])
+            case "lock_tournament":
+                await self.lock_tournament()
+            case "start_tournament":
+                await self.start_tournament()
+            case "end_match":
+                winner = data["content"].get("winner")
+                await self.end_match(winner)
+            case _:
+                logger.warning(f"Unhandled message type: {data.get('type')}")
 
     async def add_player(self, player):
         if player in self.players:
@@ -47,7 +73,6 @@ class TournamentManager:
 
     ### Lock Tournament ###
     async def lock_tournament(self):
-        logger.info("Created TOURNAMENT")
         response = {"type": "tournament_locked", "content": {"ready": False, "players": self.players}}
         # if len(self.players) < 2:
         #     return
@@ -120,7 +145,8 @@ class TournamentManager:
 
 
     async def broadcast(self, message):
+        logger.info("BROADCASTED")
         await self.exchange.publish(
             aio_pika.Message(body=json.dumps(message).encode()),
-            routing_key=""
+            routing_key="players"
         )

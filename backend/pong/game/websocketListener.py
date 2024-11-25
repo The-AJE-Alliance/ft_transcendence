@@ -1,3 +1,4 @@
+from email.policy import default
 import json
 import asyncio
 import channels.exceptions
@@ -8,6 +9,7 @@ from django.contrib.auth.models import AnonymousUser
 from .pongGame import PongGame
 from .tournament import TournamentManager
 from .queueHandler import QueueHandler
+from .tournamentHandler import TournamentHandler
 
 logger = logging.getLogger(__name__)
 game_tasks = {}
@@ -35,10 +37,9 @@ class WebsocketListener(AsyncWebsocketConsumer):
             case "setup":
                 await self.setup(data)
             case "setup_tournament":
-                # logger.error("Created TOURNAMENT")
                 await self.setup_tournament(data)
-            case "lock_tournament":
-                await self.lock_tournament()
+            case _:
+                await self.queue_handler.publish_to_loop(data)
 
     async def setup_tournament(self, data):
         content = data["content"]
@@ -47,7 +48,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
         self.tournament_id = content["tournament_id"]
         self.tournament = TournamentManager(self.tournament_id)
         tournaments[self.tournament_id] = asyncio.create_task(self.tournament.start())
-        self.queue_handler = QueueHandler(self, self.tournament_id, 1)
+        self.queue_handler = TournamentHandler(self, self.tournament_id, 1)
         await self.queue_handler.start(data)
 
     async def setup(self, data):
@@ -88,12 +89,6 @@ class WebsocketListener(AsyncWebsocketConsumer):
                 self, self.room_id, (1 if self.host else 2)
             )
             await self.queue_handler.start(data)
-
-    async def lock_tournament(self):
-        tournament = tournaments.get(self.tournament_id) 
-        if not tournament:
-            return
-        await self.tournament.lock_tournament()
 
 
     async def disconnect(self, close_code):

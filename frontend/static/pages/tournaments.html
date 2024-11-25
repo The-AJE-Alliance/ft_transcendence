@@ -1,35 +1,29 @@
 <div class="tournament-container">
-    <h1 class="tournament-title">Tournament Mode</h1>
-    <p class="tournament-instructions">
-      Welcome to the tournament! Players will be matched automatically. Stay tuned for updates.
-    </p>
-  
-   
-    <div class="player-list">
-      <h2>Players</h2>
-      <ul id="playerList">
-      
-      </ul>
-    </div>
-  
-  
-    <div class="bracket-container">
-      <h2>Bracket</h2>
-      <div id="tournamentBracket">
-        <p>Waiting for players to join...</p>
-      </div>
-    </div>
-  
- 
-    <div class="match-status">
-      <h2>Match Status</h2>
-      <p id="current-match">No matches in progress.</p>
-    </div>
-  
- <!-- for host only -->
-    <div class="tournament-controls">
-      <button id="lock-tournament" class="btn btn-danger">Lock Tournament</button>
-      <button id="start-tournament" class="btn btn-success" disabled>Start Tournament</button>
+  <h1 class="tournament-title">Tournament Mode</h1>
+  <p class="tournament-instructions">
+    Welcome to the tournament! Players will be matched automatically. Stay tuned for updates.
+  </p>
+
+  <div class="player-list">
+    <h2>Players</h2>
+    <ul id="playerList"></ul>
+  </div>
+
+  <div class="bracket-container">
+    <h2>Bracket</h2>
+    <div id="tournamentBracket">
+      <p>Waiting for players to join...</p>
     </div>
   </div>
-  
+
+  <div class="match-status">
+    <h2>Match Status</h2>
+    <p id="current-match">No matches in progress.</p>
+  </div>
+
+  <!-- for host only -->
+  <div class="tournament-controls">
+    <button id="lock-tournament" class="btn btn-success">Lock Tournament</button>
+    <button id="start-tournament" class="btn btn-success" disabled>Start Tournament</button>
+  </div>
+</div>
