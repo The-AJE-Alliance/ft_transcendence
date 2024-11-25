@@ -53,10 +53,16 @@ export async function initTournament(client) {
         handleTournamentEnd(data.content.winner)
         break
 
+      case 'start_tournament':
+        handleStartTournament()
+        break
+
       default:
         console.log('Unknown message:', data)
     }
   }
+
+  
 
   // Lock tournament
   const lockTournamentBtn = document.getElementById('lock-tournament')
@@ -77,6 +83,18 @@ export async function initTournament(client) {
     const newPlayer = document.createElement('li')
     newPlayer.textContent = player
     playerList.appendChild(newPlayer)
+  }
+
+  function handleStartTournament() {
+    const tournamentMessage = document.getElementById('tournamentMessage');
+    
+    // Display the initial message
+    tournamentMessage.textContent = `You'll be playing a match against XX in 5 seconds.`;
+  
+    // Use setTimeout to create a 5-second pause
+    setTimeout(() => {
+      tournamentMessage.textContent = `The match has started!`;
+    }, 5000); // 5000 milliseconds = 5 seconds
   }
 
   function handleTournamentLocked() {

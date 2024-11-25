@@ -89,12 +89,12 @@ class TournamentManager:
             for i in range(0, len(self.players) - 1, 2)
         ]
         
-
    
     async def start_tournament(self):
-        if not self.matches:
-
-            return
+        response = {"type": "start_tournament", "content": {"ready": False, "players": self.players}}
+        # if not self.matches:
+        #     return
+        await self.broadcast(response)
         await self.start_next_match()
 
 
@@ -145,7 +145,6 @@ class TournamentManager:
 
 
     async def broadcast(self, message):
-        logger.info("BROADCASTED")
         await self.exchange.publish(
             aio_pika.Message(body=json.dumps(message).encode()),
             routing_key="players"
