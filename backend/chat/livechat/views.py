@@ -75,12 +75,12 @@ class IngestUsers(APIView):
             status=status.HTTP_200_OK,
         )
 
+
 class LiveChatFriends(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         friends = request.user.friends.all()
-
         serializer = UserSerializer(friends, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -97,7 +97,6 @@ class LiveChatConversation(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# TODO: Mesages should be sent & received via a websocket
 class LiveChatMessages(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -106,7 +105,6 @@ class LiveChatMessages(APIView):
             Q(user1=request.user, user2_id=user_id)
             | Q(user1_id=user_id, user2=request.user)
         ).first()
-
         # If no conversation exists, create a new one
         if not conversation:
             conversation = Conversation.objects.create(
@@ -166,14 +164,12 @@ class LiveChatSendMessage(APIView):
         # Parse incoming data
         conversation_id = request.data.get("conversation_id")
         message_content = request.data.get("messageContent")
-
         # Ensure both conversation and content are provided
         if not conversation_id or not message_content:
             return Response(
                 {"error": "Conversation ID and message content are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         # Retrieve the conversation and verify the user is a participant
         conversation = Conversation.objects.filter(id=conversation_id).first()
         if not conversation or (
@@ -188,7 +184,6 @@ class LiveChatSendMessage(APIView):
             sentFromUser=request.user,
             messageContent=message_content,
         )
-
         queue_handler = QueueHandler(None, conversation_id, request.user.id)
         message_data = {
             "type": "chat_message",

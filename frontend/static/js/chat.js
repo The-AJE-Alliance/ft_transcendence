@@ -11,92 +11,30 @@ export async function chat(client) {
   const blockButton = document.getElementById('block-user')
   const getProfileButton = document.getElementById('profile-user')
   const inviteToGameButton = document.getElementById('invite-game')
-  const isTesting = true // Basculer sur false pour utiliser le backend réel
-  const userId = 1 // Remplacer par l'ID de l'utilisateur connecté en production
-  const state = {
-    selectedConversationId: null,
-  }
-
+  const userId = client.userId // TODO: WITH THE LOADED
+  let selectedConversationId = null
   let ws = null
 
-  // Données de test
-  const testFriends = [
-    { nickname: 'Elodie', unread: true },
-    { nickname: 'User B', unread: true },
-    { nickname: 'User C', unread: false },
-    { nickname: 'User E', unread: false },
-    { nickname: 'User F', unread: false },
-    { nickname: 'User G', unread: false },
-    { nickname: 'User H', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User B', unread: false },
-    { nickname: 'User C', unread: false },
-  ]
-  const testMessages = [
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'User A' }, messageContent: 'Salut !' },
-    { sentFromUser: { nickname: 'Me' }, messageContent: 'Comment ça va ?' },
-  ]
-
-  // Charger la liste des amis
   async function loadFriends() {
-    if (isTesting) {
-      renderFriends(testFriends)
-    }
-    else {
-      const friends = await ky.get('/friends/', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        credentials: 'include',
-      }).json()
-      renderFriends(friends)
-    }
+    const friends = await ky.get('/friends/', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      credentials: 'include',
+    }).json()
+    const conversations = await ky.get(`/conversations/`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      credentials: 'include',
+    }).json()
+    renderFriends(friends, conversations)
   }
 
-  function renderFriends(friends) {
+  function renderFriends(friends, conversations) {
     friendsList.innerHTML = ''
     friends.forEach((friend) => {
+      const conversationWithUnreadMsg = conversations.find(conv => (conv.user1.id === userId && conv.user2.id === friend.id
+        && conv.hasUnreadMessagesByUser1) || (conv.user1.id === friend.id && conv.user2.id === userId && conv.hasUnreadMessagesByUser2))
       const li = document.createElement('li')
       li.textContent = friend.nickname
-      if (friend.unread) {
+      if (conversationWithUnreadMsg) {
         const unread = document.createElement('span')
         unread.textContent = '●'
         unread.className = 'unread'
@@ -110,26 +48,19 @@ export async function chat(client) {
   async function selectConversation(friend) {
     document.getElementById('chat-user').textContent = friend.nickname
     updateReadStatus(friend.nickname, false)
-    if (isTesting) {
-      chatMessages.innerHTML = ''
-      renderMessages(testMessages)
-    }
-    else {
+    try {
       const conversations = await ky.get(`/conversations/`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         credentials: 'include',
       }).json()
-      // TODO: ajouter un trycatch
-
       const conversation = conversations.find(conv =>
         (conv.user1.id === userId && conv.user2.id === friend.id)
         || (conv.user1.id === friend.id && conv.user2.id === userId),
       )
-
       if (conversation) {
-        state.selectedConversationId = conversation.id
-        loadMessages(state.selectedConversationId)
-        openWebSocket(state.selectedConversationId)
+        selectedConversationId = conversation.id
+        loadMessages(selectedConversationId)
+        openWebSocket(selectedConversationId)
       }
       else {
         const newConversation = await ky.post('/conversations/', {
@@ -140,25 +71,23 @@ export async function chat(client) {
           credentials: 'include',
           body: JSON.stringify({ user_id: friend.id }),
         }).json()
-        state.selectedConversationId = newConversation.id
+        selectedConversationId = newConversation.id
         chatMessages.innerHTML = ''
-        openWebSocket(state.selectedConversationId)
+        openWebSocket(selectedConversationId)
       }
+    }
+    catch (error) {
+      console.error('Error while loading the selected conversation:', error)
     }
   }
 
   // Charger les messages d'une conversation
   async function loadMessages(conversationId) {
-    if (isTesting) {
-      renderMessages(testMessages)
-    }
-    else {
-      const messages = await ky.get(`/conversations/${conversationId}/messages/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        credentials: 'include',
-      }).json()
-      renderMessages(messages)
-    }
+    const messages = await ky.get(`/conversations/${conversationId}/messages/`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      credentials: 'include',
+    }).json()
+    renderMessages(messages)
   }
 
   function renderMessages(messages) {
@@ -216,15 +145,7 @@ export async function chat(client) {
   client.router.addEvent(sendMessageButton, 'click', () => {
     const messageContent = messageInput.value.trim()
     if (messageContent) {
-      if (isTesting) {
-        const newMessage = {
-          sentFromUser: { nickname: 'Me' },
-          messageContent,
-        }
-        renderMessages([...testMessages, newMessage]) // Simuler l'ajout de message
-        messageInput.value = '' // Clear input field
-      }
-      else if (ws) {
+      if (ws) {
         ws.send(JSON.stringify({ messageContent }))
         messageInput.value = '' // Clear the input field
       }
@@ -237,15 +158,7 @@ export async function chat(client) {
       event.preventDefault()
       const messageContent = messageInput.value.trim()
       if (messageContent) {
-        if (isTesting) {
-          const newMessage = {
-            sentFromUser: { nickname: 'Me' },
-            messageContent,
-          }
-          renderMessages([...testMessages, newMessage]) // Simuler l'ajout de message
-          messageInput.value = '' // Clear input field
-        }
-        else if (ws) {
+        if (ws) {
           ws.send(JSON.stringify({ messageContent }))
           messageInput.value = '' // Clear the input field
         }
@@ -253,16 +166,15 @@ export async function chat(client) {
     }
   })
 
-  // Bloquer le contact
   client.router.addEvent(blockButton, 'click', async () => {
-    if (!state.selectedConversationId) {
+    if (!selectedConversationId) {
       console.error('Aucune conversation sélectionnée.')
       return
     }
     if (ws)
       ws.close()
     try {
-      const response = await ky.post(`/conversations/${state.selectedConversationId}/block/`, {
+      const response = await ky.post(`/conversations/${selectedConversationId}/block/`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         credentials: 'include',
       })
@@ -274,42 +186,32 @@ export async function chat(client) {
     catch (error) {
       console.error('Error during block submission:', error)
     }
-    await loadMessages(state.selectedConversationId)
+    await loadMessages(selectedConversationId)
   })
 
-  // Voir profile
   client.router.addEvent(getProfileButton, 'click', async () => {
-    if (!state.selectedConversationId && !isTesting) {
+    if (!selectedConversationId) {
       console.error('Aucune conversation sélectionnée.')
       return
     }
     if (ws)
       ws.close()
+    // TODO: ADD HERE THE FUNCTION TO LOAD A USER PROFILE
   })
 
   // Envoyer une invitation
   client.router.addEvent(inviteToGameButton, 'click', async () => {
-    if (!state.selectedConversationId && !isTesting) {
+    if (!selectedConversationId) {
       console.error('Aucune conversation sélectionnée.')
       return
     }
-    // TODO: get the room id
-    if (isTesting) {
-      const messageContent = 'Join me at Pong party! Here\'s the link: https://transcendence.fr/pong/remote/join/XXX'
-      const newMessage = {
-        sentFromUser: { nickname: 'Me' },
-        messageContent,
-      }
-      renderMessages([...testMessages, newMessage]) // Simuler l'ajout de message
-      messageInput.value = ''
-      return
-    }
     try {
+      // TODO: ADD HERE THE API CALL TO GET THE ROOM_ID
       const roomId = TODOmyRandomAPItoGetit()
-      const response = await ky.post(`/conversations/${state.selectedConversationId}/invite/`, {
+      const response = await ky.post(`/conversations/${selectedConversationId}/invite/`, {
         json: {
           room_id: roomId,
-          conversation_id: state.selectedConversationId,
+          conversation_id: selectedConversationId,
         },
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         credentials: 'include',
@@ -326,6 +228,6 @@ export async function chat(client) {
   await loadFriends()
   window.addEventListener('beforeunload', () => {
     if (ws)
-      ws.close() // Fermer la connexion WebSocket lorsque l'utilisateur quitte la page
+      ws.close()
   })
 }
