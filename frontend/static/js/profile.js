@@ -1,29 +1,9 @@
 import ky from 'ky'
 import profilePage from '../pages/profile.html?raw'
-import { disableTwoFactor, showTwoFactorActivationForm } from './2FA.js'
-import { getFriends } from './friends.js'
+import { getFriends, sendFriendRequest } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { loadPageStyle } from './utils.js'
-
 import '../css/edit-profile.css'
-
-export async function enableTwoFactor(client) {
-  try {
-    const data = await ky.post('https://auth.api.transcendence.fr/users/enable-two-factor/', {
-      credentials: 'include',
-      headers: { Authorization: `Bearer ${client.token}` },
-    }).json()
-    const qrCodeImageBase64 = data.qr_code
-    const qrcodeContainer = document.getElementById('qrcode-container')
-    const qrcodeImage = document.getElementById('qrcode-image')
-    qrcodeImage.src = `data:image/png;base64,${qrCodeImageBase64}`
-    qrcodeContainer.classList.remove('d-none')
-    showTwoFactorActivationForm(client)
-  }
-  catch (error) {
-    console.error('Error enabling 2FA:', error)
-  }
-}
 
 function setupDeleteProfileButton(client) {
   const confirmDeleteButton = document.getElementById('confirmDelete')
@@ -47,7 +27,7 @@ function setupDeleteProfileButton(client) {
         client.router.redirect('/')
       }
       catch (error) {
-        console.error('Erreur lors de la suppression du profil :', error)
+        console.error('Error while deleting profile :', error)
       }
     })
   }
@@ -136,45 +116,6 @@ function displayUserAvatar(user) {
   }
 }
 
-async function setupTwoFactorAuth(client, user) {
-  const twoFactorSection = document.getElementById('two-factor-section')
-
-  if (user.auth_method === 'oauth42') {
-    if (twoFactorSection) {
-      twoFactorSection.classList.add('d-none')
-    }
-    return
-  }
-
-  const enable2FAButton = document.getElementById('enable-2fa-button')
-  if (enable2FAButton) {
-    const newEnable2FAButton = enable2FAButton.cloneNode(true)
-    enable2FAButton.parentNode.replaceChild(newEnable2FAButton, enable2FAButton)
-
-    async function disableTwoFactorHandler(event) {
-      const success = await disableTwoFactor(client)
-      if (success) {
-        newEnable2FAButton.textContent = 'Enable 2FA'
-        newEnable2FAButton.removeEventListener('click', disableTwoFactorHandler)
-        client.router.addEvent('click', () => {
-          enableTwoFactor(client)
-        })
-      }
-    }
-
-    if (user.two_factor_enabled) {
-      newEnable2FAButton.textContent = 'Disable 2FA'
-      client.router.addEvent(newEnable2FAButton, 'click', disableTwoFactorHandler)
-    }
-    else {
-      newEnable2FAButton.textContent = 'Enable 2FA'
-      client.router.addEvent(newEnable2FAButton, 'click', () => {
-        enableTwoFactor(client)
-      })
-    }
-  }
-}
-
 async function setupNicknameEdit(client, user) {
   const editElement = document.getElementById('edit-nickname-btn')
   if (user.auth_method === 'oauth42') {
@@ -186,7 +127,7 @@ async function setupNicknameEdit(client, user) {
   }
 }
 
-async function displayFriendsList(client) {
+export async function displayFriendsList(client) {
   const friendsList = document.getElementById('friends-list')
   const friends = await getFriends(client)
   friendsList.innerHTML = ''
@@ -194,7 +135,31 @@ async function displayFriendsList(client) {
   if (friends && friends.length > 0) {
     friends.forEach((friend) => {
       const friendItem = document.createElement('li')
-      friendItem.textContent = friend.username
+      friendItem.classList.add('friend-item')
+      const avatarImg = document.createElement('img')
+      avatarImg.src = friend.avatar_url_full
+      avatarImg.alt = `Avatar de ${friend.username}`
+      avatarImg.classList.add('friend-avatar')
+      const infoContainer = document.createElement('div')
+      infoContainer.classList.add('friend-info')
+      const usernameSpan = document.createElement('span')
+      usernameSpan.textContent = friend.username
+      usernameSpan.classList.add('friend-username')
+      const statusContainer = document.createElement('span')
+      statusContainer.classList.add('friend-status')
+      const statusIcon = document.createElement('i')
+      statusIcon.classList.add('bi', 'bi-circle-fill')
+      statusIcon.classList.add(friend.is_online ? 'online' : 'offline')
+      statusIcon.title = friend.is_online ? 'Online' : 'Offline'
+      const statusText = document.createElement('span')
+      statusText.textContent = friend.is_online ? ' Online' : ' Offline'
+      statusText.classList.add('status-text', friend.is_online ? 'online' : 'offline')
+      statusContainer.appendChild(statusIcon)
+      statusContainer.appendChild(statusText)
+      infoContainer.appendChild(usernameSpan)
+      infoContainer.appendChild(statusContainer)
+      friendItem.appendChild(avatarImg)
+      friendItem.appendChild(infoContainer)
       friendsList.appendChild(friendItem)
     })
   }
@@ -213,6 +178,24 @@ function configureDeleteProfileButton(client) {
   }
 }
 
+export function initializeAddFriendSection(client) {
+  const addFriendBtn = document.getElementById('add-friend-btn')
+  const friendUsernameInput = document.getElementById('friend-username')
+
+  if (addFriendBtn && friendUsernameInput) {
+    addFriendBtn.addEventListener('click', async () => {
+      const friendUsername = friendUsernameInput.value.trim()
+      if (friendUsername) {
+        await sendFriendRequest(client, friendUsername)
+        friendUsernameInput.value = ''
+      }
+    })
+  }
+  else {
+    console.error('Add Friend elements not found in the DOM.')
+  }
+}
+
 export async function profile(client) {
   loadPageStyle('profile')
   client.app.innerHTML = profilePage
@@ -222,12 +205,14 @@ export async function profile(client) {
     if (user) {
       displayUserInfo(user)
       displayUserAvatar(user)
-      await setupTwoFactorAuth(client, user)
+      // await setupTwoFactorAuth(client, user)
       await setupNicknameEdit(client, user)
-      await displayFriendsList(client)
+      // await displayFriendsList(client)
+      // await loadPendingFriendRequests(client)
     }
   }
 
   configureDeleteProfileButton(client)
+  // initializeAddFriendSection(client)
   await updateNavbar(client)
 }

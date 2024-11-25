@@ -45,7 +45,7 @@ class PendingFriendRequestsView(APIView):
 
     def get(self, request):
         pending_requests = FriendRequest.objects.filter(
-            to_user=request.user, status="pending", context={"request": request}
+            to_user=request.user, status="pending"
         )
         serializer = FriendRequestSerializer(pending_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

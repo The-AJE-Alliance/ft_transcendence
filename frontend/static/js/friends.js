@@ -1,4 +1,21 @@
 import ky from 'ky'
+import friendsPage from '../pages/friends.html?raw'
+import { updateNavbar } from './navbar.js'
+import { displayFriendsList, initializeAddFriendSection } from './profile.js'
+import { loadPageStyle } from './utils.js'
+import '../css/friends.css'
+
+export async function friends(client) {
+  loadPageStyle('friends')
+  client.app.innerHTML = friendsPage
+
+  if (await client.isLoggedIn()) {
+    await displayFriendsList(client)
+    await loadPendingFriendRequests(client)
+  }
+  initializeAddFriendSection(client)
+  await updateNavbar(client)
+}
 
 export async function loadFriends(client) {
   if (!await client.isLoggedIn()) {
@@ -17,11 +34,11 @@ export async function loadFriends(client) {
       const listItem = document.createElement('li')
       listItem.textContent = friend.username
 
-      const playButton = document.createElement('button')
-      playButton.textContent = 'Play'
-      client.router.addEvent(playButton, 'click', () => startGameWithFriend(client, friend.id))
+      // const playButton = document.createElement('button')
+      // playButton.textContent = 'Play'
+      // client.router.addEvent(playButton, 'click', () => startGameWithFriend(client, friend.id))
 
-      listItem.appendChild(playButton)
+      // listItem.appendChild(playButton)
       friendsList.appendChild(listItem)
     })
   }
@@ -30,9 +47,9 @@ export async function loadFriends(client) {
   }
 }
 
-function startGameWithFriend(client, friendId) {
-  client.router.redirect(`/pong/remote/${friendId}`)
-}
+// function startGameWithFriend(client, friendId) {
+//  client.router.redirect(`/pong/remote/${friendId}`)
+// }
 
 export async function getFriends(client) {
   try {
@@ -107,11 +124,13 @@ export async function loadPendingFriendRequests(client) {
   try {
     const pendingRequests = await ky.get('https://auth.api.transcendence.fr/pending-friend-requests/', {
       headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
     }).json()
     const pendingList = document.getElementById('pending-requests-list')
     pendingList.innerHTML = ''
 
     if (pendingRequests.length > 0) {
+      console.log(pendingRequests.length)
       friendRequest.classList.remove('d-none')
       pendingRequests.forEach((req) => {
         if (req.from_user && req.from_user.username) {
@@ -130,8 +149,6 @@ export async function loadPendingFriendRequests(client) {
           client.router.addEvent(declineButton, 'click', async () => {
             await declineFriendRequest(client, req.from_user.id)
           })
-
-          // Ajouter le bouton à l'élément de liste
           listItem.appendChild(acceptButton)
           listItem.appendChild(declineButton)
           pendingList.appendChild(listItem)

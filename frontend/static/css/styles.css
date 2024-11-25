@@ -4,6 +4,7 @@ body {
   font-family: 'Space Mono', monospace;
   margin: 0;
   padding-top: 60px;
+  display: flex;
 }
 
 h1,
@@ -140,10 +141,22 @@ button:hover {
   z-index: 1000;
 }
 
-.alert {
+.alert-danger {
   background-color: #1a1a1a;
   color: #dc3545;
   border: 1px solid #ff3333;
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.alert-success {
+  background-color: #00cc99;
+  color: #1a1a1a;
+  border: 1px solid #00cc99;
   width: 100%;
   text-align: center;
   font-size: 1rem;
@@ -197,4 +210,21 @@ button:hover {
   color: #dc3545;
   border: 1px solid #ff3333;
   border-radius: 5px;
+}
+
+.dropdown-menu {
+  background-color: #1a1a1a;
+}
+
+.dropdown-menu .dropdown-item {
+  color: #00cc99;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #333;
+  color: #00cc99;
+}
+
+.dropdown-divider {
+  border-color: #00cc99;
 }
