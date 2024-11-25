@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 ENVS=()
 SERVICE_APPS=("auth chat pong")
