@@ -175,7 +175,7 @@ services:
       - VAULT_SECRETID=${AUTH_SID}
     logging: *log
     volumes:
-      - auth-ssl:/etc/ssl
+      - auth-ssl:/certs
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -198,7 +198,7 @@ services:
       - VAULT_SECRETID=${AUTH_SID}
     logging: *log
     volumes:
-      - auth-ssl:/etc/ssl
+      - auth-ssl:/certs
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -230,7 +230,7 @@ services:
     logging: *log
     volumes:
       - media-files:/media
-      - pong-ssl:/etc/ssl
+      - pong-ssl:/certs
       - static-files:/static
       - vault-ca:/ca
   pong-worker:
@@ -252,7 +252,7 @@ services:
       - VAULT_SECRETID=${PONG_SID}
     logging: *log
     volumes:
-      - pong-ssl:/etc/ssl
+      - pong-ssl:/certs
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -284,7 +284,7 @@ services:
     logging: *log
     volumes:
       - media-files:/media
-      - chat-ssl:/etc/ssl
+      - chat-ssl:/certs
       - static-files:/static
       - vault-ca:/ca
   chat-db:
@@ -314,7 +314,7 @@ services:
       - VAULT_SECRETID=${CHAT_SID}
     logging: *log
     volumes:
-      - chat-ssl:/etc/ssl
+      - chat-ssl:/certs
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca

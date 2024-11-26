@@ -43,9 +43,10 @@ WORKDIR /${APP_NAME}
 RUN addgroup --gid 1001 --system app && \
     adduser --no-create-home --shell /bin/false --disabled-password --uid 1001 --system --group app && \
     mkdir -p /static && \
+    mkdir -p /certs && \
     chown app:app /${APP_NAME} && \
     chown app:app /static && \
-    chown app:app /etc/ssl
+    chown app:app /certs
 
 USER app
 
@@ -55,6 +56,6 @@ COPY --chown=app:app generate-ssl-certificate.sh /generate-ssl-certificate.sh
 
 EXPOSE 8000
 
-CMD exec daphne -e ssl:8000:privateKey=/etc/ssl/${APP_NAME}.api.${HOST}.key:certKey=/etc/ssl/${APP_NAME}.api.${HOST}.crt core.asgi:application
+CMD exec daphne -e ssl:8000:privateKey=/certs/${APP_NAME}.api.${HOST}.key:certKey=/certs/${APP_NAME}.api.${HOST}.crt core.asgi:application
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

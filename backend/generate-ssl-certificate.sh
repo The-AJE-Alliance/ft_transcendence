@@ -4,7 +4,7 @@ set -e
 
 HOSTNAME=${APP_NAME}.api.${HOSTNAME}
 
-if [ -f "/etc/ssl/${HOSTNAME}.crt" ] && openssl x509 -checkend 86400 -noout -in /etc/ssl/"${HOSTNAME}.crt"; then
+if [ -f "/certs/${HOSTNAME}.crt" ] && openssl x509 -checkend 86400 -noout -in /certs/"${HOSTNAME}.crt"; then
   echo "Certificate is present and valid"
   return
 fi
@@ -19,5 +19,5 @@ RESULT="$(curl --cacert /ca/ca.pem -s --header "X-Vault-Token: $APP_TOKEN" \
   --data "{\"common_name\":\"${HOSTNAME}\",\"ttl\":\"450h\"}" \
   "$VAULT_ADDR/v1/pki_int/issue/domain")"
 
-echo "$RESULT" | jq -r .data.certificate | tee /etc/ssl/"${HOSTNAME}".crt &> /dev/null
-echo "$RESULT" | jq -r .data.private_key | tee /etc/ssl/"${HOSTNAME}".key &> /dev/null
+echo "$RESULT" | jq -r .data.certificate | tee /certs/"${HOSTNAME}".crt &> /dev/null
+echo "$RESULT" | jq -r .data.private_key | tee /certs/"${HOSTNAME}".key &> /dev/null
