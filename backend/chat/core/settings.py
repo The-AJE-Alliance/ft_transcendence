@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-sq&rhnj@@i10x7&6peaubpdvymu%5-lsr-!7lz-l9ke4$1o^cm"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
@@ -44,6 +44,7 @@ DATABASE_OWNERROLE = "chat"
 
 INSTALLED_APPS = [
     "corsheaders",
+    "channels",
     "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_dbconn_retry",
     "health_check",
     "health_check.db",
     "livechat",
@@ -96,7 +98,6 @@ TEMPLATES = [
     },
 ]
 
-# WSGI_APPLICATION = "core.asgi.application"
 # Daphne
 ASGI_APPLICATION = "core.asgi.application"
 
@@ -169,6 +170,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+AUTH_USER_MODEL = "livechat.User"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

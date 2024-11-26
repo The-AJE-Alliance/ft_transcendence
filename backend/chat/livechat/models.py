@@ -15,6 +15,7 @@ class User(AbstractUser, PermissionsMixin):
         "self", related_name="friend_set", symmetrical=False, blank=True
     )
     is_online = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email", "nickname"]
@@ -22,7 +23,7 @@ class User(AbstractUser, PermissionsMixin):
     objects = UserManager()
 
     class Meta:
-        ordering = ["created"]
+        ordering = ["created_at"]
 
     def __str__(self):
         return self.username
@@ -50,7 +51,7 @@ class Conversation(models.Model):
 
     class Meta:
         unique_together = ("user1", "user2")
-        ordering = ["created"]
+        ordering = ["created_at"]
 
     def save(self, *args, **kwargs):
         if self.user1 > self.user2:
@@ -71,4 +72,4 @@ class Message(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["created"]
+        ordering = ["created_at"]

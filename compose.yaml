@@ -186,7 +186,7 @@ services:
     env_file:
       - .env
     volumes:
-      - auth-ssl:/etc/ssl
+      - pong-ssl:/etc/ssl
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -198,10 +198,11 @@ services:
     volumes:
       - pong-db:/var/lib/postgresql/data
   chat:
-    <<: *micro
+    <<: *base
     container_name: chat
     build:
       context: backend
+      dockerfile: Dockerfile.app
       args:
         APP_NAME: chat
         HOST: ${HOSTNAME}
@@ -217,7 +218,7 @@ services:
       - .env
     volumes:
       - media-files:/media
-      - pong-ssl:/etc/ssl
+      - chat-ssl:/etc/ssl
       - static-files:/static
       - vault-ca:/ca
   chat-db:
@@ -227,6 +228,30 @@ services:
       - DB_NAME=chat
     volumes:
       - chat-db:/var/lib/postgresql/data
+  chat-worker:
+    <<: *base
+    container_name: chat-worker
+    build:
+      context: backend
+      dockerfile: Dockerfile.worker
+      args:
+        APP_NAME: chat
+        HOST: ${HOSTNAME}
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./backend/chat/
+          target: /chat/
+    environment:
+      - VAULT_ROLEID=${CHAT_RID}
+      - VAULT_SECRETID=${CHAT_SID}
+    env_file:
+      - .env
+    volumes:
+      - chat-ssl:/etc/ssl
+      - media-files:/media
+      - static-files:/static
+      - vault-ca:/ca
 
 
 networks:

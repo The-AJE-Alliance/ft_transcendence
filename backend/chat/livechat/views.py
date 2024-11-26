@@ -1,8 +1,10 @@
+from django.contrib.sites import requests
 from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from backend.chat.livechat.models import Conversation, Message
+
+from .models import User, Conversation, Message
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from django.db.models import Q
@@ -147,6 +149,11 @@ class LiveChatBlockUser(APIView):
                 conversation.isBlockedByUser1 = not conversation.isBlockedByUser1
             elif conversation.user2 == request.user:
                 conversation.isBlockedByUser2 = not conversation.isBlockedByUser2
+            else:
+                return Response(
+                    {"error": "Conversation not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
             conversation.save()
             return Response(
                 {"status": "Blocked status toggled"}, status=status.HTTP_200_OK
@@ -154,56 +161,6 @@ class LiveChatBlockUser(APIView):
         return Response(
             {"error": "Conversation not found"}, status=status.HTTP_404_NOT_FOUND
         )
-
-
-class LiveChatSendMessage(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @transaction.atomic
-    def post(self, request):
-        # Parse incoming data
-        conversation_id = request.data.get("conversation_id")
-        message_content = request.data.get("messageContent")
-        # Ensure both conversation and content are provided
-        if not conversation_id or not message_content:
-            return Response(
-                {"error": "Conversation ID and message content are required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        # Retrieve the conversation and verify the user is a participant
-        conversation = Conversation.objects.filter(id=conversation_id).first()
-        if not conversation or (
-            conversation.user1 != request.user and conversation.user2 != request.user
-        ):
-            return Response(
-                {"error": "Conversation not found or access denied."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        message = Message.objects.create(
-            conversation=conversation,
-            sentFromUser=request.user,
-            messageContent=message_content,
-        )
-        queue_handler = QueueHandler(None, conversation_id, request.user.id)
-        message_data = {
-            "type": "chat_message",
-            "content": message_content,
-            "sender_id": request.user.id,
-            "conversation_id": conversation_id,
-            "timestamp": str(message.created_at),
-        }
-        asyncio.run(queue_handler.publish_message(message_data))
-
-        # Update unread messages status for the other user
-        if conversation.user1 == request.user:
-            conversation.hasUnreadMessagesByUser2 = True
-        else:
-            conversation.hasUnreadMessagesByUser1 = True
-        conversation.save()
-
-        # Serialize and return the new message data
-        serializer = MessageSerializer(message)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class LiveChatSendInvitation(APIView):

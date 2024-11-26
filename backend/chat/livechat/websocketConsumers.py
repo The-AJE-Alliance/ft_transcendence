@@ -5,6 +5,8 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .queueHandler import QueueHandler
 
+# from .messageRecord import MessageRecord
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -28,10 +30,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.queue_handler.stop()
 
     async def receive(self, text_data):
+        from .messageRecord import MessageRecord
+
         data = json.loads(text_data)
         data["sender_id"] = self.user.id
         data["conversation_id"] = self.conversation_id
         await self.queue_handler.publish_message(data)
+        await MessageRecord(
+            self.user, self.conversation_id, data.get("messageContent")
+        ).save()
 
     async def send_message(self, message):
         # Méthode utilisée par le QueueHandler pour envoyer un message au client
