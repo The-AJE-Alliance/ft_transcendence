@@ -21,6 +21,7 @@ channels = "^4.1.0"
 aio-pika = "^9.4.3"
 pyotp = "^2.9.0"
 qrcode = {extras = ["pil"], version = "^8.0"}
+django-model-utils = "^5.0.0"
 
 
 [tool.poetry.group.dev.dependencies]

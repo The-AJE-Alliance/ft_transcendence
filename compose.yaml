@@ -175,7 +175,7 @@ services:
       - VAULT_SECRETID=${AUTH_SID}
     logging: *log
     volumes:
-      - auth-ssl:/etc/ssl
+      - auth-ssl:/certs
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -196,8 +196,9 @@ services:
     environment:
       - VAULT_ROLEID=${AUTH_RID}
       - VAULT_SECRETID=${AUTH_SID}
+    logging: *log
     volumes:
-      - auth-ssl:/etc/ssl
+      - auth-ssl:/certs
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -229,7 +230,7 @@ services:
     logging: *log
     volumes:
       - media-files:/media
-      - pong-ssl:/etc/ssl
+      - pong-ssl:/certs
       - static-files:/static
       - vault-ca:/ca
   pong-worker:
@@ -249,8 +250,9 @@ services:
     environment:
       - VAULT_ROLEID=${PONG_RID}
       - VAULT_SECRETID=${PONG_SID}
+    logging: *log
     volumes:
-      - pong-ssl:/etc/ssl
+      - pong-ssl:/certs
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -279,11 +281,10 @@ services:
     environment:
       - VAULT_ROLEID=${CHAT_RID}
       - VAULT_SECRETID=${CHAT_SID}
-    env_file:
-      - .env
+    logging: *log
     volumes:
       - media-files:/media
-      - chat-ssl:/etc/ssl
+      - chat-ssl:/certs
       - static-files:/static
       - vault-ca:/ca
   chat-db:
@@ -291,6 +292,7 @@ services:
     container_name: chat-db
     environment:
       - DB_NAME=chat
+    logging: *log
     volumes:
       - chat-db:/var/lib/postgresql/data
   chat-worker:
@@ -310,10 +312,9 @@ services:
     environment:
       - VAULT_ROLEID=${CHAT_RID}
       - VAULT_SECRETID=${CHAT_SID}
-    env_file:
-      - .env
+    logging: *log
     volumes:
-      - chat-ssl:/etc/ssl
+      - chat-ssl:/certs
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca

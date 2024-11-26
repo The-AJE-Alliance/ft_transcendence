@@ -34,11 +34,6 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
-VAULT_DATABASE_PATH = "database/creds/chat"
-VAULT_CACERT = "/ca/ca.pem"
-DATABASE_URL = "postgres://chat-db:5432/chat"
-DATABASE_OWNERROLE = "chat"
-
 
 # Application definition
 

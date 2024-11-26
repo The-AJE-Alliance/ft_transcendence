@@ -43,9 +43,10 @@ WORKDIR /${APP_NAME}
 RUN addgroup --gid 1001 --system app && \
     adduser --no-create-home --shell /bin/false --disabled-password --uid 1001 --system --group app && \
     mkdir -p /static && \
+    mkdir -p /certs && \
     chown app:app /${APP_NAME} && \
     chown app:app /static && \
-    chown app:app /etc/ssl
+    chown app:app /certs
 
 USER app
 

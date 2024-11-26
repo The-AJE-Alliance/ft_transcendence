@@ -8,7 +8,6 @@ from rest_framework.permissions import (
     IsAuthenticated,
     AllowAny,
 )
-from django.http import HttpResponse
 import qrcode
 import io
 from django.contrib.auth import authenticate
@@ -25,7 +24,6 @@ from rest_framework import status
 from django.shortcuts import redirect
 from django.views import View
 from django.conf import settings
-from django.urls import reverse
 from django.http import JsonResponse, HttpResponseBadRequest
 from .models import User, FriendRequest
 from .serializers import UserSerializer
@@ -33,8 +31,6 @@ from .permissions import IsOwner
 from .serializers import FriendRequestSerializer
 import logging
 import requests
-from .publisher import publish_message
-from asgiref.sync import async_to_sync
 import pyotp
 
 logger = logging.getLogger(__name__)
