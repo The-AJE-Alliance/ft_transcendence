@@ -26,21 +26,18 @@
             <li class="nav-item" id="sign-in-link">
               <a class="btn btn-link nav-link" href="/sign-in">Sign In</a>
             </li>
-            <li class="nav-item d-none" id="profile-link">
-              <a class="btn btn-link nav-link" href="/profile">
+            <li class="nav-item dropdown d-none" id="profile-dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-person fs-4"></i>
               </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                <li><a class="dropdown-item" href="/friends">Friends</a></li>
+                <li><a class="dropdown-item" href="/profile/2FA">2FA</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="/logout">Logout</a></li>
+              </ul>
             </li>
-            <li class="nav-item d-none" id="logout-link">
-              <a class="btn btn-link nav-link icon-button" href="/logout">
-                <i class="bi bi-box-arrow-right fs-4"></i>
-              </a>
-            </li>
-            <li class="nav-item d-none" id="logout42-link">
-              <a class="btn btn-link nav-link icon-button" href="/logout">
-                <i class="bi bi-box-arrow-right fs-4"></i>
-              </a>
-          </li>
           </ul>
         </div>
       </div>

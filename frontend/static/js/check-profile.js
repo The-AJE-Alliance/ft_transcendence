@@ -1,5 +1,4 @@
 import ky from 'ky'
-import { isValidEmail } from './register.js'
 
 export async function checkNicknameExists(client, nickname, currentNickname) {
   if (!nickname || nickname === currentNickname) {
@@ -21,27 +20,6 @@ export async function checkNicknameExists(client, nickname, currentNickname) {
       return false
     }
   }
-}
-
-export function validateEmailField(client, emailField, useEmailExistsFeedback = false) {
-  const emailFormatFeedback = document.getElementById('email-format-feedback')
-  const emailExistsFeedback = useEmailExistsFeedback ? document.getElementById('email-exists-feedback') : null
-
-  client.router.addEvent(emailField, 'input', () => {
-    if (emailExistsFeedback) {
-      emailExistsFeedback.style.display = 'none'
-    }
-    if (isValidEmail(emailField.value)) {
-      emailField.classList.add('is-valid')
-      emailField.classList.remove('is-invalid')
-      emailFormatFeedback.style.display = 'none'
-    }
-    else {
-      emailField.classList.add('is-invalid')
-      emailField.classList.remove('is-valid')
-      emailFormatFeedback.style.display = 'block'
-    }
-  })
 }
 
 export function validateFormFields() {
@@ -107,14 +85,14 @@ async function checkUsernameExists(client, username, currentUsername) {
 }
 
 export function setupEmailValidation(client, emailField, currentEmail) {
-  validateEmailField(client, emailField)
   emailField.addEventListener('input', async () => {
     const emailExistsFeedback = document.getElementById('email-exists-feedback')
     const emailFormatFeedback = document.getElementById('email-format-feedback')
+    emailExistsFeedback.classList.add('d-none')
+    emailFormatFeedback.classList.add('d-none')
     if (!emailField.value) {
-      emailField.classList.remove('is-invalid', 'is-valid')
-      emailExistsFeedback.style.display = 'none'
-      emailFormatFeedback.style.display = 'none'
+      emailField.classList.add('is-invalid', 'is-valid')
+      emailFormatFeedback.classList.remove('d-none')
       return
     }
     if (emailField.classList.contains('is-valid')) {
@@ -122,13 +100,11 @@ export function setupEmailValidation(client, emailField, currentEmail) {
       if (await checkEmailExists(client, email, currentEmail)) {
         emailField.classList.add('is-invalid')
         emailField.classList.remove('is-valid')
-        emailExistsFeedback.style.display = 'block'
-        emailFormatFeedback.style.display = 'none'
+        emailExistsFeedback.classList.remove('d-none')
       }
       else {
         emailField.classList.add('is-valid')
         emailField.classList.remove('is-invalid')
-        emailExistsFeedback.style.display = 'none'
       }
     }
   })
@@ -136,13 +112,16 @@ export function setupEmailValidation(client, emailField, currentEmail) {
 
 export function setupUsernameValidation(client, usernameField, currentUsername) {
   client.router.addEvent(usernameField, 'input', async () => {
-    const usernameExistsFeedback = document.getElementById('username-feedback')
+    const usernameEmptyFeedback = document.getElementById('username-empty-feedback')
+    const usernameExistsFeedback = document.getElementById('username-exists-feedback')
+    usernameEmptyFeedback.classList.add('d-none')
+    usernameExistsFeedback.classList.add('d-none')
+    usernameExistsFeedback.textContent = ''
     const username = usernameField.value
     const validUsernamePattern = /^[a-z0-9]+$/i
     if (!username) {
-      usernameField.classList.remove('is-invalid', 'is-valid')
-      usernameExistsFeedback.classList.add('d-none')
-      usernameExistsFeedback.textContent = ''
+      usernameField.classList.add('is-invalid', 'is-valid')
+      usernameEmptyFeedback.classList.remove('d-none')
       return
     }
     if (!validUsernamePattern.test(username)) {
@@ -165,6 +144,31 @@ export function setupUsernameValidation(client, usernameField, currentUsername) 
       usernameField.classList.remove('is-invalid')
       usernameField.classList.add('is-valid')
       usernameExistsFeedback.classList.add('d-none')
+    }
+  })
+}
+
+export function setupNicknameValidation(client, nicknameField, currentNickname) {
+  const nicknameExistsFeedback = document.getElementById('nickname-exists-feedback')
+  const nicknameRequiredFeedback = document.getElementById('nickname-empty-feedback')
+  client.router.addEvent(nicknameField, 'input', async () => {
+    nicknameField.classList.remove('is-invalid', 'is-valid')
+    nicknameExistsFeedback.classList.add('d-none')
+    nicknameRequiredFeedback.classList.add('d-none')
+    const nickname = nicknameField.value.trim()
+
+    if (!nickname) {
+      nicknameField.classList.add('is-invalid', 'is-valid')
+      nicknameRequiredFeedback.classList.remove('d-none')
+      return
+    }
+    const nicknameExists = await checkNicknameExists(client, nickname, currentNickname)
+    if (nicknameExists) {
+      nicknameField.classList.add('is-invalid')
+      nicknameExistsFeedback.classList.remove('d-none')
+    }
+    else {
+      nicknameField.classList.add('is-valid')
     }
   })
 }

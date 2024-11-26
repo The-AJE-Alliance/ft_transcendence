@@ -1,0 +1,66 @@
+#friends-card {
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.friends-section {
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 0 15px rgba(0, 204, 153, 0.3);
+  text-align: left;
+}
+
+#friends-list li {
+  color: #00cc99;
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.friend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.friend-avatar {
+  width: 20%;
+  height: 10%;
+  border-radius: 50%;
+  margin-right: 20px;
+}
+.friend-info {
+  display: flex;
+  align-items: center;
+}
+
+.friend-username {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.friend-status {
+  display: flex;
+  font-weight: normal;
+}
+
+.friend-status i {
+  font-size: 1em;
+}
+.friend-status .status-text {
+  margin-left: 5px;
+}
+
+.online {
+  color: green;
+}
+
+.offline {
+  color: #a60303;
+}

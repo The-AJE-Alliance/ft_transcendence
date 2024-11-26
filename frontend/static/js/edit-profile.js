@@ -1,53 +1,26 @@
 import ky from 'ky'
 import editProfilePage from '../pages/edit-profile.html?raw'
-import { showAlert } from './2FA.js'
 import { changePassword, validatePasswordConfirmation } from './change-password.js'
-import { checkNicknameExists, setupEmailValidation, setupUsernameValidation, validateFormFields } from './check-profile.js'
+import { checkNicknameExists, setupEmailValidation, setupNicknameValidation, setupUsernameValidation, validateFormFields } from './check-profile.js'
+import { updateNavbar } from './navbar'
 import { getUserProfile } from './profile.js'
-
-function setupNicknameValidation(client, nicknameField, currentNickname) {
-  const nicknameExistsFeedback = document.getElementById('nickname-exists-feedback')
-
-  client.router.addEvent(nicknameField, 'input', async () => {
-    nicknameExistsFeedback.style.display = 'none'
-    nicknameField.classList.remove('is-invalid', 'is-valid')
-
-    const nickname = nicknameField.value.trim()
-
-    if (!nickname) {
-      nicknameField.classList.remove('is-invalid', 'is-valid')
-      nicknameExistsFeedback.style.display = 'none'
-      return
-    }
-
-    const nicknameExists = await checkNicknameExists(client, nickname, currentNickname)
-    if (nicknameExists) {
-      nicknameField.classList.add('is-invalid')
-      nicknameExistsFeedback.style.display = 'block'
-    }
-    else {
-      nicknameField.classList.add('is-valid')
-    }
-  })
-}
 
 async function validateProfileForm(client, currentNickname) {
   const nicknameField = document.getElementById('nickname')
   const nickname = nicknameField.value.trim()
 
   if (!nickname) {
-    showAlert('This field cannot be empty.', 'danger')
     return false
   }
   const nicknameExists = await checkNicknameExists(client, nickname, currentNickname)
   if (nicknameExists) {
-    showAlert('This nickname is already used.', 'danger')
     return false
   }
   return true
 }
 
 export async function editProfile(client) {
+  await updateNavbar(client)
   client.app.innerHTML = editProfilePage
   const user = await getUserProfile(client)
 
@@ -73,8 +46,10 @@ export async function editProfile(client) {
     }
     errorAlert.classList.add('d-none')
     const isValid = await validateProfileForm(client, user.nickname)
-    if (isValid)
-      await updateProfile(client)
+    if (!isValid) {
+      return
+    }
+    await updateProfile(client)
   })
   const passwordForm = document.getElementById('change-password-form')
   validatePasswordConfirmation(client, passwordForm)
@@ -101,7 +76,7 @@ function updateProfileFields() {
   return formData
 }
 
-export async function updateProfile(client) {
+async function updateProfile(client) {
   const errorAlert = document.getElementById('edit-alert')
   const formData = updateProfileFields()
 

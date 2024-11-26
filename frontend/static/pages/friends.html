@@ -1,8 +1,31 @@
-<div id="add-friend-section">
-  <input type="text" id="friend-username" placeholder="Enter friend's username" />
-  <button id="add-friend-btn">Add Friend</button>
+<div class="container-friends">
+  <h1 class="mb-4">Friends</h1>
+
+  <!-- Liste des amis -->
+  <div id="friends-list-container" class="card">
+    <h2 class="mb-3">Your Friends</h2>
+    <div class="profile-content">
+      <ul id="friends-list" class="list-unstyled"></ul>
+    </div>
+  </div>
+
+  <!-- Ajouter un ami -->
+  <div class="section mt-4">
+    <h2>Add a Friend</h2>
+    <input type="text" id="friend-username" class="form-control my-3" placeholder="Enter friend's username" />
+    <button id="add-friend-btn" class="btn custom-btn">Add Friend</button>
+    <div id="duplicate-alert" class="alert custom-alert-warning d-none mt-3" role="alert">
+      You are already friends with this user or a request is pending.
+    </div>
+    <div id="error-alert" class="alert custom-alert-danger d-none mt-3" role="alert">User doesn't exist</div>
+  </div>
+
+  <!-- Demandes d'amis -->
+  <div id="friend-requests-section" class="section d-none mt-4">
+    <h2>Friend Requests</h2>
+    <ul id="pending-requests-list" class="list-unstyled mt-3">
+      <!-- Liste des demandes d'amis en attente -->
+    </ul>
+  </div>
 </div>
-<div id="friends-list-section">
-  <h3>Your Friends</h3>
-  <ul id="friends-list"></ul>
-</div>
+

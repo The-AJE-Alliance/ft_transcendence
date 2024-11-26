@@ -35,22 +35,22 @@ export function setupRegisterNicknameValidation(client, nicknameField) {
   const nicknameRequiredFeedback = document.querySelector('#nickname + .invalid-feedback')
 
   nicknameField.addEventListener('input', async () => {
-    nicknameExistsFeedback.style.display = 'none'
-    nicknameRequiredFeedback.style.display = 'none'
     nicknameField.classList.remove('is-invalid', 'is-valid')
+    nicknameExistsFeedback.classList.add('d-none')
+    nicknameRequiredFeedback.classList.add('d-none')
 
     const nickname = nicknameField.value.trim()
 
     if (!nickname) {
-      nicknameRequiredFeedback.style.display = 'block'
       nicknameField.classList.add('is-invalid')
+      nicknameRequiredFeedback.classList.remove('d-none')
       return
     }
 
     const nicknameExists = await checkNicknameExistsForRegister(client, nickname)
     if (nicknameExists) {
       nicknameField.classList.add('is-invalid')
-      nicknameExistsFeedback.style.display = 'block'
+      nicknameExistsFeedback.classList.remove('d-none')
     }
     else {
       nicknameField.classList.add('is-valid')
@@ -61,12 +61,15 @@ export function setupRegisterNicknameValidation(client, nicknameField) {
 function validateRegistrationPasswordConfirmation(form) {
   const passwordInput = form.querySelector('#password')
   const confirmPasswordInput = form.querySelector('#confirm-password')
+  const passwordFeedback = document.getElementById('password-feedback')
+  passwordFeedback.classList.add('d-none')
 
   if (passwordInput && confirmPasswordInput) {
     confirmPasswordInput.addEventListener('input', () => {
       if (passwordInput.value !== confirmPasswordInput.value) {
         confirmPasswordInput.classList.remove('is-valid')
         confirmPasswordInput.classList.add('is-invalid')
+        passwordFeedback.classList.remove('d-none')
       }
       else {
         confirmPasswordInput.classList.remove('is-invalid')
@@ -86,26 +89,26 @@ function setupRegisterEmailValidation(client, emailField) {
   const emailExistsFeedback = document.getElementById('email-exists-feedback')
 
   emailField.addEventListener('input', async () => {
-    emailFormatFeedback.style.display = 'none'
-    emailExistsFeedback.style.display = 'none'
     emailField.classList.remove('is-invalid', 'is-valid')
+    emailFormatFeedback.classList.add('d-none')
+    emailExistsFeedback.classList.add('d-none')
     const email = emailField.value.trim()
 
     if (!email) {
       emailField.classList.add('is-invalid')
-      emailFormatFeedback.style.display = 'block'
+      emailFormatFeedback.classList.remove('d-none')
       return
     }
 
     if (!isValidEmail(email)) {
       emailField.classList.add('is-invalid')
-      emailFormatFeedback.style.display = 'block'
+      emailFormatFeedback.classList.remove('d-none')
       return
     }
     const emailExists = await checkEmailExistsForRegister(client, emailField.value)
     if (emailExists) {
       emailField.classList.add('is-invalid')
-      emailExistsFeedback.style.display = 'block'
+      emailExistsFeedback.classList.remove('d-none')
     }
     else {
       emailField.classList.add('is-valid')
@@ -138,21 +141,21 @@ function setupRegisterUsernameValidation(client, usernameField) {
   const usernameExistsFeedback = document.getElementById('username-exists')
 
   usernameField.addEventListener('input', async () => {
-    usernameFeedback.style.display = 'none'
-    usernameExistsFeedback.style.display = 'none'
     usernameField.classList.remove('is-invalid', 'is-valid')
+    usernameExistsFeedback.classList.add('d-none')
+    usernameFeedback.classList.add('d-none')
 
     const username = usernameField.value.trim()
     if (!username) {
-      usernameExistsFeedback.style.display = 'block'
       usernameField.classList.add('is-invalid')
+      usernameFeedback.classList.remove('d-none')
       return
     }
 
     const usernameExists = await checkUsernameExistsForRegister(client, usernameField.value)
     if (usernameExists) {
       usernameField.classList.add('is-invalid')
-      usernameFeedback.style.display = 'block'
+      usernameExistsFeedback.classList.remove('d-none')
     }
     else {
       usernameField.classList.add('is-valid')

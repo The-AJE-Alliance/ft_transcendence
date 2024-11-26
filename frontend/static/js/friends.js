@@ -1,28 +1,78 @@
 import ky from 'ky'
+import friendsPage from '../pages/friends.html?raw'
+import { updateNavbar } from './navbar.js'
+import { loadPageStyle } from './utils.js'
+import '../css/friends.css'
 
-export async function loadFriends(client) {
-  if (!await client.isLoggedIn()) {
-    client.app.innerHTML = '<p>Please login again</p>'
-    return
+function initializeAddFriendSection(client) {
+  const addFriendBtn = document.getElementById('add-friend-btn')
+  const friendUsernameInput = document.getElementById('friend-username')
+
+  if (addFriendBtn && friendUsernameInput) {
+    addFriendBtn.addEventListener('click', async () => {
+      const friendUsername = friendUsernameInput.value.trim()
+      if (friendUsername) {
+        await sendFriendRequest(client, friendUsername)
+        friendUsernameInput.value = ''
+      }
+    })
   }
-  const friends = await getFriends(client)
-  if (!friends) {
-    client.app.innerHTML = '<p>Unable to load friends list</p>'
-    return
+  else {
+    console.error('Add Friend elements not found in the DOM.')
   }
+}
+
+export async function friends(client) {
+  loadPageStyle('friends')
+  client.app.innerHTML = friendsPage
+
+  if (await client.isLoggedIn()) {
+    await loadPendingFriendRequests(client)
+    await displayFriendsList(client)
+  }
+  initializeAddFriendSection(client)
+  await updateNavbar(client)
+}
+
+async function displayFriendsList(client) {
   const friendsList = document.getElementById('friends-list')
+  const friends = await getFriends(client)
   friendsList.innerHTML = ''
+
   if (friends && friends.length > 0) {
     friends.forEach((friend) => {
-      const listItem = document.createElement('li')
-      listItem.textContent = friend.username
+      const friendItem = document.createElement('li')
+      friendItem.classList.add('friend-item')
+      const avatarImg = document.createElement('img')
+      avatarImg.src = friend.avatar_url_full
+      avatarImg.alt = `Avatar de ${friend.username}`
+      avatarImg.classList.add('friend-avatar')
+      const infoContainer = document.createElement('div')
+      infoContainer.classList.add('friend-info')
+      const usernameSpan = document.createElement('span')
+      usernameSpan.textContent = friend.username
+      usernameSpan.classList.add('friend-username')
+      const statusContainer = document.createElement('span')
+      statusContainer.classList.add('friend-status')
+      const statusIcon = document.createElement('i')
+      statusIcon.classList.add('bi', 'bi-circle-fill')
+      statusIcon.classList.add(friend.is_online ? 'online' : 'offline')
+      statusIcon.title = friend.is_online ? 'Online' : 'Offline'
+      const statusText = document.createElement('span')
+      statusText.textContent = friend.is_online ? ' Online' : ' Offline'
+      statusText.classList.add('status-text', friend.is_online ? 'online' : 'offline')
+      statusContainer.appendChild(statusIcon)
+      statusContainer.appendChild(statusText)
+      infoContainer.appendChild(usernameSpan)
+      infoContainer.appendChild(statusContainer)
+      friendItem.appendChild(avatarImg)
+      friendItem.appendChild(infoContainer)
+      // const playButton = document.createElement('button')
+      // playButton.textContent = 'Play'
+      // client.router.addEvent(playButton, 'click', () => startGameWithFriend(client, friend.id))
 
-      const playButton = document.createElement('button')
-      playButton.textContent = 'Play'
-      client.router.addEvent(playButton, 'click', () => startGameWithFriend(client, friend.id))
-
-      listItem.appendChild(playButton)
-      friendsList.appendChild(listItem)
+      // listItem.appendChild(playButton)
+      friendsList.appendChild(friendItem)
     })
   }
   else {
@@ -30,9 +80,9 @@ export async function loadFriends(client) {
   }
 }
 
-function startGameWithFriend(client, friendId) {
-  client.router.redirect(`/pong/remote/${friendId}`)
-}
+// function startGameWithFriend(client, friendId) {
+//  client.router.redirect(`/pong/remote/${friendId}`)
+// }
 
 export async function getFriends(client) {
   try {
@@ -80,7 +130,8 @@ export async function acceptFriendRequest(client, fromUserId) {
     })
     console.log(`Friend request from user ${fromUserId} accepted!`)
     await loadPendingFriendRequests(client)
-    await loadFriends(client)
+    // await loadFriends(client)
+    await displayFriendsList(client)
   }
   catch (error) {
     console.error('Failed to accept friend request :', error)
@@ -107,11 +158,13 @@ export async function loadPendingFriendRequests(client) {
   try {
     const pendingRequests = await ky.get('https://auth.api.transcendence.fr/pending-friend-requests/', {
       headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
     }).json()
     const pendingList = document.getElementById('pending-requests-list')
     pendingList.innerHTML = ''
 
     if (pendingRequests.length > 0) {
+      console.log(pendingRequests.length)
       friendRequest.classList.remove('d-none')
       pendingRequests.forEach((req) => {
         if (req.from_user && req.from_user.username) {
@@ -130,8 +183,6 @@ export async function loadPendingFriendRequests(client) {
           client.router.addEvent(declineButton, 'click', async () => {
             await declineFriendRequest(client, req.from_user.id)
           })
-
-          // Ajouter le bouton à l'élément de liste
           listItem.appendChild(acceptButton)
           listItem.appendChild(declineButton)
           pendingList.appendChild(listItem)

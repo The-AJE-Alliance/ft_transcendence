@@ -1,29 +1,8 @@
 import ky from 'ky'
 import profilePage from '../pages/profile.html?raw'
-import { disableTwoFactor, showTwoFactorActivationForm } from './2FA.js'
-import { getFriends } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { loadPageStyle } from './utils.js'
-
 import '../css/edit-profile.css'
-
-export async function enableTwoFactor(client) {
-  try {
-    const data = await ky.post('https://auth.api.transcendence.fr/users/enable-two-factor/', {
-      credentials: 'include',
-      headers: { Authorization: `Bearer ${client.token}` },
-    }).json()
-    const qrCodeImageBase64 = data.qr_code
-    const qrcodeContainer = document.getElementById('qrcode-container')
-    const qrcodeImage = document.getElementById('qrcode-image')
-    qrcodeImage.src = `data:image/png;base64,${qrCodeImageBase64}`
-    qrcodeContainer.classList.remove('d-none')
-    showTwoFactorActivationForm(client)
-  }
-  catch (error) {
-    console.error('Error enabling 2FA:', error)
-  }
-}
 
 function setupDeleteProfileButton(client) {
   const confirmDeleteButton = document.getElementById('confirmDelete')
@@ -47,7 +26,7 @@ function setupDeleteProfileButton(client) {
         client.router.redirect('/')
       }
       catch (error) {
-        console.error('Erreur lors de la suppression du profil :', error)
+        console.error('Error while deleting profile :', error)
       }
     })
   }
@@ -136,45 +115,6 @@ function displayUserAvatar(user) {
   }
 }
 
-async function setupTwoFactorAuth(client, user) {
-  const twoFactorSection = document.getElementById('two-factor-section')
-
-  if (user.auth_method === 'oauth42') {
-    if (twoFactorSection) {
-      twoFactorSection.classList.add('d-none')
-    }
-    return
-  }
-
-  const enable2FAButton = document.getElementById('enable-2fa-button')
-  if (enable2FAButton) {
-    const newEnable2FAButton = enable2FAButton.cloneNode(true)
-    enable2FAButton.parentNode.replaceChild(newEnable2FAButton, enable2FAButton)
-
-    async function disableTwoFactorHandler(event) {
-      const success = await disableTwoFactor(client)
-      if (success) {
-        newEnable2FAButton.textContent = 'Enable 2FA'
-        newEnable2FAButton.removeEventListener('click', disableTwoFactorHandler)
-        client.router.addEvent('click', () => {
-          enableTwoFactor(client)
-        })
-      }
-    }
-
-    if (user.two_factor_enabled) {
-      newEnable2FAButton.textContent = 'Disable 2FA'
-      client.router.addEvent(newEnable2FAButton, 'click', disableTwoFactorHandler)
-    }
-    else {
-      newEnable2FAButton.textContent = 'Enable 2FA'
-      client.router.addEvent(newEnable2FAButton, 'click', () => {
-        enableTwoFactor(client)
-      })
-    }
-  }
-}
-
 async function setupNicknameEdit(client, user) {
   const editElement = document.getElementById('edit-nickname-btn')
   if (user.auth_method === 'oauth42') {
@@ -183,23 +123,6 @@ async function setupNicknameEdit(client, user) {
   }
   else {
     editElement.classList.add('d-none')
-  }
-}
-
-async function displayFriendsList(client) {
-  const friendsList = document.getElementById('friends-list')
-  const friends = await getFriends(client)
-  friendsList.innerHTML = ''
-
-  if (friends && friends.length > 0) {
-    friends.forEach((friend) => {
-      const friendItem = document.createElement('li')
-      friendItem.textContent = friend.username
-      friendsList.appendChild(friendItem)
-    })
-  }
-  else {
-    friendsList.innerHTML = '<li>No friends found</li>'
   }
 }
 
@@ -222,9 +145,7 @@ export async function profile(client) {
     if (user) {
       displayUserInfo(user)
       displayUserAvatar(user)
-      await setupTwoFactorAuth(client, user)
       await setupNicknameEdit(client, user)
-      await displayFriendsList(client)
     }
   }
 

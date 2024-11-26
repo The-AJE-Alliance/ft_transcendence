@@ -12,14 +12,14 @@
           placeholder="Enter your username"
           required
         />
-        <div class="invalid-feedback" id="username-exists">Please enter a username.</div>
-        <div id="username-feedback">This username is already used.</div>
+        <div id="username-feedback" class="invalid-feedback d-none" >Please enter a username.</div>
+        <div id="username-exists" class="invalid-feedback d-none">This username is already used.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="email" class="form-label">Email:</label>
         <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required />
-        <div class="invalid-feedback" id="email-format-feedback">Please enter a valid email address.</div>
-        <div id="email-exists-feedback">This email is already used.</div>
+        <div id="email-format-feedback" class="invalid-feedback d-none" >Please enter a valid email address.</div>
+        <div id="email-exists-feedback" class="invalid-feedback d-none">This email is already used.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="password" class="form-label">Password:</label>
@@ -31,7 +31,7 @@
           placeholder="Enter your password"
           required
         />
-        <div class="invalid-feedback">Please enter a password.</div>
+        <div class="invalid-feedback d-none">Please enter a password.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="confirm-password" class="form-label">Confirm Password:</label>
@@ -43,7 +43,7 @@
           placeholder="Confirm your password"
           required
         />
-         <div class="invalid-feedback">Passwords do not match.</div>
+         <div id="password-feedback" class="invalid-feedback d-none">Passwords do not match.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="nickname" class="form-label">Nickname:</label>
@@ -55,8 +55,8 @@
           placeholder="Enter your nickname"
           required
         />
-        <div class="invalid-feedback">Please enter a nickname.</div>
-        <div id="nickname-exists-feedback">This nickname is already used.</div>
+        <div class="d-none invalid-feedback">Please enter a nickname.</div>
+        <div id="nickname-exists-feedback" class="d-none invalid-feedback">This nickname is already used.</div>
       </div>
       <div class="mb-3 text-start">
         <label for="avatar" class="form-label">Avatar:</label>
