@@ -1,10 +1,17 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
-from .validators import validate_alnum
 from .manager import UserManager
 from django.conf import settings
+from model_utils import FieldTracker
 import pyotp
+
+from django.core.exceptions import ValidationError
+
+
+def validate_alnum(value):
+    if not value.isalnum():
+        raise ValidationError("%(value)s is not an alpha numeric value")
 
 
 class User(AbstractUser, PermissionsMixin):
@@ -40,6 +47,7 @@ class User(AbstractUser, PermissionsMixin):
     REQUIRED_FIELDS = ["email", "nickname"]
 
     objects = UserManager()
+    tracker = FieldTracker()
 
     def __str__(self):
         return self.username

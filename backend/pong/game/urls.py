@@ -1,24 +1,29 @@
 from django.urls import path, include
 from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
+from .models import PongUser
 
 
 # Serializers define the API representation.
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class PongUserSerializer(serializers.HyperlinkedModelSerializer):
+    friends = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(), many=True, required=False
+    )
+
     class Meta:
-        model = User
-        fields = ["url", "username", "email", "is_staff"]
+        model = PongUser
+        fields = ["username", "nickname", "is_online", "friends", "wins"]
 
 
 # ViewSets define the view behavior.
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+class PongUserViewSet(viewsets.ModelViewSet):
+    queryset = PongUser.objects.all()
+    serializer_class = PongUserSerializer
 
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-router.register(r"users", UserViewSet)
+router.register(r"users", PongUserViewSet)
 
 # Wire up our API using automatic URL routing.
 # Additionally, we include login URLs for the browsable API.
