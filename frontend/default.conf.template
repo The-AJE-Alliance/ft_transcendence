@@ -2,6 +2,10 @@ upstream auth {
     server auth:8000;
 }
 
+upstream chat {
+    server chat:8000;
+}
+
 upstream pong {
     server pong:8000;
 }

@@ -3,7 +3,7 @@
 set -e
 
 ENVS=()
-SERVICE_APPS=("auth pong")
+SERVICE_APPS=("auth chat pong")
 
 decl_secrets () {
   local APP=$1
@@ -43,10 +43,10 @@ for app in "${apps[@]}"; do
   decl_secrets "$app" &> /dev/null
 done
 
-docker --log-level ERROR compose up -d auth-db pong-db
+docker --log-level ERROR compose up -d auth-db chat-db pong-db
 docker --log-level ERROR compose up -d rabbitmq
 
-until db_isready auth-db &> /dev/null && db_isready pong-db &>/dev/null && rmq_isready &>/dev/null; do
+until db_isready auth-db &> /dev/null && db_isready pong-db &>/dev/null && db_isready chat-db &>/dev/null && rmq_isready &>/dev/null; do
   true
 done
 

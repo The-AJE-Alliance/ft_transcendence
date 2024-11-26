@@ -1,6 +1,7 @@
 import authPage from '../pages/auth.html?raw'
 import homePage from '../pages/home.html?raw'
 import { login, login42, logout } from './auth.js'
+import { chat } from './chat.js'
 import Client from './client.js'
 import { editProfile, updateProfile } from './edit-profile.js'
 import { updateNavbar } from './navbar.js'
@@ -19,7 +20,7 @@ router.get('/', async (client) => {
   client.app.innerHTML = homePage
   await updateNavbar(client)
 })
-
+router.get('/chat', chat)
 router.get('/404', (client) => {
   client.app.innerHTML = '<p style="text-align: center">404 Not found</p>'
 })
