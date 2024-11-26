@@ -1,0 +1,5 @@
+NGINX_ACCESS %{IPORHOST:client_ip} - %{DATA:remote_user} \[%{HTTPDATE:timestamp}\] "(%{WORD:method} %{URIPATHPARAM:request} HTTP/%{NUMBER:http_version})" %{NUMBER:status} %{NUMBER:bytes} "(%{URI:referrer}|-)" "(%{DATA:user_agent})"
+DJANGO_LOG %{TIMESTAMP_ISO8601:timestamp} %{LOGLEVEL:log_level} %{GREEDYDATA:message}
+RABBITMQ_LOG %{TIMESTAMP_ISO8601:timestamp} \[%{DATA:log_level}\] %{GREEDYDATA:message}
+POSTGRES_LOG %{TIMESTAMP_ISO8601:timestamp} %{DATA:log_level}: %{GREEDYDATA:message}
+COMMON_LOG_FORMAT %{IPORHOST:client_ip} %{USER:ident} %{USER:auth} \[%{HTTPDATE:timestamp}\] "(?:%{WORD:method} %{URIPATHPARAM:request}(?: HTTP/%{NUMBER:http_version})?|%{DATA})" %{NUMBER:status} (?:%{NUMBER:bytes}|-)

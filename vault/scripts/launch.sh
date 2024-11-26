@@ -20,7 +20,7 @@ init_db () {
   done
 }
 
-db_isready() {
+db_ready() {
   local APP=$1
   if docker logs "${APP}" |& grep -Pzl '(?s)init process complete.*\n.*ready to accept connections'; then
     return 0
@@ -30,8 +30,22 @@ db_isready() {
   return 1
 }
 
-rmq_isready() {
+rmq_ready() {
   if docker logs rabbitmq |& grep -Pzl 'Time to start RabbitMQ'; then
+    return 0
+  fi
+  return 1
+}
+
+elastic-init_ready() {
+  if docker logs elastic-init |& grep -Pzl 'Waiting for Elasticsearch availability'; then
+    return 0
+  fi
+  return 1
+}
+
+elastic_ready() {
+  if docker logs elastic-init |& grep -Pzl 'Init completed successfully'; then
     return 0
   fi
   return 1
@@ -43,10 +57,21 @@ for app in "${apps[@]}"; do
   decl_secrets "$app" &> /dev/null
 done
 
+env "${ENVS[@]}" docker compose up -d elastic-init
+until elastic-init_ready &>/dev/null; do
+  true
+done
+
+env "${ENVS[@]}" docker compose up -d elastic
+until elastic_ready &>/dev/null; do
+  true
+done
+docker --log-level ERROR compose up -d kibana logstash
+
 docker --log-level ERROR compose up -d auth-db chat-db pong-db
 docker --log-level ERROR compose up -d rabbitmq
 
-until db_isready auth-db &> /dev/null && db_isready pong-db &>/dev/null && db_isready chat-db &>/dev/null && rmq_isready &>/dev/null; do
+until db_ready auth-db &> /dev/null && db_ready chat-db &>/dev/null && db_ready pong-db &>/dev/null && rmq_ready &>/dev/null; do
   true
 done
 

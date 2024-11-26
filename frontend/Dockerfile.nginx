@@ -9,5 +9,6 @@ RUN chown -R nginx:nginx /etc/ssl/
 
 COPY 99-generate-ssl-certificate.sh /docker-entrypoint.d
 COPY default.conf.template /etc/nginx/templates/conf.d/default.conf.template
+COPY rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf /etc/modsecurity.d/owasp-crs/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 
 USER nginx
