@@ -22,7 +22,7 @@ init_db () {
 
 db_ready() {
   local APP=$1
-  if docker logs "${APP}" |& grep -Pzl '(?s)init process complete.*\n.*ready to accept connections'; then
+  if docker logs "${APP}" |& grep -Pzl '(?s)init process complete.*'; then
     return 0
   elif docker logs "${APP}" |& grep -Pzl '(?s)Skipping initialization.*\n.*ready to accept connections'; then
     return 0
