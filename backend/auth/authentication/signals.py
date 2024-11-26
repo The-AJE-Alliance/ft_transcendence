@@ -56,7 +56,7 @@ def post_save_user(sender, instance, created, **kwargs):
 @receiver(m2m_changed, sender=User.friends.through)
 def friends_changed(sender, instance, action, pk_set, **kwargs):
     exchange = "micro"
-    routing_key = "chat"
+    routing_key = "broadcast"
 
     try:
         if action in ["post_add", "post_remove", "post_clear"]:
