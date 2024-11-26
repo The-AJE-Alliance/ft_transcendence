@@ -48,6 +48,7 @@ class TournamentHandler:
             logger.error(f"{str(e)}")
 
     async def publish_to_loop(self, data):
+        logger.info(f"Publishing message to loop: {json.dumps(data, indent=4)}") 
         await self.exchange.publish(
             aio_pika.Message(body=json.dumps(data).encode()), routing_key="tournament"
         )

@@ -49,6 +49,8 @@ class TournamentManager:
             case "end_match":
                 winner = data["content"].get("winner")
                 await self.end_match(winner)
+            case "setup_tournament":
+                await self.setup_tournament(data["content"])
             case _:
                 logger.warning(f"Unhandled message type: {data.get('type')}")
 
@@ -61,6 +63,15 @@ class TournamentManager:
             "content": {"player": player}
         })
       
+    async def setup_tournament(self, content):
+        await self.broadcast({
+            "type": "setup_tournament",
+            "content": {
+                "tournament_id": self.tournament_id,
+                "mode": content.get("mode"),
+                "host": content.get("host"),
+            },
+        })
 
     async def remove_player(self, player):
         if player in self.players:
@@ -140,9 +151,7 @@ class TournamentManager:
         await self.broadcast({
             "type": "tournament_end",
             "content": {"winner": final_winner}
-        })
-       
-
+        }) 
 
     async def broadcast(self, message):
         await self.exchange.publish(
