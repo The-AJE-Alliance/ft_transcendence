@@ -1,0 +1,17 @@
+cluster.name: ${CLUSTER_NAME}
+node.name: elastic
+discovery.type: single-node
+network.host: 0.0.0.0
+bootstrap.memory_lock: true
+xpack.security.enabled: true
+xpack.security.autoconfiguration.enabled: true
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: certs/elastic/elastic.key
+xpack.security.http.ssl.certificate: certs/elastic/elastic.crt
+xpack.security.http.ssl.certificate_authorities: [ "certs/ca/transcendence_ca.crt", "certs/ca/transcendence.crt" ]
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.key: certs/elastic/elastic.key
+xpack.security.transport.ssl.certificate: certs/elastic/elastic.crt
+xpack.security.transport.ssl.certificate_authorities: certs/ca/transcendence.crt
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.license.self_generated.type: ${LICENSE}

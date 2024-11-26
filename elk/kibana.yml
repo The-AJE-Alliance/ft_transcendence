@@ -1,0 +1,13 @@
+server.name: "kibana"
+server.host: "0.0.0.0"
+server.publicBaseUrl: "https://logs.${HOSTNAME}"
+server.shutdownTimeout: "5s"
+elasticsearch.hosts: [ "https://elastic:9200" ]
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "${KIBANA_PASSWORD}"
+elasticsearch.ssl.certificateAuthorities: [ "config/certs/transcendence_ca.crt", "config/certs/transcendence.crt" ]
+xpack.security.encryptionKey: "${ENCRYPTION_KEY}"
+xpack.encryptedSavedObjects:
+  encryptionKey: "${ENCRYPTION_KEY}"
+xpack.reporting.encryptionKey: "${ENCRYPTION_KEY}"
+monitoring.ui.container.elasticsearch.enabled: true

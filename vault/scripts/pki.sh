@@ -19,9 +19,9 @@ else
     /pki/issuer/"$(vault list -format=json pki/issuers/ | jq -r '.[]')" /pki_int/ \
     common_name="Transcendence FR Intermediate Authority" \
     o="Transcendence" ou="Ecole42" key_type="rsa" key_bits="4096" max_depth_len=1 \
-    permitted_dns_domains="${HOSTNAME},*.${HOSTNAME}" ttl="876000h"
+    permitted_dns_domains="${HOSTNAME},*.${HOSTNAME}, elastic" ttl="876000h"
   vault write pki_int/roles/domain issuer_ref="$(vault read -field=default pki_int/config/issuers)" \
-    allowed_domains="${HOSTNAME}",localhost,127.0.0.1,host.docker.internal \
+    allowed_domains="${HOSTNAME}",localhost,127.0.0.1,host.docker.internal,elastic \
     allow_subdomains=true allow_bare_domains=true require_cn=false server_flag=true max_ttl=8670h
   vault policy write domain /vault/policies/domain.hcl
   curl -ks "${VAULT_ADDR}"/v1/pki_int/issuer/"$(vault read -field=default pki_int/config/issuers)"/pem > /export/transcendence.crt

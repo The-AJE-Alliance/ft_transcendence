@@ -33,11 +33,6 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
-VAULT_DATABASE_PATH = "database/creds/auth"
-VAULT_CACERT = "/ca/ca.pem"
-DATABASE_URL = "postgres://auth-db:5432/auth"
-DATABASE_OWNERROLE = "auth"
-
 
 # Application definition
 
