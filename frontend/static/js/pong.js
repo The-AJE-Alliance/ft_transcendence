@@ -16,7 +16,6 @@ export async function pong(client, state) {
   //   canvasResize(canvas)
   // })
 
-
   // client.router.addEvent(document, 'visibilitychange', () => {
   //   // TODO: Pause game for x seconds...
   //   client.socket.close()
@@ -42,6 +41,7 @@ export async function pong(client, state) {
           // TODO: Waiting for player 2, create a button to copy link
           const copyLinkBtn = document.getElementById('host-copy-btn')
           copyLinkBtn.classList.remove('d-none')
+
           // TODO: inform the user that the link was copied
           await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
         }
