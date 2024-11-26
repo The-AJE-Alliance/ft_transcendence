@@ -12,23 +12,8 @@ async function enableTwoFactor(client) {
       headers: { Authorization: `Bearer ${client.token}` },
     }).json()
     const qrcodeContainer = document.getElementById('qrcode-container')
-    console.log('qrcodeContainer:', qrcodeContainer)
     const qrcodeImage = document.getElementById('qrcode-image')
-    console.log('qrcodeImage:', qrcodeImage)
-    if (!qrcodeContainer || !qrcodeImage) {
-      console.error('QR Code container or image element is missing in the DOM.')
-      showAlert('An error occurred while enabling 2FA. Please try again.', 'danger')
-      return
-    }
-    if (!data.qr_code) {
-      console.error('QR Code data is missing in the API response.')
-      showAlert('An error occurred while enabling 2FA. Please try again.', 'danger')
-      return
-    }
-    console.log('API Response:', data)
     const qrCodeImageBase64 = data.qr_code
-    // const qrcodeContainer = document.getElementById('qrcode-container')
-    // const qrcodeImage = document.getElementById('qrcode-image')
     qrcodeImage.src = `data:image/png;base64,${qrCodeImageBase64}`
     qrcodeContainer.classList.remove('d-none')
     showTwoFactorActivationForm(client)
@@ -57,10 +42,7 @@ async function setupTwoFactorAuth(client, user) {
       const success = await disableTwoFactor(client)
       if (success) {
         newEnable2FAButton.textContent = 'Enable 2FA'
-        // newEnable2FAButton.removeEventListener('click', disableTwoFactorHandler)
-        // client.router.addEvent('click', () => {
-        //  enableTwoFactor(client)
-        // })
+        newEnable2FAButton.removeEventListener('click', disableTwoFactorHandler)
         client.router.addEvent(newEnable2FAButton, 'click', () => {
           enableTwoFactor(client)
         })
@@ -118,12 +100,7 @@ export async function disableTwoFactor(client) {
       json: {},
     })
     showAlert('Two-Factor Authentication has been disabled.', 'success')
-    // Refresh the user profile
-    console.log('Disabling 2FA succeeded, refreshing user profile...')
-    const updatedUser = await getUserProfile(client) // Fetch updated profile
-    console.log(updatedUser) // Log to ensure `two_factor_enabled` is updated
-
-    // Reinitialize the Two-Factor Authentication UI
+    const updatedUser = await getUserProfile(client)
     await setupTwoFactorAuth(client, updatedUser)
     return true
   }
@@ -134,64 +111,13 @@ export async function disableTwoFactor(client) {
   }
 }
 
-/*
 export function showTwoFactorActivationForm(client) {
   const activationForm = document.getElementById('two-factor-activation-form')
   const activationError = document.getElementById('activation-error')
   const cancelBtn = document.getElementById('cancel-2fa-activation-btn')
-
-  if (!activationForm.dataset.listenerAdded) {
-    client.router.addEvent(activationForm, 'submit', async (event) => {
-      event.preventDefault()
-      const otpCode = document.getElementById('otp_code').value
-
-      try {
-        await ky.post('https://auth.api.transcendence.fr/users/confirm-two-factor/', {
-          headers: {
-            'Authorization': `Bearer ${client.token}`,
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ otp_code: otpCode }),
-        })
-
-        showAlert('Two-Factor Authentication has been enabled successfully.', 'success')
-        const qrcodeContainer = document.getElementById('qrcode-container')
-        qrcodeContainer.innerHTML = ''
-        const enable2FAButton = document.getElementById('enable-2fa-button')
-        if (enable2FAButton) {
-          const newEnable2FAButton = enable2FAButton.cloneNode(true)
-          enable2FAButton.parentNode.replaceChild(newEnable2FAButton, enable2FAButton)
-          newEnable2FAButton.textContent = 'Disable 2FA'
-          client.router.addEvent(newEnable2FAButton, 'click', () => {
-            disableTwoFactor(client)
-          })
-        }
-        activationForm.classList.add('d-none')
-      }
-      catch {
-        activationError.textContent = 'Invalid 2FA code, please try again.'
-        activationError.classList.remove('d-none')
-      }
-    })
-    activationForm.dataset.listenerAdded = 'true'
-  }
-  if (cancelBtn && !cancelBtn.dataset.listenerAdded) {
-    client.router.addEvent(cancelBtn, 'click', () => {
-      const qrcodeContainer = document.getElementById('qrcode-container')
-      qrcodeContainer.classList.add('d-none')
-      activationForm.reset()
-      activationError.classList.add('d-none')
-    })
-    cancelBtn.dataset.listenerAdded = 'true'
-  }
-}
-*/
-export function showTwoFactorActivationForm(client) {
-  const activationForm = document.getElementById('two-factor-activation-form')
-  const activationError = document.getElementById('activation-error')
-  const cancelBtn = document.getElementById('cancel-2fa-activation-btn')
-
+  activationForm.reset()
+  activationForm.classList.remove('d-none')
+  activationError.classList.add('d-none')
   if (!activationForm.dataset.listenerAdded) {
     activationForm.addEventListener('submit', async (event) => {
       event.preventDefault()
@@ -211,7 +137,9 @@ export function showTwoFactorActivationForm(client) {
         if (response.ok) {
           showAlert('Two-Factor Authentication has been enabled successfully.', 'success')
           const qrcodeContainer = document.getElementById('qrcode-container')
-          qrcodeContainer.innerHTML = ''
+          qrcodeContainer.classList.add('d-none')
+          const activationForm = document.getElementById('two-factor-activation-form')
+          activationForm.classList.add('d-none')
           const enable2FAButton = document.getElementById('enable-2fa-button')
           if (enable2FAButton) {
             const newEnable2FAButton = enable2FAButton.cloneNode(true)
