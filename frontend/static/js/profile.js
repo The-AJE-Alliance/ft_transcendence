@@ -1,6 +1,5 @@
 import ky from 'ky'
 import profilePage from '../pages/profile.html?raw'
-import { getFriends, sendFriendRequest } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { loadPageStyle } from './utils.js'
 import '../css/edit-profile.css'
@@ -127,47 +126,6 @@ async function setupNicknameEdit(client, user) {
   }
 }
 
-export async function displayFriendsList(client) {
-  const friendsList = document.getElementById('friends-list')
-  const friends = await getFriends(client)
-  friendsList.innerHTML = ''
-
-  if (friends && friends.length > 0) {
-    friends.forEach((friend) => {
-      const friendItem = document.createElement('li')
-      friendItem.classList.add('friend-item')
-      const avatarImg = document.createElement('img')
-      avatarImg.src = friend.avatar_url_full
-      avatarImg.alt = `Avatar de ${friend.username}`
-      avatarImg.classList.add('friend-avatar')
-      const infoContainer = document.createElement('div')
-      infoContainer.classList.add('friend-info')
-      const usernameSpan = document.createElement('span')
-      usernameSpan.textContent = friend.username
-      usernameSpan.classList.add('friend-username')
-      const statusContainer = document.createElement('span')
-      statusContainer.classList.add('friend-status')
-      const statusIcon = document.createElement('i')
-      statusIcon.classList.add('bi', 'bi-circle-fill')
-      statusIcon.classList.add(friend.is_online ? 'online' : 'offline')
-      statusIcon.title = friend.is_online ? 'Online' : 'Offline'
-      const statusText = document.createElement('span')
-      statusText.textContent = friend.is_online ? ' Online' : ' Offline'
-      statusText.classList.add('status-text', friend.is_online ? 'online' : 'offline')
-      statusContainer.appendChild(statusIcon)
-      statusContainer.appendChild(statusText)
-      infoContainer.appendChild(usernameSpan)
-      infoContainer.appendChild(statusContainer)
-      friendItem.appendChild(avatarImg)
-      friendItem.appendChild(infoContainer)
-      friendsList.appendChild(friendItem)
-    })
-  }
-  else {
-    friendsList.innerHTML = '<li>No friends found</li>'
-  }
-}
-
 function configureDeleteProfileButton(client) {
   if (client.authMethod !== 'oauth42') {
     setupDeleteProfileButton(client)
@@ -175,24 +133,6 @@ function configureDeleteProfileButton(client) {
   else {
     const actionsButton = document.getElementById('action-buttons')
     actionsButton.classList.add('d-none')
-  }
-}
-
-export function initializeAddFriendSection(client) {
-  const addFriendBtn = document.getElementById('add-friend-btn')
-  const friendUsernameInput = document.getElementById('friend-username')
-
-  if (addFriendBtn && friendUsernameInput) {
-    addFriendBtn.addEventListener('click', async () => {
-      const friendUsername = friendUsernameInput.value.trim()
-      if (friendUsername) {
-        await sendFriendRequest(client, friendUsername)
-        friendUsernameInput.value = ''
-      }
-    })
-  }
-  else {
-    console.error('Add Friend elements not found in the DOM.')
   }
 }
 
@@ -205,14 +145,10 @@ export async function profile(client) {
     if (user) {
       displayUserInfo(user)
       displayUserAvatar(user)
-      // await setupTwoFactorAuth(client, user)
       await setupNicknameEdit(client, user)
-      // await displayFriendsList(client)
-      // await loadPendingFriendRequests(client)
     }
   }
 
   configureDeleteProfileButton(client)
-  // initializeAddFriendSection(client)
   await updateNavbar(client)
 }

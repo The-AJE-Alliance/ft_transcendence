@@ -1,9 +1,9 @@
 import ky from 'ky'
-import settingsPage from '../pages/settings.html?raw'
+import twoFAPage from '../pages/2FA.html?raw'
 import { updateNavbar } from './navbar.js'
 import { getUserProfile } from './profile.js'
 import { loadPageStyle } from './utils.js'
-import '../css/settings.css'
+import '../css/2FA.css'
 
 async function enableTwoFactor(client) {
   try {
@@ -62,9 +62,9 @@ async function setupTwoFactorAuth(client, user) {
   }
 }
 
-export async function settings(client) {
-  loadPageStyle('settings')
-  client.app.innerHTML = settingsPage
+export async function twoFA(client) {
+  loadPageStyle('2FA')
+  client.app.innerHTML = twoFAPage
 
   if (await client.isLoggedIn()) {
     const user = await getUserProfile(client)
@@ -79,6 +79,7 @@ export function showAlert(message, type = 'success') {
   const alertContainer = document.getElementById('alert-settings')
   if (!alertContainer)
     return
+  alertContainer.innerHTML = ''
   const wrapper = document.createElement('div')
   wrapper.innerHTML = `
     <div class="alert alert-${type} alert-dismissible fade show" role="alert">
