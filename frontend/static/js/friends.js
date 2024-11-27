@@ -7,7 +7,6 @@ import '../css/friends.css'
 function initializeAddFriendSection(client) {
   const addFriendBtn = document.getElementById('add-friend-btn')
   const friendUsernameInput = document.getElementById('friend-username')
-
   if (addFriendBtn && friendUsernameInput) {
     addFriendBtn.addEventListener('click', async () => {
       const friendUsername = friendUsernameInput.value.trim()
@@ -35,7 +34,7 @@ export async function friends(client) {
 }
 
 async function displayFriendsList(client) {
-  const friendsList = document.getElementById('friends-list')
+  const friendsList = document.getElementById('friends-list-perso')
   const friends = await getFriends(client)
   friendsList.innerHTML = ''
 
@@ -67,6 +66,7 @@ async function displayFriendsList(client) {
       infoContainer.appendChild(statusContainer)
       friendItem.appendChild(avatarImg)
       friendItem.appendChild(infoContainer)
+
       // const playButton = document.createElement('button')
       // playButton.textContent = 'Play'
       // client.router.addEvent(playButton, 'click', () => startGameWithFriend(client, friend.id))
@@ -76,7 +76,10 @@ async function displayFriendsList(client) {
     })
   }
   else {
-    friendsList.innerHTML = '<li>No friends found</li>'
+    const noFriendsItem = document.createElement('li')
+    noFriendsItem.textContent = 'No friends found'
+    noFriendsItem.classList.add('no-friends')
+    friendsList.appendChild(noFriendsItem)
   }
 }
 
@@ -98,13 +101,8 @@ export async function getFriends(client) {
 }
 
 export async function sendFriendRequest(client, friendUsername) {
-  const duplicateAlert = document.getElementById('duplicate-alert')
   const errorAlert = document.getElementById('error-alert')
-  const friends = await getFriends(client)
-  if (friends && friends.some(friend => friend.username === friendUsername)) {
-    duplicateAlert.classList.remove('d-none')
-    return
-  }
+  const successAlert = document.getElementById('success-alert')
   try {
     await ky.post('https://auth.api.transcendence.fr/send-friend-request/', {
       headers: { Authorization: `Bearer ${client.token}` },
@@ -113,11 +111,27 @@ export async function sendFriendRequest(client, friendUsername) {
     })
     console.log(`Friend request sent to ${friendUsername}!`)
     errorAlert.classList.add('d-none')
+    successAlert.textContent = `Friend request sent successfully to ${friendUsername}!`
+    successAlert.classList.remove('d-none')
     await loadPendingFriendRequests(client)
   }
   catch (error) {
-    errorAlert.classList.remove('d-none')
-    console.error('Error while trying to send friend request:', error)
+    const errorResponse = await error.response.json()
+    if (errorResponse.error === 'You cannot add yourself as a friend.') {
+      errorAlert.textContent = 'You cannot add yourself as a friend.'
+      errorAlert.classList.remove('d-none')
+    }
+    else if (errorResponse.error === 'Friend request already sent.') {
+      errorAlert.textContent = 'Friend request already sent.'
+      errorAlert.classList.remove('d-none')
+    }
+    else if (errorResponse.error === 'User does not exist.') {
+      errorAlert.textContent = 'The user doesn\'t exist.'
+      errorAlert.classList.remove('d-none')
+    }
+    else {
+      errorAlert.textContent = 'An unexpected error occurred. Please try again.'
+    }
   }
 }
 

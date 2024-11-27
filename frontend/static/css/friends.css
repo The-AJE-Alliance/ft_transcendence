@@ -17,10 +17,17 @@
   text-align: left;
 }
 
-#friends-list li {
+.friends-list-perso {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.friends-list-perso li {
   color: #00cc99;
   font-size: 1rem;
   margin-bottom: 5px;
+  align-items: center;
 }
 
 .friend-item {
@@ -56,11 +63,17 @@
 .friend-status .status-text {
   margin-left: 5px;
 }
-
 .online {
   color: green;
 }
 
 .offline {
   color: #a60303;
+}
+
+.no-friends {
+  font-size: 1rem;
+  color: #ff6b6b;
+  margin: 10px 0;
+  list-style: none;
 }
