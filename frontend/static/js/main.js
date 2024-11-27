@@ -13,7 +13,7 @@ import { choosePongMode, joinGame, localGame, remotePong, remoteSetup } from './
 import { profile } from './profile.js'
 import { register } from './register.js'
 import Router from './router.js'
-import { remoteTournament, tournamentSetup, joinTournament } from './tournament.js'
+import { joinTournament, remoteTournament, tournamentSetup } from './tournament-setup.js'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import '../css/styles.css'

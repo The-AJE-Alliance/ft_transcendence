@@ -1,91 +1,42 @@
-import tournamentSetupPage from '../pages/tournament-setup.html?raw'
-import tournamentPage from '../pages/tournaments.html?raw'
-// import '../css/tournament.css';
+import tournamentPage from '../pages/tournament.html'
 
-export async function remoteTournament(client) {
-  client.redirectToFriends = true
-  if (await client.isLoggedIn())
-    client.router.redirect('/pong/tournament/setup')
-  else
-    client.router.redirect('/sign-in')
-}
-
-export async function joinTournament(client, uuid) {
-  if (!await client.isLoggedIn()) {
-    await client.refresh()
-    client.router.redirect('/login')
-    return
-  }
-  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
-
-  const state = {
-    mode: 'tournament',
-    player: 1,
-    host: false,
-    tournament_id: uuid,
-  }
-}
-
-export async function tournamentSetup(client) {
-  if (!await client.isLoggedIn()) {
-    await client.refresh()
-    client.router.redirect('/login')
-    return
-  }
-
-  client.app.innerHTML = tournamentSetupPage
-
-  const createGameBtn = document.getElementById('host-create-btn')
-
-  client.router.addEvent(createGameBtn, 'click', async () => {
-    client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
-
-    const initMessage = {
-      type: 'setup_tournament',
-      content: {
-        mode: 'tournament',
-        host: true,
-        tournament_id: globalThis.crypto.randomUUID(),
-      },
-    }
-    createGameBtn.classList.add('d-none')
-    await initTournament(client, initMessage)
-  })
-}
-
-export async function initTournament(client, initMessage) {
+export async function tournament(client, input) {
   client.app.innerHTML = tournamentPage
   // State to track the tournament
-  const tournamentState = {
+  const state = {
     players: [],
     isLocked: false,
     matches: [],
     currentMatch: null,
+    host: input.host,
+    player: input.player,
+    user_id: input.user_id,
+    tournament_id: input.tournament_id,
   }
 
+  console.log(state)
+
   client.socket.onopen = () => {
-    console.log('WebSocket for tournament connected.')
+    console.log('Tournament WebSocket connected.')
+    const initMessage = {
+      type: 'setup_tournament',
+      content: { ...input },
+    }
+    console.log(initMessage)
     client.socket.send(JSON.stringify(initMessage))
   }
 
   client.socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
-    console.log('Message received:', event.data)
-
-    if (data.type === 'setup_tournament') {
-      const copyLinkBtn = document.getElementById('host-copy-btn')
-      if (copyLinkBtn) {
-        client.router.addEvent(copyLinkBtn, 'click', async () => {
-          await navigator.clipboard.writeText(`https://transcendence.fr/pong/tournament/join/${data.content.tournament_id}`)
-          alert('Link copied!')
-        })
-      }
-      return
-    }
+    console.log(event.data)
 
     switch (data.type) {
+      case 'setup_tournament':
+        greetTournament(client, state, data.content)
+        break
+
       case 'player_joined':
-        updatePlayerList(data.content.player)
+        updatePlayerList(state, data.content.player)
         break
 
       case 'tournament_locked':
@@ -125,15 +76,6 @@ export async function initTournament(client, initMessage) {
     client.socket.send(JSON.stringify({ type: 'start_tournament' }))
   })
 
-  // Helper functions
-  function updatePlayerList(player) {
-    tournamentState.players.push(player)
-    const playerList = document.getElementById('playerList')
-    const newPlayer = document.createElement('li')
-    newPlayer.textContent = player
-    playerList.appendChild(newPlayer)
-  }
-
   function handleStartTournament() {
     const tournamentMessage = document.getElementById('tournamentMessage')
 
@@ -145,14 +87,14 @@ export async function initTournament(client, initMessage) {
   }
 
   function handleTournamentLocked() {
-    tournamentState.isLocked = true
+    state.isLocked = true
     console.log('Tournament locked! Ready to start.')
     document.getElementById('lock-tournament').disabled = true
     document.getElementById('start-tournament').disabled = false
   }
 
   function startMatch(match) {
-    tournamentState.currentMatch = match
+    state.currentMatch = match
     console.log(`Starting match: ${match.player1} vs ${match.player2}`)
     pong(client, {
       mode: 'tournament',
@@ -175,4 +117,27 @@ export async function initTournament(client, initMessage) {
     console.log(`Tournament ended! Winner: ${winner}`)
     client.app.innerHTML = `<h1>Congratulations, ${winner}!</h1>`
   }
+}
+
+function greetTournament(client, state, data) {
+  if (state.host) {
+    const copyLinkBtn = document.getElementById('host-copy-btn')
+    copyLinkBtn.classList.remove('d-none')
+    client.router.addEvent(copyLinkBtn, 'click', async () => {
+      await navigator.clipboard.writeText(`https://transcendence.fr/pong/tournament/join/${state.tournament_id}`)
+      alert('Link copied!')
+    })
+  }
+  else {
+    state.player = data.player
+    // TODO: waiting for blabla, waiting page
+  }
+}
+
+function updatePlayerList(state, player) {
+  state.players.push(player)
+  const playerList = document.getElementById('playerList')
+  const newPlayer = document.createElement('li')
+  newPlayer.textContent = player
+  playerList.appendChild(newPlayer)
 }
