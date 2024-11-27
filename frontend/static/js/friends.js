@@ -7,13 +7,13 @@ import '../css/friends.css'
 
 function initializeAddFriendSection(client) {
   const addFriendBtn = document.getElementById('add-friend-btn')
-  const friendUsernameInput = document.getElementById('friend-username')
-  if (addFriendBtn && friendUsernameInput) {
+  const friendNicknameInput = document.getElementById('friend-username')
+  if (addFriendBtn && friendNicknameInput) {
     addFriendBtn.addEventListener('click', async () => {
-      const friendUsername = friendUsernameInput.value.trim()
+      const friendUsername = friendNicknameInput.value.trim()
       if (friendUsername) {
         await sendFriendRequest(client, friendUsername)
-        friendUsernameInput.value = ''
+        friendNicknameInput.value = ''
       }
     })
   }
@@ -49,9 +49,9 @@ async function displayFriendsList(client) {
       avatarImg.classList.add('friend-avatar')
       const infoContainer = document.createElement('div')
       infoContainer.classList.add('friend-info')
-      const usernameSpan = document.createElement('span')
-      usernameSpan.textContent = friend.username
-      usernameSpan.classList.add('friend-username')
+      const nicknameSpan = document.createElement('span')
+      nicknameSpan.textContent = friend.nickname
+      nicknameSpan.classList.add('friend-nickname')
       const statusContainer = document.createElement('span')
       statusContainer.classList.add('friend-status')
       const statusIcon = document.createElement('i')
@@ -63,7 +63,7 @@ async function displayFriendsList(client) {
       statusText.classList.add('status-text', friend.is_online ? 'online' : 'offline')
       statusContainer.appendChild(statusIcon)
       statusContainer.appendChild(statusText)
-      infoContainer.appendChild(usernameSpan)
+      infoContainer.appendChild(nicknameSpan)
       infoContainer.appendChild(statusContainer)
       friendItem.appendChild(avatarImg)
       friendItem.appendChild(infoContainer)
@@ -101,20 +101,21 @@ export async function getFriends(client) {
   }
 }
 
-export async function sendFriendRequest(client, friendUsername) {
+export async function sendFriendRequest(client, friendNickname) {
   const errorAlert = document.getElementById('error-alert')
   const successToast = document.getElementById('success-toast')
   const toastMessage = document.getElementById('toast-message')
   const toast = new bootstrap.Toast(successToast)
   errorAlert.classList.add('d-none')
+  console.log(friendNickname)
   try {
     await ky.post('https://auth.api.transcendence.fr/send-friend-request/', {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
-      json: { username: friendUsername },
+      json: { nickname: friendNickname },
     })
-    console.log(`Friend request sent to ${friendUsername}!`)
-    toastMessage.textContent = `Friend request sent successfully to ${friendUsername}!`
+    console.log(`Friend request sent to ${friendNickname}!`)
+    toastMessage.textContent = `Friend request sent successfully to ${friendNickname}!`
     successToast.classList.remove('d-none')
     toast.show()
     errorAlert.classList.add('d-none')
@@ -145,7 +146,6 @@ export async function acceptFriendRequest(client, fromUserId) {
     })
     console.log(`Friend request from user ${fromUserId} accepted!`)
     await loadPendingFriendRequests(client)
-    // await loadFriends(client)
     await displayFriendsList(client)
   }
   catch (error) {
@@ -182,9 +182,9 @@ export async function loadPendingFriendRequests(client) {
       console.log(pendingRequests.length)
       friendRequest.classList.remove('d-none')
       pendingRequests.forEach((req) => {
-        if (req.from_user && req.from_user.username) {
+        if (req.from_user && req.from_user.nickname) {
           const listItem = document.createElement('li')
-          listItem.textContent = req.from_user.username
+          listItem.textContent = req.from_user.nickname
 
           const acceptButton = document.createElement('button')
           acceptButton.textContent = 'Accept'
