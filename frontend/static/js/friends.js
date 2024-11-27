@@ -1,3 +1,4 @@
+import * as bootstrap from 'bootstrap'
 import ky from 'ky'
 import friendsPage from '../pages/friends.html?raw'
 import { updateNavbar } from './navbar.js'
@@ -102,7 +103,10 @@ export async function getFriends(client) {
 
 export async function sendFriendRequest(client, friendUsername) {
   const errorAlert = document.getElementById('error-alert')
-  const successAlert = document.getElementById('success-alert')
+  const successToast = document.getElementById('success-toast')
+  const toastMessage = document.getElementById('toast-message')
+  const toast = new bootstrap.Toast(successToast)
+  errorAlert.classList.add('d-none')
   try {
     await ky.post('https://auth.api.transcendence.fr/send-friend-request/', {
       headers: { Authorization: `Bearer ${client.token}` },
@@ -110,28 +114,25 @@ export async function sendFriendRequest(client, friendUsername) {
       json: { username: friendUsername },
     })
     console.log(`Friend request sent to ${friendUsername}!`)
+    toastMessage.textContent = `Friend request sent successfully to ${friendUsername}!`
+    successToast.classList.remove('d-none')
+    toast.show()
     errorAlert.classList.add('d-none')
-    successAlert.textContent = `Friend request sent successfully to ${friendUsername}!`
-    successAlert.classList.remove('d-none')
     await loadPendingFriendRequests(client)
   }
   catch (error) {
     const errorResponse = await error.response.json()
     if (errorResponse.error === 'You cannot add yourself as a friend.') {
       errorAlert.textContent = 'You cannot add yourself as a friend.'
-      errorAlert.classList.remove('d-none')
     }
     else if (errorResponse.error === 'Friend request already sent.') {
       errorAlert.textContent = 'Friend request already sent.'
-      errorAlert.classList.remove('d-none')
     }
     else if (errorResponse.error === 'User does not exist.') {
       errorAlert.textContent = 'The user doesn\'t exist.'
-      errorAlert.classList.remove('d-none')
     }
-    else {
-      errorAlert.textContent = 'An unexpected error occurred. Please try again.'
-    }
+    errorAlert.classList.remove('d-none')
+    console.error('Error while trying to send friend request:', error)
   }
 }
 

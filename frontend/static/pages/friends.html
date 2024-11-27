@@ -8,7 +8,14 @@
       <input type="text" id="friend-username" class="form-control my-3" placeholder="Enter friend's username" />
       <button id="add-friend-btn" class="btn custom-btn">Add Friend</button>
         <div id="error-alert" class="alert custom-alert-danger d-none mt-3" role="alert"></div>
-        <div id="success-alert" class="alert alert-success d-none mt-3" role="alert">Friend request sent successfully!</div>
+        <div id="success-toast" class="toast align-items-center text-bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="d-flex">
+            <div id="toast-message" class="toast-body">
+              Friend request sent successfully!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
     </div>
   </div>
 
