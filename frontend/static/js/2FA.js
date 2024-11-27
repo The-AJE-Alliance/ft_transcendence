@@ -1,9 +1,10 @@
 import ky from 'ky'
-import twoFAPage from '../pages/2FA.html?raw'
+import settingsPage from '../pages/settings.html?raw'
+import { setupPasswordChange } from './change-password.js'
 import { updateNavbar } from './navbar.js'
 import { getUserProfile } from './profile.js'
 import { loadPageStyle } from './utils.js'
-import '../css/2FA.css'
+import '../css/settings.css'
 
 async function enableTwoFactor(client) {
   try {
@@ -62,9 +63,9 @@ async function setupTwoFactorAuth(client, user) {
   }
 }
 
-export async function twoFA(client) {
-  loadPageStyle('2FA')
-  client.app.innerHTML = twoFAPage
+export async function settings(client) {
+  loadPageStyle('settings')
+  client.app.innerHTML = settingsPage
 
   if (await client.isLoggedIn()) {
     const user = await getUserProfile(client)
@@ -72,6 +73,7 @@ export async function twoFA(client) {
       await setupTwoFactorAuth(client, user)
     }
   }
+  await setupPasswordChange(client)
   await updateNavbar(client)
 }
 

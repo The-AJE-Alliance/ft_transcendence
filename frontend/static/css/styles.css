@@ -2,9 +2,9 @@ body {
   background-color: #1a1a1a;
   color: #00cc99;
   font-family: 'Space Mono', monospace;
-  margin: 0;
-  padding-top: 60px;
-  display: flex;
+  margin: 0 auto;
+  padding-top: 56px;
+  max-width: 100%;
 }
 
 h1,
@@ -130,10 +130,9 @@ button:hover {
 }
 
 .alert-container {
-  display: flex;
-  justify-content: center;
   position: fixed;
-  top: 10%;
+  justify-content: center;
+  top: 70%;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
@@ -189,17 +188,10 @@ button:hover {
   color: #dc3545;
 }
 
-#logout-toast {
-  position: absolute;
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1050;
-}
-
+#logout-toast,
 #logout-toast-failed {
   position: absolute;
-  top: 100px;
+  top: 70px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1050;
