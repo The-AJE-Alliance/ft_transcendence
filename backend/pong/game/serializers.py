@@ -13,6 +13,8 @@ class UserStatsSerializer(serializers.ModelSerializer):
             "wins",
             "loss",
             "win_ratio",
+            "tournaments_won",
+            "tournaments_played",
             "created_at",
         ]
 

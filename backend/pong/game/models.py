@@ -24,6 +24,8 @@ class PongUser(models.Model):
     wins = models.IntegerField(default=0)
     loss = models.IntegerField(default=0)
     win_ratio = models.DoubleField(default=0)
+    tournaments_played = models.IntegerField(default=0)
+    tournaments_won = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
