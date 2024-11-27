@@ -22,3 +22,17 @@ class PongUser(models.Model):
 
     # specific fields of the app that will not be synced
     wins = models.IntegerField(default=0)
+    loss = models.IntegerField(default=0)
+    win_ratio = models.DoubleField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def save(self, *args, **kwargs):
+            if self.loss == 0 :
+                self.win_ratio = None
+            else
+                self.win_ratio = wins/loss
+            super().save(*args, **kwargs)
+
