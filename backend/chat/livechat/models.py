@@ -1,12 +1,10 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from .validators import validate_alnum
-from .manager import UserManager
 from django.conf import settings
 
 
-class User(AbstractUser, PermissionsMixin):
+class ChatUser(models.Model):
     username = models.CharField(
         max_length=15, unique=True, validators=[MinLengthValidator(3), validate_alnum]
     )
@@ -15,18 +13,6 @@ class User(AbstractUser, PermissionsMixin):
         "self", related_name="friend_set", symmetrical=False, blank=True
     )
     is_online = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = ["email", "nickname"]
-
-    objects = UserManager()
-
-    class Meta:
-        ordering = ["created_at"]
-
-    def __str__(self):
-        return self.username
 
 
 class Conversation(models.Model):

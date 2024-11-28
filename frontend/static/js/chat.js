@@ -1,8 +1,10 @@
 import ky from 'ky'
 import chatPage from '../pages/chat.html?raw'
+import { updateNavbar } from './navbar.js'
 import '../css/chat.css'
 
 export async function chat(client) {
+  await updateNavbar(client)
   client.app.innerHTML = chatPage
   const friendsList = document.getElementById('friends')
   const chatMessages = document.getElementById('chat-messages')
@@ -16,14 +18,18 @@ export async function chat(client) {
   let ws = null
 
   async function loadFriends() {
-    const friends = await ky.get('/friends/', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    const friends = await ky.get('/friends', {
+      headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
-    }).json()
+    })
+
+    const responseText = await friends.text()
+    console.error('Réponse inattendue de /friends/ :', responseText)
     const conversations = await ky.get(`/conversations/`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
-    }).json()
+    })
+
     renderFriends(friends, conversations)
   }
 
@@ -44,13 +50,13 @@ export async function chat(client) {
       friendsList.appendChild(li)
     })
   }
-
+  await loadFriends()
   async function selectConversation(friend) {
     document.getElementById('chat-user').textContent = friend.nickname
     updateReadStatus(friend.nickname, false)
     try {
       const conversations = await ky.get(`/conversations/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
       }).json()
       const conversation = conversations.find(conv =>
@@ -65,7 +71,7 @@ export async function chat(client) {
       else {
         const newConversation = await ky.post('/conversations/', {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${client.token}`,
             'Content-Type': 'application/json',
           },
           credentials: 'include',
@@ -84,7 +90,7 @@ export async function chat(client) {
   // Charger les messages d'une conversation
   async function loadMessages(conversationId) {
     const messages = await ky.get(`/conversations/${conversationId}/messages/`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
     }).json()
     renderMessages(messages)
@@ -175,7 +181,7 @@ export async function chat(client) {
       ws.close()
     try {
       const response = await ky.post(`/conversations/${selectedConversationId}/block/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
       })
       if (!response.ok) {
@@ -212,7 +218,7 @@ export async function chat(client) {
           room_id: roomId,
           conversation_id: selectedConversationId,
         },
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
       })
       if (!response.ok) {
@@ -222,11 +228,5 @@ export async function chat(client) {
     catch (error) {
       console.error('Erreur lors de l\'appel API pour l\'invitation:', error)
     }
-  })
-
-  await loadFriends()
-  window.addEventListener('beforeunload', () => {
-    if (ws)
-      ws.close()
   })
 }

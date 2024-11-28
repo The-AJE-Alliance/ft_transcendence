@@ -1,7 +1,9 @@
 import aio_pika
+import json
 import asyncio
 import logging
 from django.conf import settings
+from .processors import process
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +11,8 @@ logger = logging.getLogger(__name__)
 async def process_message(message):
     async with message.process():
         logger.error(f"Received message: {message.body.decode()}")
-        # Add your message handling logic here
+        data = json.loads(message.body.decode())
+        await asyncio.to_thread(process, data)
 
 
 async def start_consumer(queue_name, exchange_name):
