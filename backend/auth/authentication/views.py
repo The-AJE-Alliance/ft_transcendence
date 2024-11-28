@@ -1,5 +1,7 @@
 import base64
 from urllib.parse import urlparse
+
+from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 import os
 from rest_framework.decorators import action
@@ -535,9 +537,7 @@ class CookieTokenObtainPairSerializer(TokenObtainPairSerializer):
         user = self.user
 
         if user.two_factor_enabled:
-            raise serializers.ValidationError(
-                {"detail": "2FA required"}, code="authorization"
-            )
+            raise PermissionDenied({"detail": "2FA required"})
 
         user.is_online = True
         user.save()
