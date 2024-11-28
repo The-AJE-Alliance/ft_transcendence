@@ -32,6 +32,7 @@ export async function login(client) {
 async function loginPostProcess(client, result, responseStatus) {
   if (responseStatus === 200 && result) {
     client.token = result.access
+    client.id = result.id
     client.authMethod = 'classic'
     localStorage.setItem('authMethod', 'classic')
     await updateNavbar(client)
@@ -98,6 +99,7 @@ export async function logout(client) {
         headers: { Authorization: `Bearer ${client.token}` },
       })
       client.token = ''
+      client.id = undefined
       client.authMethod = ''
       localStorage.removeItem('access_token')
       await updateNavbar(client)
@@ -112,6 +114,7 @@ export async function logout(client) {
         headers: { Authorization: `Bearer ${client.token}` },
       })
       client.token = ''
+      client.id = undefined
       client.authMethod = ''
       localStorage.removeItem('access_token')
       await updateNavbar(client)
