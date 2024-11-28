@@ -1,5 +1,7 @@
 import base64
 from urllib.parse import urlparse
+
+from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 import os
 from rest_framework.decorators import action
@@ -14,8 +16,11 @@ from django.contrib.auth import authenticate
 from rest_framework.authentication import SessionAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenRefreshView, TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
-from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer,
+    TokenRefreshSerializer,
+)
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView
@@ -25,6 +30,7 @@ from django.shortcuts import redirect
 from django.views import View
 from django.conf import settings
 from django.http import JsonResponse, HttpResponseBadRequest
+from . import serializers
 from .models import User, FriendRequest
 from .serializers import UserSerializer
 from .permissions import IsOwner
@@ -525,51 +531,26 @@ class RegisterView(CreateAPIView):
         )
 
 
-class CookieTokenRefreshSerializer(TokenRefreshSerializer):
-    refresh = None
-
+class CookieTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        attrs["refresh"] = self.context["request"].COOKIES.get("refresh_token")
-        if attrs["refresh"]:
-            return super().validate(attrs)
-        else:
-            raise InvalidToken("No valid token found in cookie 'refresh_token'")
+        data = super().validate(attrs)
+        user = self.user
+
+        if user.two_factor_enabled:
+            raise PermissionDenied({"detail": "2FA required"})
+
+        user.is_online = True
+        user.save()
+        data.update({"id": user.id})
+
+        return data
 
 
 class CookieTokenObtainPairView(TokenObtainPairView):
-    def post(self, request, *args, **kwargs):
-        username = request.data.get("username")
-        password = request.data.get("password")
-        user = authenticate(username=username, password=password)
+    serializer_class = CookieTokenObtainPairSerializer
 
-        if user:
-            if user.two_factor_enabled:
-                return Response(
-                    {"detail": "2FA required"}, status=status.HTTP_403_FORBIDDEN
-                )
-            else:
-                refresh = RefreshToken.for_user(user)
-                access_token = str(refresh.access_token)
-                user.is_online = True
-                user.save()
-                response = Response({"access": access_token}, status=status.HTTP_200_OK)
-                cookie_max_age = 3600 * 24 * 14  # 14 jours
-                response.set_cookie(
-                    "refresh_token",
-                    str(refresh),
-                    max_age=cookie_max_age,
-                    httponly=True,
-                )
-                return response
-        else:
-            return Response(
-                {"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-
-class CookieTokenRefreshView(TokenRefreshView):
     def finalize_response(self, request, response, *args, **kwargs):
-        if response.data.get("refresh"):
+        if response.status_code == status.HTTP_200_OK and "refresh" in response.data:
             cookie_max_age = 3600 * 24 * 14  # 14 days
             response.set_cookie(
                 "refresh_token",
@@ -580,7 +561,41 @@ class CookieTokenRefreshView(TokenRefreshView):
             del response.data["refresh"]
         return super().finalize_response(request, response, *args, **kwargs)
 
+
+class CookieTokenRefreshSerializer(TokenRefreshSerializer):
+    refresh = None
+
+    def validate(self, attrs):
+        attrs["refresh"] = self.context["request"].COOKIES.get("refresh_token")
+        if not attrs["refresh"]:
+            raise InvalidToken("No valid token found in cookie 'refresh_token'")
+
+        try:
+            refresh = RefreshToken(attrs["refresh"])
+            user_id = refresh["user_id"]
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        data = super().validate(attrs)
+        data["id"] = user_id
+
+        return data
+
+
+class CookieTokenRefreshView(TokenRefreshView):
     serializer_class = CookieTokenRefreshSerializer
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        if "refresh" in response.data:
+            cookie_max_age = 3600 * 24 * 14  # 14 days
+            response.set_cookie(
+                "refresh_token",
+                response.data["refresh"],
+                max_age=cookie_max_age,
+                httponly=True,
+            )
+            del response.data["refresh"]
+        return super().finalize_response(request, response, *args, **kwargs)
 
 
 class LogoutView(APIView):

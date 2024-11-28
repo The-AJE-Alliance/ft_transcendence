@@ -3,6 +3,7 @@ import ky from 'ky'
 export default {
   app: document.getElementById('app'),
   token: '',
+  id: undefined,
   socket: undefined,
   router: undefined,
 
@@ -12,10 +13,12 @@ export default {
         credentials: 'include',
       }).json()
       this.token = result.access
+      this.id = result.id
     }
     catch {
       // console.clear()
       this.token = ''
+      this.id = undefined
     }
   },
 
