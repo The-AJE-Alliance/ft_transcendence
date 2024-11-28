@@ -1,8 +1,35 @@
-.container-edit-profile {
+.container-settings {
   margin-top: 5%;
   position: relative;
   top: 50%;
   text-align: center;
+}
+
+#two-factor-section,
+#edit-password {
+  background-color: #1a1a1a;
+  border: 1px solid #00cc99;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+#otp_code {
+  background-color: #1a1a1a;
+  color: #00cc99;
+}
+
+.qrcode-image {
+  width: 200px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.mt-3 {
+  color: #00cc99;
 }
 
 .mb-3-edit-profile {
@@ -14,6 +41,7 @@
 }
 
 .mb-3-edit-profile label {
+  color: #00cc99;
   width: 150%;
   text-align: left;
   white-space: nowrap;
@@ -33,45 +61,9 @@
   border-color: #ff4d4d;
 }
 
-.edit-control.is-valid {
-  color: #00cc99;
-}
-
-.edit-control {
-  background-color: #262626;
-  color: #00cc99;
-  border: 1px solid #00cc99;
-}
-
-.edit-card {
-  background-color: #1a1a1a;
-  border: 1px solid #00cc99;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 0px 15px rgba(0, 204, 153, 0.3);
-  max-width: 600px;
-  margin: 20px auto;
-}
-
 .edit-content {
   color: #00cc99;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.edit-info {
-  background-color: #1a1a1a;
-  color: #00cc99;
-  text-align: left;
-  flex: 1;
-  margin-right: 20px;
-}
-
-.edit-info input {
-  background-color: #262626;
-  color: #00cc99;
-  border: 1px solid #00cc99;
-  font-size: 18px;
-  margin: 10px 0;
 }

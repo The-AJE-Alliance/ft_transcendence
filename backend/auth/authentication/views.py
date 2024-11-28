@@ -49,9 +49,21 @@ class PendingFriendRequestsView(APIView):
 
 class SendFriendRequestView(APIView):
     def post(self, request):
-        username = request.data.get("username")
+        nickname = request.data.get("nickname")
+        if nickname == request.user.username:
+            return Response(
+                {"error": "You cannot add yourself as a friend."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
-            recipient = User.objects.get(username=username)
+            recipient = User.objects.get(nickname=nickname)
+            if FriendRequest.objects.filter(
+                from_user=request.user, to_user=recipient
+            ).exists():
+                return Response(
+                    {"error": "Friend request already sent."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             FriendRequest.objects.create(from_user=request.user, to_user=recipient)
             return Response(
                 {"message": "Friend request sent."}, status=status.HTTP_201_CREATED
@@ -632,9 +644,15 @@ class AuthCallbackView(APIView):
                 avatar_url = user_data.get("image", {}).get("link")
 
                 user, created = User.objects.get_or_create(
-                    username=username, defaults={"email": email}
+                    username=username,
+                    defaults={
+                        "email": email,
+                        "nickname": username,
+                    },
                 )
-
+                if not user.nickname:
+                    user.nickname = username
+                    user.save()
                 if created or not user.avatar:
                     if avatar_url:
                         try:

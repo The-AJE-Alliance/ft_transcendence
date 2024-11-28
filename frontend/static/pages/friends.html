@@ -1,31 +1,41 @@
-<div class="container-friends">
-  <h1 class="mb-4">Friends</h1>
-
-  <!-- Liste des amis -->
-  <div id="friends-list-container" class="card">
-    <h2 class="mb-3">Your Friends</h2>
-    <div class="profile-content">
-      <ul id="friends-list" class="list-unstyled"></ul>
-    </div>
-  </div>
+<div class="container-friends mt-5 pt-5">
+  <h1 class="mb-4 text-center">Friends</h1>
 
   <!-- Ajouter un ami -->
-  <div class="section mt-4">
-    <h2>Add a Friend</h2>
-    <input type="text" id="friend-username" class="form-control my-3" placeholder="Enter friend's username" />
-    <button id="add-friend-btn" class="btn custom-btn">Add Friend</button>
-    <div id="duplicate-alert" class="alert custom-alert-warning d-none mt-3" role="alert">
-      You are already friends with this user or a request is pending.
+  <div id="add-friend-section" class="card mb-4">
+    <div class="card-body">
+      <h2>Add a Friend</h2>
+      <input type="text" id="friend-username" class="form-control my-3" placeholder="Enter friend's username" />
+      <button id="add-friend-btn" class="btn custom-btn">Add Friend</button>
+        <div id="error-alert" class="alert custom-alert-danger d-none mt-3" role="alert"></div>
+        <div id="success-toast" class="toast align-items-center text-bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="d-flex">
+            <div id="toast-message" class="toast-body">
+              Friend request sent successfully!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
     </div>
-    <div id="error-alert" class="alert custom-alert-danger d-none mt-3" role="alert">User doesn't exist</div>
   </div>
 
+  <!-- Liste des amis -->
+  <div id="friends-list-container" class="card mb-4">
+    <div class="card-body">
+      <h2>Your Friends</h2>
+      <ul id="friends-list-perso" class="list-unstyled mt-3"></ul>
+    </div>
+  </div>
+
+
   <!-- Demandes d'amis -->
-  <div id="friend-requests-section" class="section d-none mt-4">
-    <h2>Friend Requests</h2>
-    <ul id="pending-requests-list" class="list-unstyled mt-3">
+  <div id="friend-requests-section" class="card d-none">
+     <div class="card-body">
+      <h2>Friend Requests</h2>
+      <ul id="pending-requests-list" class="list-unstyled mt-3">
       <!-- Liste des demandes d'amis en attente -->
-    </ul>
+      </ul>
+     </div>
   </div>
 </div>
 

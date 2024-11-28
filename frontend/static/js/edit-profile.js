@@ -1,7 +1,6 @@
 import ky from 'ky'
 import editProfilePage from '../pages/edit-profile.html?raw'
-import { changePassword, validatePasswordConfirmation } from './change-password.js'
-import { checkNicknameExists, setupEmailValidation, setupNicknameValidation, setupUsernameValidation, validateFormFields } from './check-profile.js'
+import { checkNicknameExists, setupEmailValidation, setupNicknameValidation, setupUsernameValidation } from './check-profile.js'
 import { updateNavbar } from './navbar'
 import { getUserProfile } from './profile.js'
 
@@ -50,13 +49,6 @@ export async function editProfile(client) {
       return
     }
     await updateProfile(client)
-  })
-  const passwordForm = document.getElementById('change-password-form')
-  validatePasswordConfirmation(client, passwordForm)
-  client.router.addEvent(passwordForm, 'submit', async (event) => {
-    event.preventDefault()
-    if (validateFormFields())
-      await changePassword(client)
   })
 }
 

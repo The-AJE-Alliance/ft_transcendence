@@ -1,5 +1,21 @@
 import ky from 'ky'
-import { showAlert } from './check-profile.js'
+import { showAlert, validateFormFields } from './check-profile.js'
+
+export async function setupPasswordChange(client) {
+  const passwordForm = document.getElementById('change-password-form')
+
+  if (!passwordForm)
+    return
+
+  validatePasswordConfirmation(client, passwordForm)
+
+  client.router.addEvent(passwordForm, 'submit', async (event) => {
+    event.preventDefault()
+    const isValid = validateFormFields()
+    if (isValid)
+      await changePassword(client)
+  })
+}
 
 export function validatePasswordConfirmation(client, form) {
   const passwordChange = form.querySelector('#new-password')

@@ -1,6 +1,6 @@
 import authPage from '../pages/auth.html?raw'
 import homePage from '../pages/home.html?raw'
-import { twoFA } from './2FA.js'
+import { settings } from './2FA.js'
 import { login, login42, logout } from './auth.js'
 import { chat } from './chat.js'
 import Client from './client.js'
@@ -49,4 +49,4 @@ router.get('/pong/local', localGame)
 
 router.get('/profile/edit', editProfile)
 router.get('/friends', friends)
-router.get('/profile/2FA', twoFA)
+router.get('/settings', settings)
