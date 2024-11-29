@@ -121,8 +121,10 @@ class TournamentManager:
     async def lock_tournament(self):
         response = {
             "type": "tournament_locked",
-            "content": {"ready": False, "players": self.players},
-        }
+            "content": {
+                "ready": False,
+                "players": [player.to_dict() for player in self.players.values()],
+        }}
         # if len(self.players) < 2:
         #     return
         self.lock = True
@@ -139,7 +141,9 @@ class TournamentManager:
     async def start_tournament(self):
         response = {
             "type": "start_tournament",
-            "content": {"ready": False, "players": self.players},
+            "content": {
+                "ready": False,
+                 "players": [player.to_dict() for player in self.players.values()],},
         }
         # if not self.matches:
         #     return
@@ -207,3 +211,13 @@ class TournamentManager:
             self.tournament_id = tournament_id
             self.host = host
             self.player_num = player_num
+
+        def to_dict(self):
+            return {
+            "user_id": self.user_id,
+            "tournament_id": self.tournament_id,
+            "host": self.host,
+            "player_num": self.player_num,
+        }
+        
+    
