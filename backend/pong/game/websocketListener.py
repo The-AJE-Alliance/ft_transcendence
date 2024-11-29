@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 game_tasks = {}
 tournaments = {}
 
+
 class WebsocketListener(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -28,6 +29,9 @@ class WebsocketListener(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept()
+        await self.send(
+            text_data=json.dumps({"type": "test", "content": "Connection established"})
+        )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -42,14 +46,25 @@ class WebsocketListener(AsyncWebsocketConsumer):
                 await self.queue_handler.publish_to_loop(data)
 
     async def setup_tournament(self, data):
+        logger.info(
+            f"[WebsocketListener] setup_tournament called with data: {json.dumps(data, indent=4)}"
+        )
         content = data["content"]
-        self.mode = content["mode"]
         self.host = content["host"]
         self.tournament_id = content["tournament_id"]
+        logger.info(
+            f"TournamentManager started for tournament_id: {self.tournament_id}"
+        )
+        if not self.tournament_id:
+            logger.error("Tournament ID is None!")
+            return
         self.tournament = TournamentManager(self.tournament_id)
         tournaments[self.tournament_id] = asyncio.create_task(self.tournament.start())
         self.queue_handler = TournamentHandler(self, self.tournament_id, 1)
         await self.queue_handler.start(data)
+        logger.info(
+            f"[WebsocketListener] setup_tournament completed for tournament_id: {self.tournament_id}"
+        )
 
     async def setup(self, data):
         user = self.scope["user"]
@@ -89,7 +104,6 @@ class WebsocketListener(AsyncWebsocketConsumer):
                 self, self.room_id, (1 if self.host else 2)
             )
             await self.queue_handler.start(data)
-
 
     async def disconnect(self, close_code):
         logger.warning("Client déconnecté")

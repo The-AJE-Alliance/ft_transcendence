@@ -12,50 +12,53 @@ logger = logging.getLogger(__name__)
 
 
 class TournamentHandler:
-    def __init__(self, websocket, tournament_id, player_id):
+    def __init__(self, websocket, tournament_id, player_num):
         self.websocket = websocket
         self.tournament_id = tournament_id
-        self.player = player_id
+        self.player_num = player_num
         self.connection = None
         self.channel = None
         self.exchange = None
         self.queue = None
-        self.consumer_task = None
-
-    async def setup(self):
-        self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
-        self.channel = await self.connection.channel()
-        self.exchange = await self.channel.declare_exchange(
-            f"tournament-{self.tournament_id}", ExchangeType.DIRECT, auto_delete=True
-        )
-        self.queue = await self.channel.declare_queue(auto_delete=True)
-        await self.queue.bind(self.exchange, "players")
-        await self.queue.bind(self.exchange, f"player-{self.player}")
 
     async def start(self, data):
         await self.setup()
-
-        self.consumer_task = asyncio.create_task(self.consume_loop_state())
+        asyncio.create_task(self.consume_messages())
         await self.publish_to_loop(data)
 
-    async def consume_loop_state(self):
+    async def setup(self):
         try:
-            async with self.queue.iterator() as iterator:
-                async for message in iterator:
-                    async with message.process():
-                        await self.websocket.send(text_data=(message.body.decode()))
+            self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
+            self.channel = await self.connection.channel()
+            self.exchange = await self.channel.declare_exchange(
+                f"tournament-{self.tournament_id}",
+                ExchangeType.DIRECT,
+                auto_delete=False,
+            )
+            self.queue = await self.channel.declare_queue(
+                name=f"tournament-{self.tournament_id}-player-{self.player_num}",
+                auto_delete=False,
+            )
+            await self.queue.bind(self.exchange, routing_key="players")
         except Exception as e:
-            logger.error(f"{str(e)}")
+            logger.error(f"Exception in TournamentHandler.setup: {str(e)}")
+
+    async def consume_messages(self):
+        async with self.queue.iterator() as queue_iter:
+            async for message in queue_iter:
+                async with message.process():
+                    msg = message.body.decode()
+                    logger.info(f"[TournamentHandler] Message received: {msg}")
+                    await self.websocket.send(msg)
 
     async def publish_to_loop(self, data):
-        logger.info(f"Publishing message to loop: {json.dumps(data, indent=4)}") 
+        logger.info(
+            f"TournamentHandler publishing message: {json.dumps(data, indent=4)}"
+        )
         await self.exchange.publish(
             aio_pika.Message(body=json.dumps(data).encode()), routing_key="tournament"
         )
 
     async def stop(self):
-        if self.consumer_task:
-            self.consumer_task.cancel()
         if self.connection:
-            await self.channel.close()
             await self.connection.close()

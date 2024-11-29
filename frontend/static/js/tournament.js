@@ -1,4 +1,4 @@
-import tournamentPage from '../pages/tournament.html'
+import tournamentPage from '../pages/tournament.html?raw'
 
 export async function tournament(client, input) {
   client.app.innerHTML = tournamentPage
@@ -27,17 +27,18 @@ export async function tournament(client, input) {
   }
 
   client.socket.onmessage = (event) => {
+    console.log('Message received:', event.data)
     const data = JSON.parse(event.data)
-    console.log(event.data)
 
     switch (data.type) {
       case 'setup_tournament':
+        console.log('Handling setup_tournament:', data)
         greetTournament(client, state, data.content)
         break
 
-      case 'player_joined':
-        updatePlayerList(state, data.content.player)
-        break
+        // case 'player_joined':
+        //   updatePlayerList(state, data.content.player)
+        //   break
 
       case 'tournament_locked':
         handleTournamentLocked()
@@ -60,7 +61,7 @@ export async function tournament(client, input) {
         break
 
       default:
-        console.log('Unknown message:', data)
+        console.log('Unknown message:', data.type)
     }
   }
 
@@ -120,24 +121,41 @@ export async function tournament(client, input) {
 }
 
 function greetTournament(client, state, data) {
+  console.log('Greet tournament called with data:', data)
   if (state.host) {
+    // client.app.innerHTML = tournamentSetupPage
     const copyLinkBtn = document.getElementById('host-copy-btn')
     copyLinkBtn.classList.remove('d-none')
-    client.router.addEvent(copyLinkBtn, 'click', async () => {
-      await navigator.clipboard.writeText(`https://transcendence.fr/pong/tournament/join/${state.tournament_id}`)
-      alert('Link copied!')
-    })
+    if (copyLinkBtn) {
+      client.router.addEvent(copyLinkBtn, 'click', async () => {
+        console.log('Copy button clicked!')
+        const link = `https://transcendence.fr/pong/tournament/join/${state.tournament_id}`
+        console.log('Link to copy:', link)
+        await navigator.clipboard.writeText(`https://transcendence.fr/pong/tournament/join/${state.tournament_id}`)
+        alert('Link copied!')
+      })
+    }
+    else {
+      console.error('Copy Link button not found in the DOM.')
+    }
   }
   else {
     state.player = data.player
     // TODO: waiting for blabla, waiting page
+    updatePlayerList(state, data.players)
   }
 }
 
-function updatePlayerList(state, player) {
-  state.players.push(player)
+function updatePlayerList(state, players) {
+  state.players = players
+
   const playerList = document.getElementById('playerList')
-  const newPlayer = document.createElement('li')
-  newPlayer.textContent = player
-  playerList.appendChild(newPlayer)
+
+  playerList.innerHTML = ''
+
+  players.forEach((player) => {
+    const newPlayer = document.createElement('li')
+    newPlayer.textContent = `Player ${player.player_num}: ${player.user_id}`
+    playerList.appendChild(newPlayer)
+  })
 }

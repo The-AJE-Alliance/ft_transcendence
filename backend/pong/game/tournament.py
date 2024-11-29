@@ -1,5 +1,6 @@
 import json
 import aio_pika
+import asyncio
 import logging
 from aio_pika import ExchangeType
 from django.conf import settings
@@ -10,7 +11,10 @@ logger = logging.getLogger(__name__)
 class TournamentManager:
     def __init__(self, tournament_id):
         self.tournament_id = tournament_id
-        self.players = []
+        logger.info(
+            f"TournamentManager instantiated with tournament_id: {self.tournament_id}"
+        )
+        self.players = {}
         self.matches = []  # List of matches in the tournament
         self.current_match_index = -1  # Index of the current match
         self.exchange = None
@@ -19,65 +23,98 @@ class TournamentManager:
         self.channel = None
         self.exchange = None
         self.queue = None
+        self.nb_players = 0
 
     async def start(self):
         self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
         self.channel = await self.connection.channel()
         self.exchange = await self.channel.declare_exchange(
-            f"tournament-{self.tournament_id}", ExchangeType.DIRECT, auto_delete=True
+            f"tournament-{self.tournament_id}", ExchangeType.DIRECT, auto_delete=False
         )
-        self.queue = await self.channel.declare_queue(auto_delete=True)
-        await self.queue.bind(self.exchange, "tournament")
-        await self.consume_data()
+        self.queue = await self.channel.declare_queue(
+            name=f"tournament-{self.tournament_id}-manager",
+            auto_delete=False,
+        )
+        await self.queue.bind(self.exchange, routing_key="tournament")
+        asyncio.create_task(self.consume_data())
 
     async def consume_data(self):
-        async with self.queue.iterator() as iterator:
-            async for message in iterator:
-                async with message.process():
-                    await self.dispatch(message.body.decode())
+        try:
+            logger.info("TournamentManager is starting to consume data...")
+            async with self.queue.iterator() as iterator:
+                async for message in iterator:
+                    async with message.process():
+                        logger.info(
+                            f"TournamentManager received message: {message.body.decode()}"
+                        )
+                        await self.dispatch(message.body.decode())
+        except Exception as e:
+            logger.error(f"Exception in consume_data: {str(e)}")
 
     async def dispatch(self, message):
-        data = json.loads(message)
-        match data.get("type"):
-            case "setup_tournament":
-                await self.setup_tournament(data["content"])
-            case "add_player":
-                await self.add_player(data["content"]["player"])
-            case "remove_player":
-                await self.remove_player(data["content"]["player"])
-            case "lock_tournament":
-                await self.lock_tournament()
-            case "start_tournament":
-                await self.start_tournament()
-            case "end_match":
-                winner = data["content"].get("winner")
-                await self.end_match(winner)
-            case _:
-                logger.warning(f"Unhandled message type: {data.get('type')}")
+        try:
+            data = json.loads(message)
+            match data.get("type"):
+                case "setup_tournament":
+                    await self.setup_tournament(data["content"])
+                # case "add_player":
+                #     await self.add_player(data["content"]["player"])
+                case "remove_player":
+                    await self.remove_player(data["content"]["player"])
+                case "lock_tournament":
+                    await self.lock_tournament()
+                case "start_tournament":
+                    await self.start_tournament()
+                case "end_match":
+                    winner = data["content"].get("winner")
+                    await self.end_match(winner)
+                case _:
+                    logger.warning(f"Unhandled message type: {data.get('type')}")
+        except Exception as e:
+            logger.error(f"Exception in dispatch: {str(e)}")
 
-    async def add_player(self, player):
+    async def add_player(self, player, content):
         if player in self.players:
             return
-        self.players.append(player)
-        await self.broadcast({"type": "player_joined", "content": {"player": player}})
+        self.nb_players += 1
+        self.players[self.nb_players] = self.Player(
+            content.get("user_id"),
+            content.get("tournament_id"),
+            content.get("host"),
+            self.nb_players,
+        )
+        # await self.broadcast({"type": "player_joined", "content": {"player": player}})
 
     async def setup_tournament(self, content):
-        if content.get("host"):
-            self.players[1] = content.get("user_id")
-        await self.broadcast(
-            {
-                "type": "setup_tournament",
-                "content": {
-                    "tournament_id": self.tournament_id,
-                    "mode": content.get("mode"),
-                    "host": content.get("host"),
-                },
-            }
+        logger.info("Entering setup_tournament")
+        logger.info(
+            f"[TournamentManager] setup_tournament called with content: {json.dumps(content, indent=4)}"
         )
+        if content.get("host"):
+            self.players[0] = self.Player(
+                content.get("user_id"),
+                content.get("tournament_id"),
+                content.get("host"),
+                0,
+            )
+        else:
+            await self.add_player(content["player"], content)
+
+        message = {
+            "type": "setup_tournament",
+            "content": {
+                "player_id": self.nb_players,
+                "tournament_id": self.tournament_id,
+                "players": [player.__dict__ for player in self.players.values()],
+            },
+        }
+        logger.info(f"Broadcasting setup_tournament: {json.dumps(message, indent=4)}")
+        await self.broadcast(message)
+        logger.info("Exiting setup_tournament")
 
     async def remove_player(self, player):
         if player in self.players:
-            self.players.remove(player)
+            del self.players[player]
             await self.broadcast({"type": "player_left", "content": {"player": player}})
 
     ### Lock Tournament ###
@@ -157,9 +194,16 @@ class TournamentManager:
         )
 
     async def broadcast(self, message):
+        logger.info(
+            f"[TournamentManager] Broadcasting message: {json.dumps(message, indent=4)}"
+        )
         await self.exchange.publish(
             aio_pika.Message(body=json.dumps(message).encode()), routing_key="players"
         )
 
     class Player:
-        def __init__(self, id):
+        def __init__(self, user_id, tournament_id, host, player_num):
+            self.user_id = user_id
+            self.tournament_id = tournament_id
+            self.host = host
+            self.player_num = player_num
