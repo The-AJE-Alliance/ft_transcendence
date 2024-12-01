@@ -32,7 +32,7 @@ SECRET_KEY = "django-insecure-sq&rhnj@@i10x7&6peaubpdvymu%5-lsr-!7lz-l9ke4$1o^cm
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="").split(" ")
-
+# ALLOWED_HOSTS = ["chat.api.transcendence.fr", "transcendence.fr"]
 
 # Application definition
 
@@ -57,6 +57,17 @@ INSTALLED_APPS = [
     "vault12factor",
 ]
 
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",  # Permet l'interface de navigation
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ),
+}
+
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -70,7 +81,10 @@ MIDDLEWARE = [
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = ["https://transcendence.fr"]
+CORS_ALLOWED_ORIGINS = [
+    "https://transcendence.fr",
+    "https://www.transcendence.fr",  # If subdomains are needed
+]
 
 CSRF_TRUSTED_ORIGINS = ["https://transcendence.fr"]
 
@@ -164,7 +178,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-AUTH_USER_MODEL = "livechat.User"
+AUTH_USER_MODEL = "livechat.ChatUser"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

@@ -10,78 +10,137 @@ from .queueHandler import QueueHandler
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 import asyncio
+from django.http import JsonResponse
 
 
 class LiveChatFriends(APIView):
-    permission_classes = [IsAuthenticated]
+    def options(self, request, *args, **kwargs):
+        response = JsonResponse({"message": "Preflight OK"})
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+        return response
 
-    def get(self, request):
-        friends = request.user.friends.all()
+    # permission_classes = [IsAuthenticated]
+
+    def get(self, request, log_user_id=None):
+        # To be removed
+        user = get_object_or_404(ChatUser, id=log_user_id)
+        if not user:
+            return Response(
+                {"error": "This user is not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        friends = user.friends.all()  # request.user.friends.all()
         serializer = UserSerializer(friends, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class LiveChatConversation(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        conversation = Conversation.objects.filter(
-            Q(user1=request.user) | Q(user2=request.user)
-        )
-        # Returns all the conversation of the logged users
-        serializer = ConversationSerializer(conversation, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request, log_user_id=None):
+        # To be removed
+        try:
+            conversation = Conversation.objects.filter(
+                Q(user1_id=log_user_id) | Q(user2_id=log_user_id)
+            )
+            # Returns all the conversation of the logged users
+            serializer = ConversationSerializer(conversation, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": f"An unexpected error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class LiveChatMessages(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
-    def get(self, request, user_id=None):
-        conversation = Conversation.objects.filter(
-            Q(user1=request.user, user2_id=user_id)
-            | Q(user1_id=user_id, user2=request.user)
-        ).first()
-        # If no conversation exists, create a new one
-        if not conversation:
-            conversation = Conversation.objects.create(
-                user1=request.user, user2_id=user_id
+    def get(self, request, log_user_id=None, user_id=None):
+        try:
+            conversation = Conversation.objects.filter(
+                Q(user1_id=log_user_id, user2_id=user_id)
+                | Q(user1_id=user_id, user2_id=log_user_id)
+            ).first()  # Conversation.objects.filter(Q(user1=request.user, user2_id=user_id)| Q(user1_id=user_id, user2=request.user)).first()
+            if not conversation:
+                conversation = Conversation.objects.create(
+                    user1_id=log_user_id, user2_id=user_id
+                )
+                return Response(
+                    {
+                        "id": conversation.id,
+                        "is_blocked": False,
+                        "user1": {
+                            "id": conversation.user1_id,
+                            "nickname": conversation.user1.nickname,
+                        },
+                        "user2": {
+                            "id": conversation.user2_id,
+                            "nickname": conversation.user2.nickname,
+                        },
+                        "messages": [],
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            if conversation.is_blocked():
+                return Response(
+                    {
+                        "id": conversation.id,
+                        "is_blocked": True,
+                        "user1": {
+                            "id": conversation.user1_id,
+                            "nickname": conversation.user1.nickname,
+                        },
+                        "user2": {
+                            "id": conversation.user2_id,
+                            "nickname": conversation.user2.nickname,
+                        },
+                        "messages": [],
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            conversation.mark_messages_as_read(log_user_id)
+            messages = Message.objects.filter(conversation_id=conversation.id).order_by(
+                "created_at"
             )
-            # Since it's a new conversation, no messages to retrieve
+            serializer = MessageSerializer(messages, many=True)
             return Response(
-                {"message": "New conversation created with no messages yet."},
+                {
+                    "id": conversation.id,
+                    "is_blocked": False,
+                    "user1": {
+                        "id": conversation.user1_id,
+                        "nickname": conversation.user1.nickname,
+                    },
+                    "user2": {
+                        "id": conversation.user2_id,
+                        "nickname": conversation.user2.nickname,
+                    },
+                    "messages": serializer.data,
+                },
                 status=status.HTTP_200_OK,
             )
-        # Check if the conversation is blocked by either user
-        if (conversation.user1 == request.user and conversation.isBlockedByUser1) or (
-            conversation.user2 == request.user and conversation.isBlockedByUser2
-        ):
+        except Exception as e:
             return Response(
-                {"error": "This conversation is blocked."},
-                status=status.HTTP_403_FORBIDDEN,
+                {"error": f"An unexpected error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        # Mark unread messages as read for the logged-in user
-        if conversation.user1 == request.user:
-            conversation.hasUnreadMessagesByUser1 = False
-        else:
-            conversation.hasUnreadMessagesByUser2 = False
-        conversation.save()
-
-        # Retrieve messages in the conversation
-        messages = Message.objects.filter(conversation=conversation)
-        serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class LiveChatBlockUser(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
-    def post(self, request, conversation_id=None):
-        # Toggle block/unblock status for the given conversation
-        conversation = Conversation.objects.filter(id=conversation_id).first()
+    def post(self, request, log_user_id=None, user_id=None):
+        conversation = Conversation.objects.filter(
+            Q(user1_id=log_user_id, user2_id=user_id)
+            | Q(user1_id=user_id, user2_id=log_user_id)
+        ).first()
         if conversation:
-            if conversation.user1 == request.user:
+            if conversation.user1_id == log_user_id:
                 conversation.isBlockedByUser1 = not conversation.isBlockedByUser1
-            elif conversation.user2 == request.user:
+            elif conversation.user2_id == log_user_id:
                 conversation.isBlockedByUser2 = not conversation.isBlockedByUser2
             else:
                 return Response(
@@ -98,9 +157,9 @@ class LiveChatBlockUser(APIView):
 
 
 class LiveChatSendInvitation(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def post(self, request, log_user_id=None, user_id=None):
         room_id = request.data.get("room_id")
         conversation_id = request.data.get("conversation_id")
         if not room_id or not conversation_id:

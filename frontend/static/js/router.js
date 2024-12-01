@@ -20,8 +20,12 @@ class Router {
 
       if (target.hostname === location.hostname) {
         event.preventDefault()
-        if (this.#client.socket)
+
+        // Check if leaving the chat page
+        if (this.#client.socket) {
           this.#client.socket.close()
+          this.#client.socket = null
+        }
         this.#cleanEvents()
         this.redirect(url)
       }
