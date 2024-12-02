@@ -176,6 +176,7 @@ services:
     logging: *log
     volumes:
       - auth-ssl:/certs
+      - jwt-pub:/pub
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -199,6 +200,7 @@ services:
     logging: *log
     volumes:
       - auth-ssl:/certs
+      - jwt-pub:/pub
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -229,6 +231,7 @@ services:
       - VAULT_SECRETID=${PONG_SID}
     logging: *log
     volumes:
+      - jwt-pub:/pub
       - media-files:/media
       - pong-ssl:/certs
       - static-files:/static
@@ -252,8 +255,9 @@ services:
       - VAULT_SECRETID=${PONG_SID}
     logging: *log
     volumes:
-      - pong-ssl:/certs
+      - jwt-pub:/pub
       - media-files:/media
+      - pong-ssl:/certs
       - static-files:/static
       - vault-ca:/ca
   pong-db:
@@ -283,8 +287,9 @@ services:
       - VAULT_SECRETID=${CHAT_SID}
     logging: *log
     volumes:
-      - media-files:/media
       - chat-ssl:/certs
+      - jwt-pub:/pub
+      - media-files:/media
       - static-files:/static
       - vault-ca:/ca
   chat-db:
@@ -315,6 +320,7 @@ services:
     logging: *log
     volumes:
       - chat-ssl:/certs
+      - jwt-pub:/pub
       - media-files:/media
       - static-files:/static
       - vault-ca:/ca
@@ -332,6 +338,7 @@ volumes:
   chat-ssl:
   elastic-ssl:
   elastic-data:
+  jwt-pub:
   kibana-data:
   logstash-data:
   media-files:

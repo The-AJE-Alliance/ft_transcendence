@@ -33,6 +33,11 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
+with open(os.path.join("/certs/", "private.pem"), "rb") as f:
+    PRIVATE_KEY = f.read()
+
+with open(os.path.join("/pub/", "public.pem"), "rb") as f:
+    PUBLIC_KEY = f.read()
 
 # Application definition
 
@@ -162,6 +167,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "SIGNING_KEY": PRIVATE_KEY,
+    "VERIFYING_KEY": PUBLIC_KEY,
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,

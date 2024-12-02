@@ -19,5 +19,11 @@ RESULT="$(curl --cacert /ca/ca.pem -s --header "X-Vault-Token: $APP_TOKEN" \
   --data "{\"common_name\":\"${HOSTNAME}\",\"ttl\":\"450h\"}" \
   "$VAULT_ADDR/v1/pki_int/issue/domain")"
 
+if [ "${APP_NAME}" = "auth" ]; then
+  echo "Generating asymmetric keys for JWT..."
+  openssl genrsa -out /certs/private.pem 2048
+  openssl rsa -in /certs/private.pem -pubout > /pub/public.pem
+fi
+
 echo "$RESULT" | jq -r .data.certificate | tee /certs/"${HOSTNAME}".crt &> /dev/null
 echo "$RESULT" | jq -r .data.private_key | tee /certs/"${HOSTNAME}".key &> /dev/null

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 from vault12factor import (
     DjangoAutoRefreshDBCredentialsDict,
@@ -33,6 +34,9 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
+with open(os.path.join("/pub/", "public.pem"), "rb") as f:
+    PUBLIC_KEY = f.read()
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -50,6 +54,8 @@ INSTALLED_APPS = [
     "health_check.db",
     "postgresql_setrole",
     "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "vault12factor",
 ]
 
@@ -147,6 +153,15 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "VERIFYING_KEY": PUBLIC_KEY,
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": False,
+}
 
 
 # Internationalization
