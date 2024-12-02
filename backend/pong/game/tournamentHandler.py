@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class TournamentHandler:
-    def __init__(self, websocket, tournament_id, player_num):
+    def __init__(self, websocket, tournament_id, user_id):
         self.websocket = websocket
         self.tournament_id = tournament_id
-        self.player_num = player_num
+        self.user_id = user_id
         self.connection = None
         self.channel = None
         self.exchange = None
@@ -36,10 +36,11 @@ class TournamentHandler:
                 auto_delete=False,
             )
             self.queue = await self.channel.declare_queue(
-                name=f"tournament-{self.tournament_id}-player-{self.player_num}",
+                name=f"tournament-{self.tournament_id}-player-{self.user_id}",
                 auto_delete=False,
             )
             await self.queue.bind(self.exchange, routing_key="players")
+            await self.queue.bind(self.exchange, routing_key=f"player-{self.user_id}")
         except Exception as e:
             logger.error(f"Exception in TournamentHandler.setup: {str(e)}")
 

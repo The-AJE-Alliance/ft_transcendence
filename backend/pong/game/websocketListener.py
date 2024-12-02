@@ -22,6 +22,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
         self.pong_game = None
         self.tournament = None
         self.tournament_id = None
+        self.user_id = None
         self.queue_handler = None
         self.mode = None
         self.host = None
@@ -29,9 +30,6 @@ class WebsocketListener(AsyncWebsocketConsumer):
 
     async def connect(self):
         await self.accept()
-        await self.send(
-            text_data=json.dumps({"type": "test", "content": "Connection established"})
-        )
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -52,6 +50,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
         content = data["content"]
         self.host = content["host"]
         self.tournament_id = content["tournament_id"]
+        self.user_id = content["user_id"]
         logger.info(
             f"TournamentManager started for tournament_id: {self.tournament_id}"
         )
@@ -60,7 +59,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
             return
         self.tournament = TournamentManager(self.tournament_id)
         tournaments[self.tournament_id] = asyncio.create_task(self.tournament.start())
-        self.queue_handler = TournamentHandler(self, self.tournament_id, 1)
+        self.queue_handler = TournamentHandler(self, self.tournament_id, self.user_id)
         await self.queue_handler.start(data)
         logger.info(
             f"[WebsocketListener] setup_tournament completed for tournament_id: {self.tournament_id}"

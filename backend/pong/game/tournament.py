@@ -5,7 +5,9 @@ import logging
 
 import random
 from aio_pika import ExchangeType
+from asgiref.sync import sync_to_async
 from django.conf import settings
+from .models import PongUser
 
 logger = logging.getLogger(__name__)
 
@@ -59,12 +61,10 @@ class TournamentManager:
             match data.get("type"):
                 case "setup_tournament":
                     await self.setup_tournament(data["content"])
-                # case "add_player":
-                #     await self.add_player(data["content"]["player"])
                 case "remove_player":
                     await self.remove_player(data["content"]["player"])
                 case "lock_tournament":
-                    await self.lock_tournament()
+                    await self.lock_tournament(data["content"])
                 case "start_tournament":
                     await self.start_tournament()
                 case "end_match":
@@ -75,24 +75,15 @@ class TournamentManager:
         except Exception as e:
             logger.error(f"Exception in dispatch: {str(e)}")
 
-    async def add_player(self, player_id, content):
-        if player_id in self.players:
+    async def add_player(self, user_id, content):
+        if user_id in self.players:
             return
         self.nb_players += 1
-        self.players[player_id] = self.Player(
+        self.players[user_id] = await self.Player.create(
             content.get("user_id"),
             content.get("tournament_id"),
             content.get("host"),
             self.nb_players,
-            content.get("nickname"),
-        )
-        await self.broadcast(
-            {
-                "type": "player_joined",
-                "content": {
-                    "players": [player.to_dict() for player in self.players.values()]
-                },
-            }
         )
 
     async def setup_tournament(self, content):
@@ -100,29 +91,30 @@ class TournamentManager:
         logger.info(
             f"[TournamentManager] setup_tournament called with content: {json.dumps(content, indent=4)}"
         )
-        user_id = content.get("user_id")
-        if content.get("host"):
-            self.nb_players = 1  # Initialisez nb_players à 1 pour l'hôte
-            self.players[user_id] = self.Player(
-                user_id,
-                content.get("tournament_id"),
-                content.get("host"),
-                self.nb_players,  # player_num = 1 pour l'hôte
-                content.get("nickname"),
-            )
-        else:
-            await self.add_player(content.get("user_id"), content)
+        user_id = content["user_id"]
+        await self.add_player(user_id, content)
 
-        message = {
+        setup_message = {
             "type": "setup_tournament",
             "content": {
-                "player_id": self.nb_players,
+                "player_id": self.players[user_id].player_num,
                 "tournament_id": self.tournament_id,
                 "players": [player.to_dict() for player in self.players.values()],
             },
         }
-        logger.info(f"Broadcasting setup_tournament: {json.dumps(message, indent=4)}")
-        await self.broadcast(message)
+
+        add_message = {
+            "type": "player_joined",
+            "content": {
+                "players": [player.to_dict() for player in self.players.values()]
+            },
+        }
+        logger.info(
+            f"Sending to setup tournament setup_tournament: {json.dumps(setup_message, indent=4)}"
+        )
+        await self.send_player(setup_message, user_id)
+        await self.broadcast(add_message)
+
         logger.info("Exiting setup_tournament")
 
     async def remove_player(self, player):
@@ -131,21 +123,27 @@ class TournamentManager:
             await self.broadcast({"type": "player_left", "content": {"player": player}})
 
     ### Lock Tournament ###
-    async def lock_tournament(self):
+    async def lock_tournament(self, content):
+        user_id = content["user_id"]
+        player = self.players[user_id]
+        if not player or not player.host:
+            # TODO: is not host
+            return
         if len(self.players) < 2:
-            await self.broadcast(
+            await self.send_player(
                 {
                     "type": "tournament_locked",
                     "content": {
                         "ready": False,
                         "message": "Not enough players to start the tournament.",
                     },
-                }
+                },
+                user_id,
             )
             return
         self.lock = True
         self.generate_bracket()
-        await self.broadcast(
+        await self.send_player(
             {
                 "type": "tournament_locked",
                 "content": {
@@ -153,7 +151,8 @@ class TournamentManager:
                     "bracket": self.matches,
                     "message": "Tournament is locked and brackets are generated.",
                 },
-            }
+            },
+            user_id,
         )
 
     def generate_bracket(self):
@@ -267,6 +266,12 @@ class TournamentManager:
             aio_pika.Message(body=json.dumps(message).encode()), routing_key="players"
         )
 
+    async def send_player(self, message, user_id):
+        await self.exchange.publish(
+            aio_pika.Message(body=json.dumps(message).encode()),
+            routing_key=f"player-{user_id}",
+        )
+
     class Player:
         def __init__(self, user_id, tournament_id, host, player_num, nickname):
             self.user_id = user_id
@@ -274,6 +279,12 @@ class TournamentManager:
             self.host = host
             self.player_num = player_num
             self.nickname = nickname
+
+        @classmethod
+        async def create(cls, user_id, tournament_id, host, player_num):
+            user = await sync_to_async(PongUser.objects.get)(id=user_id)
+            nickname = user.nickname
+            return cls(user_id, tournament_id, host, player_num, nickname)
 
         def to_dict(self):
             return {

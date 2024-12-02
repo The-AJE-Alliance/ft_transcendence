@@ -78,7 +78,7 @@ export async function tournament(client, input) {
   // Lock tournament
   const lockTournamentBtn = document.getElementById('lock-tournament')
   client.router.addEvent(lockTournamentBtn, 'click', () => {
-    client.socket.send(JSON.stringify({ type: 'lock_tournament' }))
+    client.socket.send(JSON.stringify({ type: 'lock_tournament', content: state.user_id }))
   })
 
   // Start tournament
@@ -198,7 +198,7 @@ function updatePlayerList(state, players) {
   players.forEach((player) => {
     console.log('Player:', player)
     const newPlayer = document.createElement('li')
-    newPlayer.textContent = `Player ${player.player_num}: ${player.nickname || player.user_id}`
+    newPlayer.textContent = `Player ${player.player_num}: ${player.nickname}`
     playerList.appendChild(newPlayer)
   })
 }
