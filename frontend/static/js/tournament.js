@@ -69,6 +69,10 @@ export async function tournament(client, input) {
       case 'match_ended':
         handleMatchEnded(data.content)
         break
+      case 'unauthorized':
+        client.socket.close()
+        client.router.redirect('/sign-in')
+        break
 
       default:
         console.log('Unknown message:', data.type)
@@ -78,7 +82,11 @@ export async function tournament(client, input) {
   // Lock tournament
   const lockTournamentBtn = document.getElementById('lock-tournament')
   client.router.addEvent(lockTournamentBtn, 'click', () => {
-    client.socket.send(JSON.stringify({ type: 'lock_tournament', content: state.user_id }))
+    // client.socket.send(JSON.stringify({ type: 'lock_tournament', user_id: state.user_id }))
+    client.socket.send(JSON.stringify({
+      type: 'lock_tournament',
+      content: { user_id: state.user_id },
+    }))
   })
 
   // Start tournament

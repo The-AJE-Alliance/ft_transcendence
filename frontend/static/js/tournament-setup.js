@@ -16,7 +16,7 @@ export async function joinTournament(client, uuid) {
     return
   }
 
-  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
 
   const state = {
     host: false,
@@ -41,7 +41,7 @@ export async function tournamentSetup(client) {
   const createGameBtn = document.getElementById('host-create-btn')
 
   client.router.addEvent(createGameBtn, 'click', async () => {
-    client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+    client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
 
     const state = {
       host: true,

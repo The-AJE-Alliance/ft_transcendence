@@ -44,6 +44,12 @@ class WebsocketListener(AsyncWebsocketConsumer):
                 await self.queue_handler.publish_to_loop(data)
 
     async def setup_tournament(self, data):
+        user = self.scope["user"]
+        if type(user) == AnonymousUser:
+            data["type"] = "unauthorized"
+            await self.send(json.dumps(data))
+            await self.close()
+            return
         logger.info(
             f"[WebsocketListener] setup_tournament called with data: {json.dumps(data, indent=4)}"
         )
@@ -57,8 +63,13 @@ class WebsocketListener(AsyncWebsocketConsumer):
         if not self.tournament_id:
             logger.error("Tournament ID is None!")
             return
-        self.tournament = TournamentManager(self.tournament_id)
-        tournaments[self.tournament_id] = asyncio.create_task(self.tournament.start())
+        if self.tournament_id in tournaments:
+            self.tournament = tournaments[self.tournament_id]
+        else:
+            self.tournament = TournamentManager(self.tournament_id)
+            tournaments[self.tournament_id] = self.tournament
+            asyncio.create_task(self.tournament.start())
+
         self.queue_handler = TournamentHandler(self, self.tournament_id, self.user_id)
         await self.queue_handler.start(data)
         logger.info(
