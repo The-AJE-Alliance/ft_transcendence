@@ -88,6 +88,12 @@
   padding: 10px;
   border-radius: 10px;
   max-width: 70%;
+  word-break: break-all;
+  word-wrap: break-word; /* Break words that are too long */
+  overflow-wrap: break-word; /* Ensure long text wraps */
+  white-space: pre-wrap; /* Preserve whitespace and wrap text */
+  overflow: hidden; /* Hide any accidental overflow */
+  box-sizing: border-box;
 }
 #chat-messages .sent-by-me {
   text-align: right; /* Aligne le texte à droite */
@@ -97,6 +103,12 @@
   padding: 10px; /* Espacement interne */
   border-radius: 10px; /* Coins arrondis */
   max-width: 70%; /* Limite la largeur pour une bonne lisibilité */
+  word-break: break-all;
+  word-wrap: break-word; /* Break words that are too long */
+  overflow-wrap: break-word; /* Ensure long text wraps */
+  white-space: pre-wrap; /* Preserve whitespace and wrap text */
+  overflow: hidden; /* Hide any accidental overflow */
+  box-sizing: border-box;
 }
 
 #chat-messages div {

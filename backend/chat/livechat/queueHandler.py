@@ -50,6 +50,7 @@ class QueueHandler:
     async def publish_message(self, message_data):
         try:
             # Publish the message
+            message_data["user_id"] = self.user_id
             await self.exchange.publish(
                 aio_pika.Message(body=json.dumps(message_data).encode()),
                 routing_key=f"conversation-{self.conversation_id}",  # Clé de routage liée à la conversation
