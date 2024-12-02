@@ -41,10 +41,8 @@ export async function pong(client, state) {
           // TODO: Waiting for player 2, create a button to copy link
           const copyLinkBtn = document.getElementById('host-copy-btn')
           copyLinkBtn.classList.remove('d-none')
-          client.router.addEvent(copyLinkBtn, 'click', async () => {
-            await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
-            // TODO: inform the user that the link was copied
-          })
+          // TODO: inform the user that the link was copied
+          await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
         }
         else {
           // TODO: Waiting for the host to start the game

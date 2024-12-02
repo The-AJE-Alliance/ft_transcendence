@@ -219,12 +219,16 @@ export async function chat(client) {
 
   client.router.addEvent(inviteToGameButton, 'click', async () => {
     if (!selectedFriendId) {
-      console.error('Aucune conversation sélectionnée.')
+      console.error('No conversion selected.')
       return
     }
-    const invite_link = 'fakeurl.com'// client.invitation_link
+    const invite = await navigator.clipboard.readText()
+    if (!/^https:\/\/transcendence\.fr\/pong\/remote\/join\/.+$/.test(invite)) {
+      alert('Please create a game before')
+      return
+    }
     const holder = messageInput.value
-    messageInput.value = `Join me at Pong party! Here\'s the link: ${invite_link}`
+    messageInput.value = `Join me at Pong party! Here\'s the link: ${invite}`
     const messageContent = messageInput.value.trim()
     if (messageContent && client.socket) {
       client.socket.send(JSON.stringify({ messageContent }))
