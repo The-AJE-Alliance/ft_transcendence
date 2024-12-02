@@ -21,7 +21,7 @@ class LiveChatFriends(APIView):
         response["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
         return response
 
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, log_user_id=None):
         # To be removed
@@ -37,7 +37,7 @@ class LiveChatFriends(APIView):
 
 
 class LiveChatConversation(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, log_user_id=None):
         # To be removed
@@ -56,7 +56,7 @@ class LiveChatConversation(APIView):
 
 
 class LiveChatMessages(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, log_user_id=None, user_id=None):
         try:
@@ -130,7 +130,7 @@ class LiveChatMessages(APIView):
 
 
 class LiveChatBlockUser(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, log_user_id=None, user_id=None):
         conversation = Conversation.objects.filter(

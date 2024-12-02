@@ -60,6 +60,11 @@ export async function pong(client, state) {
       console.log(winner)
       // TODO: winner is blabla
     }
+
+    else if (data.type === 'unauthorized') {
+      client.socket.close()
+      client.router.redirect('/sign-in')
+    }
   }
 }
 

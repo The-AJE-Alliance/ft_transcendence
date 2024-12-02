@@ -21,9 +21,11 @@ export async function chat(client) {
 
   async function loadFriends() {
     const friends = await ky.get(`https://chat.api.transcendence.fr/friends/${client.id}/`, {
+      headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
     }).json()
     const conversations = await ky.get(`https://chat.api.transcendence.fr/conversations/${client.id}/`, {
+      headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
     }).json()
     friends.forEach((friend) => {
@@ -76,6 +78,7 @@ export async function chat(client) {
   // Charger les messages d'une conversation
   async function loadMessages(loggedUserId, friendId, friendNickname) {
     const response = await ky.get(`https://chat.api.transcendence.fr/conversations/${loggedUserId}/${friendId}/messages/`, {
+      headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
     }).json()
     renderMessages(response.messages, friendNickname)
@@ -108,7 +111,7 @@ export async function chat(client) {
       console.error('Invalid WebSocket ID.')
       return
     }
-    client.socket = new WebSocket(`wss://chat.api.transcendence.fr/ws/chat/${socketID}/${client.id}/`)
+    client.socket = new WebSocket(`wss://chat.api.transcendence.fr/ws/chat/${socketID}/${client.id}/?token=${client.token}`)
     client.socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
@@ -185,6 +188,7 @@ export async function chat(client) {
     }
     try {
       const responseBlock = await ky.post(`https://chat.api.transcendence.fr/conversations/${client.id}/${selectedFriendId}/block/`, {
+        headers: { Authorization: `Bearer ${client.token}` },
         credentials: 'include',
       })
       if (!responseBlock.ok) {

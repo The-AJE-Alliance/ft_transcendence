@@ -44,9 +44,11 @@ RUN addgroup --gid 1001 --system app && \
     adduser --no-create-home --shell /bin/false --disabled-password --uid 1001 --system --group app && \
     mkdir -p /static && \
     mkdir -p /certs && \
+    mkdir -p /pub && \
     chown app:app /${APP_NAME} && \
     chown app:app /static && \
-    chown app:app /certs
+    chown app:app /certs && \
+    chown app:app /pub
 
 USER app
 

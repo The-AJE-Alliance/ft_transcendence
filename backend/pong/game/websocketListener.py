@@ -3,6 +3,8 @@ import asyncio
 import channels.exceptions
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.contrib.auth.models import AnonymousUser
+
 from .pongGame import PongGame
 from .queueHandler import QueueHandler
 
@@ -31,10 +33,16 @@ class WebsocketListener(AsyncWebsocketConsumer):
                 await self.setup(data)
 
     async def setup(self, data):
+        user = self.scope["user"]
         content = data["content"]
         self.mode = content["mode"]
         self.host = content["host"]
         self.room_id = "room-" + content["room_id"]
+        if self.mode == "remote" and type(user) is AnonymousUser:
+            data["type"] = "unauthorized"
+            await self.send(json.dumps(data))
+            await self.close()
+            return
         if self.host:
             if self.room_id in game_tasks:
                 pass  # TODO: problem

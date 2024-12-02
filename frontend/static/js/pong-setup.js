@@ -27,7 +27,7 @@ export async function remoteSetup(client) {
   const createGameBtn = document.getElementById('host-create-btn')
 
   client.router.addEvent(createGameBtn, 'click', async () => {
-    client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+    client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
 
     const state = {
       mode: 'remote',
@@ -48,7 +48,7 @@ export async function joinGame(client, uuid) {
     return
   }
 
-  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
 
   const state = {
     mode: 'remote',
