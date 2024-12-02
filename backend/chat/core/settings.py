@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 from vault12factor import (
     VaultAuth12Factor,
@@ -32,7 +33,9 @@ SECRET_KEY = "django-insecure-sq&rhnj@@i10x7&6peaubpdvymu%5-lsr-!7lz-l9ke4$1o^cm
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", default="").split(" ")
-# ALLOWED_HOSTS = ["chat.api.transcendence.fr", "transcendence.fr"]
+
+with open(os.path.join("/pub/", "public.pem"), "rb") as f:
+    PUBLIC_KEY = f.read()
 
 # Application definition
 
@@ -58,13 +61,8 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
-    "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",  # Permet l'interface de navigation
-    ],
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
     ),
 }
 
@@ -165,6 +163,15 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "VERIFYING_KEY": PUBLIC_KEY,
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": False,
+}
 
 
 # Internationalization

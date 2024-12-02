@@ -3,6 +3,8 @@ import asyncio
 import channels.exceptions
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.contrib.auth.models import AnonymousUser
+
 from .queueHandler import QueueHandler
 from asgiref.sync import sync_to_async
 
@@ -17,9 +19,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
 
         self.user_id = self.scope["url_route"]["kwargs"]["user_id"]
-        # if not self.user.is_authenticated:
-        #    await self.close()
-        # else:
+        user = self.scope["user"]
+        if type(user) is AnonymousUser:
+            # TODO: reject msg perhaps
+            await self.close()
         self.conversation_id = self.scope["url_route"]["kwargs"]["conversation_id"]
         self.queue_handler = await sync_to_async(QueueHandler)(
             self, self.conversation_id, self.user_id
