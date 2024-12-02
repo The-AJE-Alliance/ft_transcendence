@@ -22,6 +22,7 @@ export async function joinTournament(client, uuid) {
     host: false,
     player: 0,
     user_id: client.id,
+    nickname: client.username,
     tournament_id: uuid,
   }
 
@@ -46,6 +47,7 @@ export async function tournamentSetup(client) {
       host: true,
       player: 1,
       user_id: client.id,
+      nickname: client.username,
       tournament_id: globalThis.crypto.randomUUID().split('-')[0],
     }
     createGameBtn.classList.add('d-none')

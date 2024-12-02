@@ -15,6 +15,13 @@ export async function tournament(client, input) {
   }
 
   console.log(state)
+  const controls = document.querySelector('.tournament-controls')
+  if (state.host) {
+    controls.style.display = 'block'
+  }
+  else {
+    controls.style.display = 'none'
+  }
 
   client.socket.onopen = () => {
     console.log('Tournament WebSocket connected.')
@@ -36,12 +43,12 @@ export async function tournament(client, input) {
         greetTournament(client, state, data.content)
         break
 
-        // case 'player_joined':
-        //   updatePlayerList(state, data.content.player)
-        //   break
+      case 'player_joined':
+        updatePlayerList(state, data.content.players)
+        break
 
       case 'tournament_locked':
-        handleTournamentLocked()
+        handleTournamentLocked(data.content)
         break
 
       case 'match_ready':
@@ -58,6 +65,9 @@ export async function tournament(client, input) {
 
       case 'start_tournament':
         handleStartTournament()
+        break
+      case 'match_ended':
+        handleMatchEnded(data.content)
         break
 
       default:
@@ -87,30 +97,61 @@ export async function tournament(client, input) {
     }, 5000)
   }
 
-  function handleTournamentLocked() {
+  function handleTournamentLocked(content) {
     state.isLocked = true
     console.log('Tournament locked! Ready to start.')
-    document.getElementById('lock-tournament').disabled = true
-    document.getElementById('start-tournament').disabled = false
+    if (content.ready) {
+      updateTournamentBracket(content.bracket)
+      document.getElementById('lock-tournament').disabled = true
+      document.getElementById('start-tournament').disabled = false
+    }
+    else {
+      alert(content.message)
+    }
   }
 
   function startMatch(match) {
     state.currentMatch = match
-    console.log(`Starting match: ${match.player1} vs ${match.player2}`)
+    const localUserId = state.user_id
+    let playerNumber
+    if (match.player1.user_id === localUserId) {
+      playerNumber = 1
+    }
+    else if (match.player2.user_id === localUserId) {
+      playerNumber = 2
+    }
+    else {
+      // Le joueur local n'est pas dans ce match
+      return
+    }
+    console.log(`Starting match: ${match.player1.user_id} vs ${match.player2.user_id}`)
     pong(client, {
       mode: 'tournament',
       room_id: match.room_id,
-      player: match.player,
+      player: playerNumber,
     })
+  }
+
+  function handleMatchEnded(content) {
+    const { match } = content
+    // Mettre à jour le match correspondant dans state.matches
+    const matchIndex = state.matches.findIndex(m => m.room_id === match.room_id)
+    if (matchIndex !== -1) {
+      state.matches[matchIndex].winner = match.winner
+      updateTournamentBracket(state.matches)
+    }
+    // Vérifier si tous les matchs du round sont terminés
+    if (state.matches.every(m => m.winner)) {
+      // Tous les matchs du round sont terminés
+      console.log('All matches in the round are finished.')
+      // Attendre le prochain round ou terminer le tournoi
+    }
   }
 
   function updateTournamentBracket(bracket) {
     const bracketElement = document.getElementById('tournamentBracket')
     bracketElement.innerHTML = bracket.map(
-      match =>
-        `<p>${match.player1} vs ${match.player2} - Winner: ${
-          match.winner || 'TBD'
-        }</p>`,
+      match => `<p>${match.player1.nickname} vs ${match.player2.nickname} - Winner: ${match.winner ? match.winner.nickname || match.winner.user_id : 'TBD'}</p>`,
     ).join('')
   }
 
@@ -122,6 +163,7 @@ export async function tournament(client, input) {
 
 function greetTournament(client, state, data) {
   console.log('Greet tournament called with data:', data)
+  updatePlayerList(state, data.players)
   if (state.host) {
     // client.app.innerHTML = tournamentSetupPage
     const copyLinkBtn = document.getElementById('host-copy-btn')
@@ -155,7 +197,7 @@ function updatePlayerList(state, players) {
 
   players.forEach((player) => {
     const newPlayer = document.createElement('li')
-    newPlayer.textContent = `Player ${player.player_num}: ${player.user_id}`
+    newPlayer.textContent = `Player ${player.player_num}: ${player.nickname || player.user_id}`
     playerList.appendChild(newPlayer)
   })
 }

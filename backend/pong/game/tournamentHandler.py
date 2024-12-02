@@ -59,6 +59,10 @@ class TournamentHandler:
             aio_pika.Message(body=json.dumps(data).encode()), routing_key="tournament"
         )
 
+    async def dispatch(self, message):
+        data = json.loads(message)
+        await self.publish_to_loop(data)  # Publier au tournoi
+
     async def stop(self):
         if self.connection:
             await self.connection.close()

@@ -2,6 +2,8 @@ import json
 import aio_pika
 import asyncio
 import logging
+
+from PIL.ImagePalette import random
 from aio_pika import ExchangeType
 from django.conf import settings
 
@@ -73,17 +75,25 @@ class TournamentManager:
         except Exception as e:
             logger.error(f"Exception in dispatch: {str(e)}")
 
-    async def add_player(self, player, content):
-        if player in self.players:
+    async def add_player(self, player_id, content):
+        if player_id in self.players:
             return
         self.nb_players += 1
-        self.players[self.nb_players] = self.Player(
+        self.players[player_id] = self.Player(
             content.get("user_id"),
             content.get("tournament_id"),
             content.get("host"),
-            self.nb_players,
+            player_id,
+            content.get("nickname"),
         )
-        # await self.broadcast({"type": "player_joined", "content": {"player": player}})
+        await self.broadcast(
+            {
+                "type": "player_joined",
+                "content": {
+                    "players": [player.to_dict() for player in self.players.values()]
+                },
+            }
+        )
 
     async def setup_tournament(self, content):
         logger.info("Entering setup_tournament")
@@ -96,9 +106,10 @@ class TournamentManager:
                 content.get("tournament_id"),
                 content.get("host"),
                 0,
+                content.get("nickname"),
             )
         else:
-            await self.add_player(content["player"], content)
+            await self.add_player(content.get("user-id"), content)
 
         message = {
             "type": "setup_tournament",
@@ -119,36 +130,65 @@ class TournamentManager:
 
     ### Lock Tournament ###
     async def lock_tournament(self):
-        response = {
-            "type": "tournament_locked",
-            "content": {
-                "ready": False,
-                "players": [player.to_dict() for player in self.players.values()],
-        }}
-        # if len(self.players) < 2:
-        #     return
+        if len(self.players) < 2:
+            await self.broadcast(
+                {
+                    "type": "tournament_locked",
+                    "content": {
+                        "ready": False,
+                        "message": "Not enough players to start the tournament.",
+                    },
+                }
+            )
+            return
         self.lock = True
         self.generate_bracket()
-        response["content"]["ready"] = True
-        await self.broadcast(response)
+        await self.broadcast(
+            {
+                "type": "tournament_locked",
+                "content": {
+                    "ready": True,
+                    "bracket": self.matches,
+                    "message": "Tournament is locked and brackets are generated.",
+                },
+            }
+        )
 
     def generate_bracket(self):
+        players_list = list(self.players.values())
+        random.shuffle(players_list)  # Pour mélanger les joueurs
         self.matches = [
-            {"player1": self.players[i], "player2": self.players[i + 1], "winner": None}
-            for i in range(0, len(self.players) - 1, 2)
+            {
+                "player1": players_list[i].to_dict(),
+                "player2": players_list[i + 1].to_dict(),
+                "winner": None,
+            }
+            for i in range(0, len(players_list) - 1, 2)
         ]
 
+    async def start_round(self):
+        for match in self.matches:
+            if match["winner"] is None:
+                match["room_id"] = (
+                    f"match-{match['player1']['user_id']}-vs-{match['player2']['user_id']}"
+                )
+                await self.broadcast(
+                    {"type": "match_ready", "content": {"match": match}}
+                )
+
     async def start_tournament(self):
-        response = {
-            "type": "start_tournament",
-            "content": {
-                "ready": False,
-                 "players": [player.to_dict() for player in self.players.values()],},
-        }
-        # if not self.matches:
-        #     return
-        await self.broadcast(response)
-        await self.start_next_match()
+        if not self.matches:
+            return
+        await self.broadcast(
+            {
+                "type": "start_tournament",
+                "content": {
+                    "message": "Tournament has started!",
+                    "bracket": self.matches,
+                },
+            }
+        )
+        await self.start_round()
 
     async def start_next_match(self):
         self.current_match_index += 1
@@ -168,15 +208,30 @@ class TournamentManager:
             }
         )
 
-    async def end_match(self, winner):
-        if self.current_match_index < 0 or self.current_match_index >= len(
-            self.matches
-        ):
-
+    async def prepare_next_round(self):
+        winners = [match["winner"] for match in self.matches]
+        if len(winners) <= 1:
+            await self.end_tournament(winners[0])
             return
+        # Générer les nouveaux matchs pour le prochain round
+        self.matches = [
+            {"player1": winners[i], "player2": winners[i + 1], "winner": None}
+            for i in range(0, len(winners) - 1, 2)
+        ]
+        await self.broadcast(
+            {"type": "tournament_update", "content": {"bracket": self.matches}}
+        )
+        await self.start_round()
 
-        current_match = self.matches[self.current_match_index]
-        current_match["winner"] = winner
+    async def end_match(self, winner, match_id):
+        # Trouver le match correspondant
+        for match in self.matches:
+            if match["room_id"] == match_id:
+                match["winner"] = winner
+                break
+        # Vérifier si tous les matchs du round sont terminés
+        if all(m["winner"] is not None for m in self.matches):
+            await self.prepare_next_round()
 
         await self.broadcast(
             {
@@ -206,18 +261,18 @@ class TournamentManager:
         )
 
     class Player:
-        def __init__(self, user_id, tournament_id, host, player_num):
+        def __init__(self, user_id, tournament_id, host, player_num, nickname):
             self.user_id = user_id
             self.tournament_id = tournament_id
             self.host = host
             self.player_num = player_num
+            self.nickname = nickname
 
         def to_dict(self):
             return {
-            "user_id": self.user_id,
-            "tournament_id": self.tournament_id,
-            "host": self.host,
-            "player_num": self.player_num,
-        }
-        
-    
+                "user_id": self.user_id,
+                "tournament_id": self.tournament_id,
+                "host": self.host,
+                "player_num": self.player_num,
+                "nickname": self.nickname,
+            }
