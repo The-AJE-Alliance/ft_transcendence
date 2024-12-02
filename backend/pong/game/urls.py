@@ -1,22 +1,25 @@
 from django.urls import path, include
-from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
+from rest_framework.permissions import IsAuthenticated
 from .models import PongUser
-
 
 # Serializers define the API representation.
 class PongUserSerializer(serializers.HyperlinkedModelSerializer):
-    friends = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(), many=True, required=False
-    )
-
     class Meta:
         model = PongUser
-        fields = ["username", "nickname", "is_online", "friends", "wins"]
+        fields = [
+            "nickname",
+            "wins",
+            "loss",
+            "win_ratio",
+            "tournaments_won",
+            "tournaments_played",
+            ]
 
 
 # ViewSets define the view behavior.
-class PongUserViewSet(viewsets.ModelViewSet):
+class PongUserViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = PongUser.objects.all()
     serializer_class = PongUserSerializer
 
@@ -30,5 +33,4 @@ router.register(r"users", PongUserViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-    path("stats/<int:user_id>", UserStats.as_view(), name="user-stats"),
 ]
