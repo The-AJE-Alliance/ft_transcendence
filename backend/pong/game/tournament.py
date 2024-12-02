@@ -3,7 +3,7 @@ import aio_pika
 import asyncio
 import logging
 
-from PIL.ImagePalette import random
+import random
 from aio_pika import ExchangeType
 from django.conf import settings
 
@@ -83,7 +83,7 @@ class TournamentManager:
             content.get("user_id"),
             content.get("tournament_id"),
             content.get("host"),
-            player_id,
+            self.nb_players,
             content.get("nickname"),
         )
         await self.broadcast(
@@ -100,23 +100,25 @@ class TournamentManager:
         logger.info(
             f"[TournamentManager] setup_tournament called with content: {json.dumps(content, indent=4)}"
         )
+        user_id = content.get("user_id")
         if content.get("host"):
-            self.players[0] = self.Player(
-                content.get("user_id"),
+            self.nb_players = 1  # Initialisez nb_players à 1 pour l'hôte
+            self.players[user_id] = self.Player(
+                user_id,
                 content.get("tournament_id"),
                 content.get("host"),
-                0,
+                self.nb_players,  # player_num = 1 pour l'hôte
                 content.get("nickname"),
             )
         else:
-            await self.add_player(content.get("user-id"), content)
+            await self.add_player(content.get("user_id"), content)
 
         message = {
             "type": "setup_tournament",
             "content": {
                 "player_id": self.nb_players,
                 "tournament_id": self.tournament_id,
-                "players": [player.__dict__ for player in self.players.values()],
+                "players": [player.to_dict() for player in self.players.values()],
             },
         }
         logger.info(f"Broadcasting setup_tournament: {json.dumps(message, indent=4)}")
@@ -162,6 +164,7 @@ class TournamentManager:
                 "player1": players_list[i].to_dict(),
                 "player2": players_list[i + 1].to_dict(),
                 "winner": None,
+                "room_id": f"match-{players_list[i].user_id}-vs-{players_list[i + 1].user_id}",
             }
             for i in range(0, len(players_list) - 1, 2)
         ]
@@ -225,10 +228,15 @@ class TournamentManager:
 
     async def end_match(self, winner, match_id):
         # Trouver le match correspondant
+        current_match = None
         for match in self.matches:
             if match["room_id"] == match_id:
                 match["winner"] = winner
+                current_match = match
                 break
+        if current_match is None:
+            logger.error(f"No match found with room_id {match_id}")
+            return
         # Vérifier si tous les matchs du round sont terminés
         if all(m["winner"] is not None for m in self.matches):
             await self.prepare_next_round()
@@ -242,12 +250,11 @@ class TournamentManager:
                 },
             }
         )
+        # await self.start_next_match()
 
-        await self.start_next_match()
-
-    async def end_tournament(self):
-        winners = [match["winner"] for match in self.matches if match["winner"]]
-        final_winner = winners[0] if len(winners) == 1 else "TBD"  # Simplified logic
+    async def end_tournament(self, final_winner):
+        # winners = [match["winner"] for match in self.matches if match["winner"]]
+        # final_winner = winners[0] if len(winners) == 1 else "TBD"  # Simplified logic
         await self.broadcast(
             {"type": "tournament_end", "content": {"winner": final_winner}}
         )

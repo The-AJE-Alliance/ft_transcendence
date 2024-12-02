@@ -189,13 +189,14 @@ function greetTournament(client, state, data) {
 }
 
 function updatePlayerList(state, players) {
+  console.log('Players received:', players)
   state.players = players
 
   const playerList = document.getElementById('playerList')
-
   playerList.innerHTML = ''
 
   players.forEach((player) => {
+    console.log('Player:', player)
     const newPlayer = document.createElement('li')
     newPlayer.textContent = `Player ${player.player_num}: ${player.nickname || player.user_id}`
     playerList.appendChild(newPlayer)
