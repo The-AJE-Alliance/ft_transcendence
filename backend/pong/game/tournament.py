@@ -148,17 +148,27 @@ class TournamentManager:
             return
         self.lock = True
         self.generate_bracket()
-        await self.send_player(
-            {
-                "type": "tournament_locked",
-                "content": {
-                    "ready": True,
-                    "bracket": self.matches,
-                    "message": "Tournament is locked and brackets are generated.",
-                },
+        await self.broadcast(
+        {
+            "type": "tournament_locked",
+            "content": {
+                "ready": True,
+                "bracket": self.matches,
+                "message": "Tournament is locked and brackets are generated.",
             },
-            user_id,
-        )
+        }
+    )
+        # await self.send_player(
+        #     {
+        #         "type": "tournament_locked",
+        #         "content": {
+        #             "ready": True,
+        #             "bracket": self.matches,
+        #             "message": "Tournament is locked and brackets are generated.",
+        #         },
+        #     },
+        #     user_id,
+        # )
 
     def generate_bracket(self):
         players_list = list(self.players.values())
