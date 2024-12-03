@@ -1,6 +1,7 @@
 import pongPage from '../pages/pong.html?raw'
 import '../css/pong.css'
 
+/*
 export async function pong(client, state) {
   client.socket.onopen = () => {
     console.log('WebSocket connected.')
@@ -20,7 +21,7 @@ export async function pong(client, state) {
   //   client.socket.close()
   //   client.router.redirect('/')
   // })
-  
+
   client.socket.onmessage = async (event) => {
     const data = JSON.parse(event.data)
     console.log(data)
@@ -64,6 +65,72 @@ export async function pong(client, state) {
       client.socket.close()
       client.router.redirect('/sign-in')
     }
+  }
+}
+*/
+
+export async function pong(client, state) {
+  // Créez une nouvelle connexion WebSocket pour le jeu Pong
+  const gameSocket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
+
+  gameSocket.onopen = () => {
+    console.log('Game WebSocket connected.')
+    const initMessage = {
+      type: 'setup',
+      content: { ...state },
+    }
+    console.log(initMessage)
+    gameSocket.send(JSON.stringify(initMessage))
+  }
+
+  gameSocket.onmessage = async (event) => {
+    const data = JSON.parse(event.data)
+    console.log(data)
+
+    if (data.type === 'setup') {
+      const { ready } = data.content
+      if (ready) {
+        client.app.innerHTML = pongPage
+        state.canvas = document.getElementById('pongCanvas')
+        client.router.addEvent(document, 'keyup', async (event) => {
+          await handleKeyPress(event, gameSocket, state)
+        })
+        // TODO: Game starting in timer.seconds
+      }
+      else {
+        if (state.host) {
+          // TODO: Waiting for player 2, create a button to copy link
+          const copyLinkBtn = document.getElementById('host-copy-btn')
+          copyLinkBtn.classList.remove('d-none')
+          // TODO: inform the user that the link was copied
+          await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
+        }
+        else {
+          // TODO: Waiting for the host to start the game
+        }
+      }
+    }
+
+    else if (data.type === 'state') {
+      await renderGame(data.content, state.canvas)
+    }
+
+    else if (data.type === 'end') {
+      gameSocket.close()
+      const { winner } = data.content
+      console.log(winner)
+      // TODO: winner is blabla
+    }
+
+    else if (data.type === 'unauthorized') {
+      gameSocket.close()
+      client.router.redirect('/sign-in')
+    }
+  }
+
+  gameSocket.onclose = () => {
+    console.log('Game WebSocket disconnected.')
+    // TODO: Handle disconnection if necessary
   }
 }
 

@@ -99,9 +99,13 @@ class PongGame:
     async def setup(self, content):
         response = {"type": "setup", "content": {"ready": False, "timer": self.timer}}
         if self.running or content["mode"] != self.mode:
-            pass  # TODO: problem
+            # pass  # TODO: problem
+            logger.error(
+                f"Cannot start game: running={self.running}, content['mode']={content['mode']}, self.mode={self.mode}"
+            )
+            return
 
-        logger.error(self.mode)
+        logger.info(f"Game mode: {self.mode}")
 
         if self.mode == "local":
             self.player1 = self.Pad(True)

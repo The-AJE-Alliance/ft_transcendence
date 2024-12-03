@@ -30,17 +30,22 @@ class TournamentManager:
         self.nb_players = 0
 
     async def start(self):
-        self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
-        self.channel = await self.connection.channel()
-        self.exchange = await self.channel.declare_exchange(
-            f"tournament-{self.tournament_id}", ExchangeType.DIRECT, auto_delete=False
-        )
-        self.queue = await self.channel.declare_queue(
-            name=f"tournament-{self.tournament_id}-manager",
-            auto_delete=False,
-        )
-        await self.queue.bind(self.exchange, routing_key="tournament")
-        asyncio.create_task(self.consume_data())
+        try:
+            self.connection = await aio_pika.connect_robust(settings.RMQ_ADDR)
+            self.channel = await self.connection.channel()
+            self.exchange = await self.channel.declare_exchange(
+                f"tournament-{self.tournament_id}",
+                ExchangeType.DIRECT,
+                auto_delete=False,
+            )
+            self.queue = await self.channel.declare_queue(
+                name=f"tournament-{self.tournament_id}-manager",
+                auto_delete=False,
+            )
+            await self.queue.bind(self.exchange, routing_key="tournament")
+            asyncio.create_task(self.consume_data())
+        except Exception as e:
+            logger.error(f"Exception in tournamentManager.start: {e}", exc_info=True)
 
     async def consume_data(self):
         try:

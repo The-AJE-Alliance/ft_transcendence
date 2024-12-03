@@ -45,12 +45,15 @@ class TournamentHandler:
             logger.error(f"Exception in TournamentHandler.setup: {str(e)}")
 
     async def consume_messages(self):
-        async with self.queue.iterator() as queue_iter:
-            async for message in queue_iter:
-                async with message.process():
-                    msg = message.body.decode()
-                    logger.info(f"[TournamentHandler] Message received: {msg}")
-                    await self.websocket.send(msg)
+        try:
+            async with self.queue.iterator() as queue_iter:
+                async for message in queue_iter:
+                    async with message.process():
+                        msg = message.body.decode()
+                        logger.info(f"[TournamentHandler] Message received: {msg}")
+                        await self.websocket.send(msg)
+        except Exception as e:
+            logger.error(f"Exception in consume_messages: {e}", exc_info=True)
 
     async def publish_to_loop(self, data):
         logger.info(

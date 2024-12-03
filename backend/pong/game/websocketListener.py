@@ -79,6 +79,9 @@ class WebsocketListener(AsyncWebsocketConsumer):
     async def setup(self, data):
         user = self.scope["user"]
         content = data["content"]
+        logger.info(
+            f"Received setup message with content: {json.dumps(content, indent=4)}"
+        )
         self.mode = content["mode"]
         self.host = content["host"]
 
@@ -90,30 +93,14 @@ class WebsocketListener(AsyncWebsocketConsumer):
             return
         if self.host:
             if self.room_id in game_tasks:
-                pass  # TODO: problem
-            logger.info("Created game")
-            self.pong_game = PongGame(self.room_id, self.mode)
-            game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
-
-        if self.host:
-            if self.room_id in game_tasks:
-                pass  # TODO: problem
-            logger.info("Created game")
-            self.pong_game = PongGame(self.room_id, self.mode)
-            game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
-
-        else:
-            if self.host:
-                if self.room_id in game_tasks:
-                    pass  # TODO: problem
+                logger.warning(f"Game with room_id {self.room_id} already exists.")
+                # pass  # TODO: problem
+            else:
                 logger.info("Created game")
                 self.pong_game = PongGame(self.room_id, self.mode)
                 game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
-
-            self.queue_handler = QueueHandler(
-                self, self.room_id, (1 if self.host else 2)
-            )
-            await self.queue_handler.start(data)
+        self.queue_handler = QueueHandler(self, self.room_id, (1 if self.host else 2))
+        await self.queue_handler.start(data)
 
     async def disconnect(self, close_code):
         logger.warning("Client déconnecté")

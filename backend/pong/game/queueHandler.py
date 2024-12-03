@@ -33,10 +33,13 @@ class QueueHandler:
         await self.queue.bind(self.exchange, f"player-{self.player}")
 
     async def start(self, data):
-        await self.setup()
+        try:
+            await self.setup()
 
-        self.consumer_task = asyncio.create_task(self.consume_loop_state())
-        await self.publish_to_loop(data)
+            self.consumer_task = asyncio.create_task(self.consume_loop_state())
+            await self.publish_to_loop(data)
+        except Exception as e:
+            logger.error(f"Exception in queueHandler.start: {e}", exc_info=True)
 
     async def consume_loop_state(self):
         try:

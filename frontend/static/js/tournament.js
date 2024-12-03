@@ -1,4 +1,5 @@
 import tournamentPage from '../pages/tournament.html?raw'
+import { pong } from './pong.js'
 
 export async function tournament(client, input) {
   client.app.innerHTML = tournamentPage
@@ -122,11 +123,14 @@ export async function tournament(client, input) {
     state.currentMatch = match
     const localUserId = state.user_id
     let playerNumber
+    let isHost
     if (match.player1.user_id === localUserId) {
       playerNumber = 1
+      isHost = true
     }
     else if (match.player2.user_id === localUserId) {
       playerNumber = 2
+      isHost = false
     }
     else {
       // Le joueur local n'est pas dans ce match
@@ -136,6 +140,7 @@ export async function tournament(client, input) {
     pong(client, {
       mode: 'tournament',
       room_id: match.room_id,
+      host: isHost,
       player: playerNumber,
     })
   }
