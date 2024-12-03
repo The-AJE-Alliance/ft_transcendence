@@ -193,7 +193,13 @@ class TournamentManager:
                     f"match-{match['player1']['user_id']}-vs-{match['player2']['user_id']}"
                 )
                 await self.broadcast(
-                    {"type": "match_ready", "content": {"match": match}}
+                    {
+                        "type": "match_ready",
+                        "content": {
+                            "tournament_id": self.tournament_id,
+                            "match": match,
+                        },
+                    }
                 )
 
     async def start_tournament(self):
@@ -229,13 +235,18 @@ class TournamentManager:
         )
 
     async def prepare_next_round(self):
-        winners = [match["winner"] for match in self.matches]
-        if len(winners) <= 1:
+        winners = [match["winner"] for match in self.matches if match["winner"]]
+        if len(winners) == 1:
             await self.end_tournament(winners[0])
             return
         # Générer les nouveaux matchs pour le prochain round
         self.matches = [
-            {"player1": winners[i], "player2": winners[i + 1], "winner": None}
+            {
+                "player1": winners[i],
+                "player2": winners[i + 1],
+                "winner": None,
+                "room_id": f"match-{winners[i]['user_id']}-vs-{winners[i + 1]['user_id']}",
+            }
             for i in range(0, len(winners) - 1, 2)
         ]
         await self.broadcast(
@@ -243,21 +254,52 @@ class TournamentManager:
         )
         await self.start_round()
 
-    async def end_match(self, winner, match_id):
+    async def send_match_result(self, match):
+        player1_id = match["player1"]["user_id"]
+        player2_id = match["player2"]["user_id"]
+        winner_id = match["winner"]["user_id"]
+
+        # Envoyer le résultat au joueur 1
+        await self.send_player(
+            {
+                "type": "match_result",
+                "content": {
+                    "result": "win" if winner_id == player1_id else "lose",
+                    "opponent": match["player2"]["nickname"],
+                },
+            },
+            player1_id,
+        )
+
+        # Envoyer le résultat au joueur 2
+        await self.send_player(
+            {
+                "type": "match_result",
+                "content": {
+                    "result": "win" if winner_id == player2_id else "lose",
+                    "opponent": match["player1"]["nickname"],
+                },
+            },
+            player2_id,
+        )
+
+    async def end_match(self, winner_id, match_id):
         # Trouver le match correspondant
         current_match = None
         for match in self.matches:
             if match["room_id"] == match_id:
-                match["winner"] = winner
+                match["winner"] = self.players[winner_id].to_dict()
                 current_match = match
                 break
         if current_match is None:
             logger.error(f"No match found with room_id {match_id}")
             return
+        await self.send_match_result(current_match)
         # Vérifier si tous les matchs du round sont terminés
         if all(m["winner"] is not None for m in self.matches):
             await self.prepare_next_round()
-
+        else:
+            pass
         await self.broadcast(
             {
                 "type": "match_ended",
@@ -273,7 +315,13 @@ class TournamentManager:
         # winners = [match["winner"] for match in self.matches if match["winner"]]
         # final_winner = winners[0] if len(winners) == 1 else "TBD"  # Simplified logic
         await self.broadcast(
-            {"type": "tournament_end", "content": {"winner": final_winner}}
+            {
+                "type": "tournament_end",
+                "content": {
+                    "winner": final_winner["nickname"],
+                    "message": f"{final_winner['nickname']} won the tournament !",
+                },
+            }
         )
 
     async def broadcast(self, message):

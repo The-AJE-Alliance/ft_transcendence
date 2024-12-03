@@ -57,6 +57,10 @@ export async function tournament(client, input) {
         startMatch(data.content.match)
         break
 
+      case 'match_result':
+        handleMatchResult(data.content)
+        break
+
       case 'tournament_update':
         updateTournamentBracket(data.content.bracket)
         break
@@ -81,6 +85,15 @@ export async function tournament(client, input) {
     }
   }
 
+  function handleMatchResult(content) {
+    if (content.result === 'win') {
+      alert(`You won against ${content.opponent} !`)
+    }
+    else {
+      alert(`You lost to ${content.opponent}.`)
+    }
+  }
+
   // Lock tournament
   const lockTournamentBtn = document.getElementById('lock-tournament')
   client.router.addEvent(lockTournamentBtn, 'click', () => {
@@ -94,6 +107,10 @@ export async function tournament(client, input) {
   // Start tournament
   const startTournamentBtn = document.getElementById('start-tournament')
   client.router.addEvent(startTournamentBtn, 'click', () => {
+    if (!state.isLocked) {
+      alert('The tournament must be locked before starting.')
+      return
+    }
     client.socket.send(JSON.stringify({ type: 'start_tournament' }))
   })
 
@@ -134,7 +151,6 @@ export async function tournament(client, input) {
       isHost = false
     }
     else {
-      // Le joueur local n'est pas dans ce match
       return
     }
     console.log(`Starting match: ${match.player1.user_id} vs ${match.player2.user_id}`)
@@ -164,15 +180,20 @@ export async function tournament(client, input) {
 
   function updateTournamentBracket(bracket) {
     const bracketElement = document.getElementById('tournamentBracket')
-    bracketElement.innerHTML = bracket.map(
-      match => `<p>${match.player1.nickname} vs ${match.player2.nickname} - Winner: ${match.winner ? match.winner.nickname || match.winner.user_id : 'TBD'}</p>`,
-    ).join('')
+    bracketElement.innerHTML = ''
+    bracket.forEach((match, index) => {
+      const matchElement = document.createElement('div')
+      matchElement.innerHTML = `
+        <p>Match ${index + 1}:</p>
+        <p>${match.player1.nickname} vs ${match.player2.nickname}</p>
+        <p>Gagnant: ${match.winner ? match.winner.nickname : 'En attente'}</p>
+      `
+      bracketElement.appendChild(matchElement)
+    })
   }
 
   function handleTournamentEnd(winner) {
-    console.log(`Tournament ended! Winner: ${winner}`)
-    client.app.innerHTML = `<h1>Congratulations, ${winner}!</h1>`
-  }
+    alert(content.message)
 }
 
 function greetTournament(client, state, data) {
