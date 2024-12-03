@@ -35,6 +35,7 @@ from .models import User, FriendRequest
 from .serializers import UserSerializer
 from .permissions import IsOwner
 from .serializers import FriendRequestSerializer
+from django.shortcuts import get_object_or_404
 import logging
 import requests
 import pyotp
@@ -734,3 +735,18 @@ class Fetch42UserInfoView(APIView):
                 "image_url": user_data.get("image_url"),
             }
         )
+
+
+class ChatFriendProfile(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, friend_user_id=None):
+        try:
+            friend = get_object_or_404(User, id=friend_user_id)
+            serializer = UserSerializer(friend, many=False)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": f"An unexpected error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

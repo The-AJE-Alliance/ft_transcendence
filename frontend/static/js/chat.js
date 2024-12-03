@@ -59,7 +59,6 @@ export async function chat(client) {
       client.socket.close()
       client.socket = null
     }
-    // Todo: IF click on navbar, shut the websocket down
     document.getElementById('chat-user').textContent = friend.nickname
     selectedFriendId = friendNicknameToId.get(friend.nickname)
     selectedFriendNickname = friend.nickname
@@ -218,7 +217,8 @@ export async function chat(client) {
       client.socket.close()
       client.socket = null
     }
-    // TODO: ADD HERE THE FUNCTION TO LOAD A USER PROFILE
+    client.friendId = selectedFriendId
+    client.router.redirect('/friend-profile')
   })
 
   client.router.addEvent(inviteToGameButton, 'click', async () => {
@@ -228,6 +228,7 @@ export async function chat(client) {
     }
     const invite = await navigator.clipboard.readText()
     if (!/^https:\/\/transcendence\.fr\/pong\/remote\/join\/.+$/.test(invite)) {
+      // eslint-disable-next-line no-alert
       alert('Please create a game before')
       return
     }

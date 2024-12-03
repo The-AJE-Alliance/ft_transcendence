@@ -6,10 +6,7 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from django.db.models import Q
 from .serializers import ConversationSerializer, UserSerializer, MessageSerializer
-from .queueHandler import QueueHandler
 from django.shortcuts import get_object_or_404
-from django.db import transaction
-import asyncio
 from django.http import JsonResponse
 
 
@@ -24,13 +21,7 @@ class LiveChatFriends(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, log_user_id=None):
-        # To be removed
         user = get_object_or_404(ChatUser, id=log_user_id)
-        if not user:
-            return Response(
-                {"error": "This user is not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
         friends = user.friends.all()  # request.user.friends.all()
         serializer = UserSerializer(friends, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -40,7 +31,6 @@ class LiveChatConversation(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, log_user_id=None):
-        # To be removed
         try:
             conversation = Conversation.objects.filter(
                 Q(user1_id=log_user_id) | Q(user2_id=log_user_id)
@@ -153,46 +143,4 @@ class LiveChatBlockUser(APIView):
             )
         return Response(
             {"error": "Conversation not found"}, status=status.HTTP_404_NOT_FOUND
-        )
-
-
-class LiveChatSendInvitation(APIView):
-    # permission_classes = [IsAuthenticated]
-
-    def post(self, request, log_user_id=None, user_id=None):
-        room_id = request.data.get("room_id")
-        conversation_id = request.data.get("conversation_id")
-        if not room_id or not conversation_id:
-            return Response(
-                {"error": "Conversation ID and room id content are required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        # TODO: Generate a "Pong" party link or invite link, the link below is a placeholder
-        invite_link = f"https://transcendence.fr/pong/remote/join/{room_id}"
-        # Prepare the message data for the invitation
-        message_data = {
-            "messageContent": f"Join me at Pong party! Here's the link: {invite_link}",
-            "conversation_id": conversation_id,
-        }
-
-        # Create a simulated POST request with the message data
-        factory = APIRequestFactory()
-        new_request = factory.post(
-            path="/send-message/", data=message_data, format="json"
-        )
-        new_request.user = (
-            request.user
-        )  # Attach the authenticated user to the new request
-
-        # Call the LiveChatSendMessage view with the simulated request
-        send_message_view = LiveChatSendMessage.as_view()
-        response = send_message_view(new_request)
-
-        if response.status_code == status.HTTP_201_CREATED:
-            return Response(
-                {"status": "Invitation sent"}, status=status.HTTP_201_CREATED
-            )
-
-        return Response(
-            {"error": "Failed to send invitation"}, status=response.status_code
         )
