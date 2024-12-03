@@ -16,6 +16,7 @@ from .views import (
     RedirectTo42View,
     AuthCallbackView,
     Fetch42UserInfoView,
+    ChatFriendProfile,
 )
 
 router = DefaultRouter()
@@ -53,6 +54,11 @@ urlpatterns = [
     path("auth/42/callback/", AuthCallbackView.as_view(), name="auth_42_callback"),
     path(
         "fetch-42-user-info/", Fetch42UserInfoView.as_view(), name="fetch_42_user_info"
+    ),
+    path(
+        "friend-profile/<int:friend_user_id>/",
+        ChatFriendProfile.as_view(),
+        name="fetch-friend-profile",
     ),
 ]
 

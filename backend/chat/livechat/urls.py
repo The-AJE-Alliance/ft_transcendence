@@ -8,7 +8,6 @@ from .views import (
     LiveChatConversation,
     LiveChatMessages,
     LiveChatBlockUser,
-    LiveChatSendInvitation,
 )
 
 router = DefaultRouter()
@@ -35,11 +34,6 @@ urlpatterns = [
         "conversations/<int:log_user_id>/<int:user_id>/block/",
         LiveChatBlockUser.as_view(),
         name="livechat-block",
-    ),
-    path(
-        "conversations/<int:log_user_id>/<int:user_id>/invite/",
-        LiveChatSendInvitation.as_view(),
-        name="livechat-invite",
     ),
 ]
 

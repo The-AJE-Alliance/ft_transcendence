@@ -5,6 +5,7 @@ import { login, login42, logout } from './auth.js'
 import { chat } from './chat.js'
 import Client from './client.js'
 import { editProfile } from './edit-profile.js'
+import { friendprofile } from './friendprofile'
 import { friends } from './friends.js'
 import { updateNavbar } from './navbar.js'
 import { choosePongMode, joinGame, localGame, remotePong, remoteSetup } from './pong-setup.js'
@@ -23,6 +24,7 @@ router.get('/', async (client) => {
   await updateNavbar(client)
 })
 router.get('/chat', chat)
+router.get('/friend-profile', friendprofile)
 router.get('/404', (client) => {
   client.app.innerHTML = '<p style="text-align: center">404 Not found</p>'
 })
