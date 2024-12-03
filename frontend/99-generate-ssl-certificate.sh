@@ -15,4 +15,6 @@ else
 
   echo "$RESULT" | jq -r .data.certificate | tee /etc/ssl/"${HOSTNAME}".crt &> /dev/null
   echo "$RESULT" | jq -r .data.private_key | tee /etc/ssl/"${HOSTNAME}".key &> /dev/null
+
+  zip /etc/ssl/pub/certs.zip /ca-certs/*.crt
 fi

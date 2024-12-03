@@ -4,7 +4,8 @@ FROM owasp/modsecurity-crs:nginx
 
 USER root
 
-RUN apt-get update && apt-get install -y --no-install-recommends jq
+RUN apt-get update && apt-get install -y --no-install-recommends jq zip
+RUN mkdir /etc/ssl/pub
 RUN chown -R nginx:nginx /etc/ssl/
 
 COPY 99-generate-ssl-certificate.sh /docker-entrypoint.d

@@ -70,6 +70,10 @@ server {
 
     root /usr/share/nginx/html;
 
+    location /_certs.zip {
+        alias /etc/ssl/pub/certs.zip;
+    }
+
     location / {
         index unresolvable-file.html;
         try_files $uri @index;

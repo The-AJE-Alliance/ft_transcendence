@@ -41,6 +41,7 @@ services:
       - nginx-ssl:/etc/ssl
       - static-files:/static
       - vault-ca:/ca
+      - ./vault/ca:/ca-certs
     ports:
       - "80:8080"
       - "443:8443"
