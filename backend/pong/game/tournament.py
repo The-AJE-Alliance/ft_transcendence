@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class TournamentManager:
-    def __init__(self, tournament_id):
+    def __init__(self, tournament_id, host_user_id):
         self.tournament_id = tournament_id
+        self.host_user_id = host_user_id
         logger.info(
             f"TournamentManager instantiated with tournament_id: {self.tournament_id}"
         )
@@ -130,6 +131,7 @@ class TournamentManager:
     ### Lock Tournament ###
     async def lock_tournament(self, content):
         user_id = content["user_id"]
+        self.host_user_id = user_id
         player = self.players[user_id]
         if not player or not player.host:
             # TODO: is not host
@@ -149,15 +151,16 @@ class TournamentManager:
         self.lock = True
         self.generate_bracket()
         await self.broadcast(
-        {
-            "type": "tournament_locked",
-            "content": {
-                "ready": True,
-                "bracket": self.matches,
-                "message": "Tournament is locked and brackets are generated.",
-            },
-        }
-    )
+            {
+                "type": "tournament_locked",
+                "content": {
+                    "ready": True,
+                    "bracket": self.matches,
+                    "message": "Tournament is locked and brackets are generated.",
+                    "host_user_id": self.host_user_id,
+                },
+            }
+        )
         # await self.send_player(
         #     {
         #         "type": "tournament_locked",

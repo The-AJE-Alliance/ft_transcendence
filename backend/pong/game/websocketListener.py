@@ -66,7 +66,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
         if self.tournament_id in tournaments:
             self.tournament = tournaments[self.tournament_id]
         else:
-            self.tournament = TournamentManager(self.tournament_id)
+            self.tournament = TournamentManager(self.tournament_id, self.user_id)
             tournaments[self.tournament_id] = self.tournament
             asyncio.create_task(self.tournament.start())
 
@@ -92,13 +92,14 @@ class WebsocketListener(AsyncWebsocketConsumer):
             await self.close()
             return
         if self.host:
-            if self.room_id in game_tasks:
-                logger.warning(f"Game with room_id {self.room_id} already exists.")
-                # pass  # TODO: problem
-            else:
+            if self.room_id not in game_tasks:
                 logger.info("Created game")
                 self.pong_game = PongGame(self.room_id, self.mode)
-                game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
+                game_tasks[self.room_id] = self.pong_game
+                asyncio.create_task(self.pong_game.start())
+            else:
+                logger.warning(f"Game with room_id {self.room_id} already exists.")
+                self.pong_game = game_tasks[self.room_id]
         self.queue_handler = QueueHandler(self, self.room_id, (1 if self.host else 2))
         await self.queue_handler.start(data)
 
@@ -106,8 +107,8 @@ class WebsocketListener(AsyncWebsocketConsumer):
         logger.warning("Client déconnecté")
         if self.queue_handler:
             await self.queue_handler.stop()
-        if self.host and self.pong_game:
+        if self.pong_game:
             await self.pong_game.stop()
-            game_tasks[self.room_id].cancel()
-            game_tasks[self.room_id] = None
+            if self.room_id in game_tasks:
+                del game_tasks[self.room_id]
         channels.exceptions.StopConsumer()

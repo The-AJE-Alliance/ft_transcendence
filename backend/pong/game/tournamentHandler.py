@@ -20,10 +20,11 @@ class TournamentHandler:
         self.channel = None
         self.exchange = None
         self.queue = None
+        self.consume_task = None
 
     async def start(self, data):
         await self.setup()
-        asyncio.create_task(self.consume_messages())
+        self.consume_task = asyncio.create_task(self.consume_messages())
         await self.publish_to_loop(data)
 
     async def setup(self):
@@ -52,6 +53,9 @@ class TournamentHandler:
                         msg = message.body.decode()
                         logger.info(f"[TournamentHandler] Message received: {msg}")
                         await self.websocket.send(msg)
+        except asyncio.CancelledError:
+            # La tâche a été annulée, on peut sortir proprement
+            pass
         except Exception as e:
             logger.error(f"Exception in consume_messages: {e}", exc_info=True)
 
@@ -68,5 +72,11 @@ class TournamentHandler:
         await self.publish_to_loop(data)  # Publier au tournoi
 
     async def stop(self):
+        if self.consume_task:
+            self.consume_task.cancel()
+            try:
+                await self.consume_task
+            except asyncio.CancelledError:
+                pass
         if self.connection:
             await self.connection.close()

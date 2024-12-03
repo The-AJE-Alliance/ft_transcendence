@@ -99,14 +99,27 @@ export async function pong(client, state) {
       }
       else {
         if (state.host) {
-          // TODO: Waiting for player 2, create a button to copy link
-          const copyLinkBtn = document.getElementById('host-copy-btn')
-          copyLinkBtn.classList.remove('d-none')
-          // TODO: inform the user that the link was copied
-          await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
+          if (state.mode === 'remote') {
+            // TODO: Waiting for player 2, create a button to copy link
+            const copyLinkBtn = document.getElementById('host-copy-btn')
+            copyLinkBtn.classList.remove('d-none')
+            // TODO: inform the user that the link was copied
+            try {
+              await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
+            }
+            catch (err) {
+              console.error('Failed to copy link: ', err)
+            }
+          }
+          else if (state.mode === 'tournament') {
+            // Code spécifique au mode 'tournament'
+            console.log('Waiting for the other player to join...')
+            // Vous pouvez afficher un message ou mettre à jour l'interface utilisateur ici
+          }
         }
         else {
           // TODO: Waiting for the host to start the game
+          console.log('Waiting for the host to start the game...')
         }
       }
     }

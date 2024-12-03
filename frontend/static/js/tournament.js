@@ -49,6 +49,7 @@ export async function tournament(client, input) {
         break
 
       case 'tournament_locked':
+        state.tournamentHostId = data.content.host_user_id
         handleTournamentLocked(data.content)
         break
 
@@ -123,7 +124,7 @@ export async function tournament(client, input) {
     state.currentMatch = match
     const localUserId = state.user_id
     let playerNumber
-    let isHost
+    let isHost = false
     if (match.player1.user_id === localUserId) {
       playerNumber = 1
       isHost = true

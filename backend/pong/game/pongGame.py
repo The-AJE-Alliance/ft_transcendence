@@ -97,6 +97,7 @@ class PongGame:
             self.update_player_position(data["content"])
 
     async def setup(self, content):
+        logger.info(f"Player {content['player']} setup received.")
         response = {"type": "setup", "content": {"ready": False, "timer": self.timer}}
         if self.running or content["mode"] != self.mode:
             # pass  # TODO: problem
@@ -117,6 +118,10 @@ class PongGame:
                 player_attr = f"player{player}"
                 if not getattr(self, player_attr):
                     setattr(self, player_attr, self.Pad(player == 1))
+            else:
+                # Gérer les numéros de joueur invalides
+                logger.error(f"Invalid player number: {player}")
+                return
             if self.player1 and self.player2:
                 response["content"]["ready"] = True
 

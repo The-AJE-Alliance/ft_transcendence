@@ -33,6 +33,7 @@ class QueueHandler:
         await self.queue.bind(self.exchange, f"player-{self.player}")
 
     async def start(self, data):
+        logger.info(f"QueueHandler starting for room_id {self.room_id}")
         try:
             await self.setup()
 
