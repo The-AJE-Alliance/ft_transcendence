@@ -16,6 +16,7 @@ class TournamentManager:
     def __init__(self, tournament_id, host_user_id):
         self.tournament_id = tournament_id
         self.host_user_id = host_user_id
+        self.started = False
         logger.info(
             f"TournamentManager instantiated with tournament_id: {self.tournament_id}"
         )
@@ -74,8 +75,9 @@ class TournamentManager:
                 case "start_tournament":
                     await self.start_tournament()
                 case "end_match":
-                    winner = data["content"].get("winner")
-                    await self.end_match(winner)
+                    winner_id = data["content"].get("winner_id")
+                    match_id = data["content"].get("match_id")
+                    await self.end_match(winner_id, match_id)
                 case _:
                     logger.warning(f"Unhandled message type: {data.get('type')}")
         except Exception as e:
@@ -176,15 +178,23 @@ class TournamentManager:
     def generate_bracket(self):
         players_list = list(self.players.values())
         random.shuffle(players_list)  # Pour mélanger les joueurs
-        self.matches = [
-            {
-                "player1": players_list[i].to_dict(),
-                "player2": players_list[i + 1].to_dict(),
+        self.matches = []
+        for i in range(0, len(players_list) - 1, 2):
+            player1 = players_list[i]
+            player2 = players_list[i + 1]
+            # Convertir les objets Player en dictionnaires
+            player1_dict = player1.to_dict()
+            player2_dict = player2.to_dict()
+            # Assigner l'hôte : on définit player1 comme hôte
+            player1_dict["host"] = True
+            player2_dict["host"] = False
+            match = {
+                "player1": player1_dict,
+                "player2": player2_dict,
                 "winner": None,
-                "room_id": f"match-{players_list[i].user_id}-vs-{players_list[i + 1].user_id}",
+                "room_id": f"match-{player1.user_id}-vs-{player2.user_id}",
             }
-            for i in range(0, len(players_list) - 1, 2)
-        ]
+            self.matches.append(match)
 
     async def start_round(self):
         for match in self.matches:
@@ -203,6 +213,10 @@ class TournamentManager:
                 )
 
     async def start_tournament(self):
+        if self.started:
+            logger.warning("Tournament has already started.")
+            return
+        self.started = True
         if not self.matches:
             return
         await self.broadcast(
@@ -298,8 +312,6 @@ class TournamentManager:
         # Vérifier si tous les matchs du round sont terminés
         if all(m["winner"] is not None for m in self.matches):
             await self.prepare_next_round()
-        else:
-            pass
         await self.broadcast(
             {
                 "type": "match_ended",

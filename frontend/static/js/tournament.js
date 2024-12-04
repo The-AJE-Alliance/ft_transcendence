@@ -63,20 +63,22 @@ export async function tournament(client, input) {
         break
 
       case 'tournament_end':
-        handleTournamentEnd(data.content.winner)
+        handleTournamentEnd(data.content)
         break
 
       case 'start_tournament':
         handleStartTournament()
         break
       case 'match_ended':
-        handleMatchEnded(data.content, state)
+        handleMatchEnded(data.content, state, client)
         break
       case 'unauthorized':
         client.socket.close()
         client.router.redirect('/sign-in')
         break
-
+      case 'game_not_ready':
+        alert(data.content.message)
+        break
       default:
         console.log('Unknown message:', data.type)
     }
@@ -98,6 +100,7 @@ export async function tournament(client, input) {
       return
     }
     client.socket.send(JSON.stringify({ type: 'start_tournament' }))
+    startTournamentBtn.disabled = true
   })
 }
 
@@ -124,6 +127,13 @@ function handleTournamentLocked(content, state) {
   state.isLocked = true
   console.log('Tournament locked! Ready to start.')
   if (content.ready) {
+    content.bracket.forEach((match) => {
+      if (!match.player1.host && !match.player2.host) {
+        // Assignons l'hôte au premier joueur
+        match.player1.host = true
+        match.player2.host = false
+      }
+    })
     updateTournamentBracket(content.bracket)
     document.getElementById('lock-tournament').disabled = true
     document.getElementById('start-tournament').disabled = false
@@ -137,17 +147,25 @@ async function startMatch(match, state, client) {
   state.currentMatch = match
   const localUserId = state.user_id
   let playerNumber
-  let isHost = false
+  let isHost
   if (match.player1.user_id === localUserId) {
     playerNumber = 1
-    isHost = true
+    isHost = match.player1.host
   }
   else if (match.player2.user_id === localUserId) {
     playerNumber = 2
-    isHost = false
+    isHost = match.player2.host
   }
   else {
     return
+  }
+  if (isHost === undefined) {
+    if (playerNumber === 1) {
+      isHost = true
+    }
+    else {
+      isHost = false
+    }
   }
   console.log(`Starting match: ${match.player1.user_id} vs ${match.player2.user_id}`)
   const gameSocket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
@@ -156,10 +174,12 @@ async function startMatch(match, state, client) {
     room_id: match.room_id,
     host: isHost,
     player: playerNumber,
+    tournament_id: state.tournament_id,
+    user_id: state.user_id,
   }, gameSocket)
 }
 
-function handleMatchEnded(content, state) {
+function handleMatchEnded(content, state, client) {
   const { match } = content
   // Mettre à jour le match correspondant dans state.matches
   const matchIndex = state.matches.findIndex(m => m.room_id === match.room_id)
@@ -167,12 +187,9 @@ function handleMatchEnded(content, state) {
     state.matches[matchIndex].winner = match.winner
     updateTournamentBracket(state.matches)
   }
-  // Vérifier si tous les matchs du round sont terminés
-  if (state.matches.every(m => m.winner)) {
-    // Tous les matchs du round sont terminés
-    console.log('All matches in the round are finished.')
-    // Attendre le prochain round ou terminer le tournoi
-  }
+  client.app.innerHTML = tournamentPage
+  // Réafficher le bracket mis à jour
+  updateTournamentBracket(state.matches)
 }
 
 function updateTournamentBracket(bracket) {
@@ -190,7 +207,7 @@ function updateTournamentBracket(bracket) {
 }
 
 function handleTournamentEnd(content) {
-  alert(content.message)
+  alert(`${content.winner} a gagné le tournoi !`)
 }
 
 function greetTournament(client, state, data) {
@@ -215,6 +232,8 @@ function greetTournament(client, state, data) {
   }
   else {
     state.player = data.player
+    const localPlayer = data.players.find(player => player.user_id === state.user_id)
+    state.host = localPlayer ? localPlayer.host : false
     // TODO: waiting for blabla, waiting page
     updatePlayerList(state, data.players)
   }
@@ -230,7 +249,7 @@ function updatePlayerList(state, players) {
   players.forEach((player) => {
     console.log('Player:', player)
     const newPlayer = document.createElement('li')
-    newPlayer.textContent = `Player ${player.player_num}: ${player.nickname}`
+    newPlayer.textContent = `Player ${player.player_num}: ${player.nickname}${player.host ? ' (Host)' : ''}`
     playerList.appendChild(newPlayer)
   })
 }

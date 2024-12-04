@@ -11,14 +11,19 @@ logger = logging.getLogger(__name__)
 
 
 class PongGame:
-    def __init__(self, room_id, mode):
+    def __init__(
+        self, room_id, mode, tournament_id=None, player1_id=None, player2_id=None
+    ):
         self.room_id = room_id
         self.mode = mode
         self.timer = 2
         self.running = False
         self.ball = self.Ball()
+        self.tournament_id = tournament_id
         self.player1 = None
         self.player2 = None
+        self.player1_id = player1_id
+        self.player2_id = player2_id
         self.max_score = 5
         self.player1_score = 0
         self.player2_score = 0
@@ -114,10 +119,17 @@ class PongGame:
             response["content"]["ready"] = True
         else:
             player = content["player"]
+            user_id = content.get("user_id")
             if player in [1, 2]:
                 player_attr = f"player{player}"
-                if not getattr(self, player_attr):
+                if getattr(self, player_attr) is None or not isinstance(
+                    getattr(self, player_attr), self.Pad
+                ):
                     setattr(self, player_attr, self.Pad(player == 1))
+                if player == 1:
+                    self.player1_id = user_id
+                else:
+                    self.player2_id = user_id
             else:
                 # Gérer les numéros de joueur invalides
                 logger.error(f"Invalid player number: {player}")
@@ -212,12 +224,30 @@ class PongGame:
         data = {
             "type": "end",
             "content": {
-                "winner": 1 if self.player1_score >= self.max_score else 2,
+                "winner": self.winner,
             },
         }
         await self.exchange.publish(
             aio_pika.Message(json.dumps(data).encode()), routing_key="players"
         )
+        if self.mode == "tournament" and self.tournament_id:
+            winner_id = self.player1_id if self.winner == 1 else self.player2_id
+            tournament_message = {
+                "type": "end_match",
+                "content": {
+                    "winner_id": winner_id,
+                    "match_id": self.room_id,
+                },
+            }
+            # Publier le message au TournamentManager
+            tournament_exchange_name = f"tournament-{self.tournament_id}"
+            tournament_exchange = await self.channel.declare_exchange(
+                tournament_exchange_name, ExchangeType.DIRECT, auto_delete=False
+            )
+            await tournament_exchange.publish(
+                aio_pika.Message(json.dumps(tournament_message).encode()),
+                routing_key="tournament",
+            )
         # TODO: update to db if remote
 
     async def reset_game(self):
@@ -227,8 +257,9 @@ class PongGame:
         await self.queue.purge()
 
     class Pad:
-        def __init__(self, left, width=0.02, height=0.2, color="white"):
+        def __init__(self, left, width=0.02, height=0.2, color="white", user_id=None):
             self.left = left
+            self.user_id = user_id
             self.color = color
             self.width = width
             self.height = height

@@ -1,4 +1,5 @@
 import pongPage from '../pages/pong.html?raw'
+import tournamentPage from '../pages/tournament.html?raw'
 import '../css/pong.css'
 
 /*
@@ -101,8 +102,7 @@ export async function pong(client, state, gameSocket) {
           if (state.mode === 'remote') {
             // TODO: Waiting for player 2, create a button to copy link
             const copyLinkBtn = document.getElementById('host-copy-btn')
-            if (copyLinkBtn)
-            {
+            if (copyLinkBtn) {
               client.router.addEvent(copyLinkBtn, 'click', async () => {
                 const link = `https://transcendence.fr/pong/remote/join/${state.room_id}`
                 console.log('Link to copy:', link)
@@ -134,7 +134,8 @@ export async function pong(client, state, gameSocket) {
     else if (data.type === 'end') {
       gameSocket.close()
       const { winner } = data.content
-      console.log(winner)
+      console.log(`Le gagnant est : Joueur ${winner}`)
+      client.app.innerHTML = tournamentPage
       // TODO: winner is blabla
     }
 
@@ -146,6 +147,7 @@ export async function pong(client, state, gameSocket) {
 
   gameSocket.onclose = () => {
     console.log('Game WebSocket disconnected.')
+    document.removeEventListener('keyup', handleKeyPress)
     // TODO: Handle disconnection if necessary
   }
 }
@@ -230,6 +232,10 @@ async function handleKeyPress(event, socket, state) {
       action,
     },
   }
-
-  socket.send(JSON.stringify(data))
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify(data))
+  }
+  else {
+    console.log('WebSocket is not open')
+  }
 }
