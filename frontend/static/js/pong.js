@@ -69,9 +69,8 @@ export async function pong(client, state) {
 }
 */
 
-export async function pong(client, state) {
+export async function pong(client, state, gameSocket) {
   // Créez une nouvelle connexion WebSocket pour le jeu Pong
-  const gameSocket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
 
   gameSocket.onopen = () => {
     console.log('Game WebSocket connected.')
@@ -102,13 +101,17 @@ export async function pong(client, state) {
           if (state.mode === 'remote') {
             // TODO: Waiting for player 2, create a button to copy link
             const copyLinkBtn = document.getElementById('host-copy-btn')
-            copyLinkBtn.classList.remove('d-none')
-            // TODO: inform the user that the link was copied
-            try {
-              await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
+            if (copyLinkBtn)
+            {
+              client.router.addEvent(copyLinkBtn, 'click', async () => {
+                const link = `https://transcendence.fr/pong/remote/join/${state.room_id}`
+                console.log('Link to copy:', link)
+                await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
+                alert('Link copied!')
+              })
             }
-            catch (err) {
-              console.error('Failed to copy link: ', err)
+            else {
+              console.error('Copy link button not found in the Dom')
             }
           }
           else if (state.mode === 'tournament') {
