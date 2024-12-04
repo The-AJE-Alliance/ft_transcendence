@@ -150,12 +150,13 @@ async function startMatch(match, state, client) {
     return
   }
   console.log(`Starting match: ${match.player1.user_id} vs ${match.player2.user_id}`)
+  const gameSocket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
   await pong(client, {
     mode: 'tournament',
     room_id: match.room_id,
     host: isHost,
     player: playerNumber,
-  })
+  }, gameSocket)
 }
 
 function handleMatchEnded(content, state) {
