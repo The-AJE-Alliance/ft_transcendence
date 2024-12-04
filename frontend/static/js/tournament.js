@@ -14,7 +14,6 @@ export async function tournament(client, input) {
     user_id: input.user_id,
     tournament_id: input.tournament_id,
   }
-
   console.log(state)
   const controls = document.querySelector('.tournament-controls')
   if (state.host) {
@@ -23,7 +22,6 @@ export async function tournament(client, input) {
   else {
     controls.style.display = 'none'
   }
-
   client.socket.onopen = () => {
     console.log('Tournament WebSocket connected.')
     const initMessage = {
@@ -33,7 +31,6 @@ export async function tournament(client, input) {
     console.log(initMessage)
     client.socket.send(JSON.stringify(initMessage))
   }
-
   client.socket.onmessage = (event) => {
     console.log('Message received:', event.data)
     const data = JSON.parse(event.data)
@@ -50,11 +47,11 @@ export async function tournament(client, input) {
 
       case 'tournament_locked':
         state.tournamentHostId = data.content.host_user_id
-        handleTournamentLocked(data.content)
+        handleTournamentLocked(data.content, state)
         break
 
       case 'match_ready':
-        startMatch(data.content.match)
+        startMatch(data.content.match, state, client)
         break
 
       case 'match_result':
@@ -73,7 +70,7 @@ export async function tournament(client, input) {
         handleStartTournament()
         break
       case 'match_ended':
-        handleMatchEnded(data.content)
+        handleMatchEnded(data.content, state)
         break
       case 'unauthorized':
         client.socket.close()
@@ -84,16 +81,6 @@ export async function tournament(client, input) {
         console.log('Unknown message:', data.type)
     }
   }
-
-  function handleMatchResult(content) {
-    if (content.result === 'win') {
-      alert(`You won against ${content.opponent} !`)
-    }
-    else {
-      alert(`You lost to ${content.opponent}.`)
-    }
-  }
-
   // Lock tournament
   const lockTournamentBtn = document.getElementById('lock-tournament')
   client.router.addEvent(lockTournamentBtn, 'click', () => {
@@ -103,7 +90,6 @@ export async function tournament(client, input) {
       content: { user_id: state.user_id },
     }))
   })
-
   // Start tournament
   const startTournamentBtn = document.getElementById('start-tournament')
   client.router.addEvent(startTournamentBtn, 'click', () => {
@@ -113,87 +99,97 @@ export async function tournament(client, input) {
     }
     client.socket.send(JSON.stringify({ type: 'start_tournament' }))
   })
+}
 
-  function handleStartTournament() {
-    const tournamentMessage = document.getElementById('tournamentMessage')
-
-    tournamentMessage.textContent = `You'll be playing a match against XX in 5 seconds.`
-
-    setTimeout(() => {
-      tournamentMessage.textContent = `The match has started!`
-    }, 5000)
+function handleMatchResult(content) {
+  if (content.result === 'win') {
+    alert(`You won against ${content.opponent} !`)
   }
-
-  function handleTournamentLocked(content) {
-    state.isLocked = true
-    console.log('Tournament locked! Ready to start.')
-    if (content.ready) {
-      updateTournamentBracket(content.bracket)
-      document.getElementById('lock-tournament').disabled = true
-      document.getElementById('start-tournament').disabled = false
-    }
-    else {
-      alert(content.message)
-    }
+  else {
+    alert(`You lost to ${content.opponent}.`)
   }
+}
 
-  function startMatch(match) {
-    state.currentMatch = match
-    const localUserId = state.user_id
-    let playerNumber
-    let isHost = false
-    if (match.player1.user_id === localUserId) {
-      playerNumber = 1
-      isHost = true
-    }
-    else if (match.player2.user_id === localUserId) {
-      playerNumber = 2
-      isHost = false
-    }
-    else {
-      return
-    }
-    console.log(`Starting match: ${match.player1.user_id} vs ${match.player2.user_id}`)
-    pong(client, {
-      mode: 'tournament',
-      room_id: match.room_id,
-      host: isHost,
-      player: playerNumber,
-    })
+function handleStartTournament() {
+  const tournamentMessage = document.getElementById('tournamentMessage')
+
+  tournamentMessage.textContent = `You'll be playing a match against XX in 5 seconds.`
+
+  setTimeout(() => {
+    tournamentMessage.textContent = `The match has started!`
+  }, 5000)
+}
+
+function handleTournamentLocked(content, state) {
+  state.isLocked = true
+  console.log('Tournament locked! Ready to start.')
+  if (content.ready) {
+    updateTournamentBracket(content.bracket)
+    document.getElementById('lock-tournament').disabled = true
+    document.getElementById('start-tournament').disabled = false
   }
-
-  function handleMatchEnded(content) {
-    const { match } = content
-    // Mettre à jour le match correspondant dans state.matches
-    const matchIndex = state.matches.findIndex(m => m.room_id === match.room_id)
-    if (matchIndex !== -1) {
-      state.matches[matchIndex].winner = match.winner
-      updateTournamentBracket(state.matches)
-    }
-    // Vérifier si tous les matchs du round sont terminés
-    if (state.matches.every(m => m.winner)) {
-      // Tous les matchs du round sont terminés
-      console.log('All matches in the round are finished.')
-      // Attendre le prochain round ou terminer le tournoi
-    }
+  else {
+    alert(content.message)
   }
+}
 
-  function updateTournamentBracket(bracket) {
-    const bracketElement = document.getElementById('tournamentBracket')
-    bracketElement.innerHTML = ''
-    bracket.forEach((match, index) => {
-      const matchElement = document.createElement('div')
-      matchElement.innerHTML = `
+async function startMatch(match, state, client) {
+  state.currentMatch = match
+  const localUserId = state.user_id
+  let playerNumber
+  let isHost = false
+  if (match.player1.user_id === localUserId) {
+    playerNumber = 1
+    isHost = true
+  }
+  else if (match.player2.user_id === localUserId) {
+    playerNumber = 2
+    isHost = false
+  }
+  else {
+    return
+  }
+  console.log(`Starting match: ${match.player1.user_id} vs ${match.player2.user_id}`)
+  await pong(client, {
+    mode: 'tournament',
+    room_id: match.room_id,
+    host: isHost,
+    player: playerNumber,
+  })
+}
+
+function handleMatchEnded(content, state) {
+  const { match } = content
+  // Mettre à jour le match correspondant dans state.matches
+  const matchIndex = state.matches.findIndex(m => m.room_id === match.room_id)
+  if (matchIndex !== -1) {
+    state.matches[matchIndex].winner = match.winner
+    updateTournamentBracket(state.matches)
+  }
+  // Vérifier si tous les matchs du round sont terminés
+  if (state.matches.every(m => m.winner)) {
+    // Tous les matchs du round sont terminés
+    console.log('All matches in the round are finished.')
+    // Attendre le prochain round ou terminer le tournoi
+  }
+}
+
+function updateTournamentBracket(bracket) {
+  const bracketElement = document.getElementById('tournamentBracket')
+  bracketElement.innerHTML = ''
+  bracket.forEach((match, index) => {
+    const matchElement = document.createElement('div')
+    matchElement.innerHTML = `
         <p>Match ${index + 1}:</p>
         <p>${match.player1.nickname} vs ${match.player2.nickname}</p>
         <p>Gagnant: ${match.winner ? match.winner.nickname : 'En attente'}</p>
       `
-      bracketElement.appendChild(matchElement)
-    })
-  }
+    bracketElement.appendChild(matchElement)
+  })
+}
 
-  function handleTournamentEnd(winner) {
-    alert(content.message)
+function handleTournamentEnd(content) {
+  alert(content.message)
 }
 
 function greetTournament(client, state, data) {
