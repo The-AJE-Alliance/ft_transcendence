@@ -28,14 +28,18 @@ export async function chat(client) {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
     }).json()
+    const tournament = {
+      nickname: 'Tournament',
+      message: 'Hello, this is a kind reminder to attend your tournament game',
+    }
     friends.forEach((friend) => {
       friendNicknameToId.set(friend.nickname, friend.id)
       friendIdToNickname.set(friend.id, friend.nickname)
     })
-    renderFriends(friends, conversations)
+    renderFriends(friends, conversations, tournament) // ADD tournament
   }
 
-  function renderFriends(friends, conversations) {
+  function renderFriends(friends, conversations, tournament) {
     friendsList.innerHTML = ''
     friends.forEach((friend) => {
       const conversationWithUnreadMsg = conversations.find(conv => (conv.user1.id === client.id && conv.user2.id === friend.id
@@ -51,6 +55,14 @@ export async function chat(client) {
       client.router.addEvent(li, 'click', () => selectConversation(friend))
       friendsList.appendChild(li)
     })
+    // Render the "Tournament" friend
+    if (tournament) {
+      const li = document.createElement('li')
+      li.textContent = tournament.nickname
+      li.style.color = 'red'
+      client.router.addEvent(li, 'click', () => selectConversation(tournament))
+      friendsList.appendChild(li)
+    }
   }
   await loadFriends()
 
@@ -58,6 +70,12 @@ export async function chat(client) {
     if (client.socket) {
       client.socket.close()
       client.socket = null
+    }
+    if (friend.nickname === 'Tournament') {
+      renderMessages([{ sentFromUser: { nickname: 'Tournament' }, messageContent: friend.message }], 'Tournament')
+      updateFrontendReadStatus(friend.nickname, false)
+      selectedFriendId = null
+      return // No need to load messages for "Tournament"
     }
     document.getElementById('chat-user').textContent = friend.nickname
     selectedFriendId = friendNicknameToId.get(friend.nickname)
@@ -68,6 +86,7 @@ export async function chat(client) {
       if (response.is_blocked === false) {
         openWebSocket(response.id, selectedFriendNickname)
       }
+      loadFriends()
     }
     catch (error) {
       console.error('Error while loading the selected conversation:', error)
