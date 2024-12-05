@@ -36,6 +36,8 @@ class PongGame:
         self.queue = None
         self.task = None
         self.winner = None
+        self.consume_task = None
+        logger.info(f"PongGame initialized for room_id: {self.room_id}")
 
     async def start(self):
         try:
@@ -46,7 +48,8 @@ class PongGame:
             )
             self.queue = await self.channel.declare_queue(auto_delete=True)
             await self.queue.bind(self.exchange, "loop")
-            await self.consume_data()
+            self.consume_task = asyncio.create_task(self.consume_data())
+            # self.task = asyncio.create_task(self.game_loop())
         except Exception as e:
             logger.error(f"{str(e)}")
 
@@ -69,8 +72,28 @@ class PongGame:
         self.running = False
         if self.task:
             self.task.cancel()
-        await self.channel.close()
-        await self.connection.close()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                logger.info("Game loop task canceled.")
+        if self.consume_task:
+            self.consume_task.cancel()
+            try:
+                await self.consume_task
+            except asyncio.CancelledError:
+                logger.info("Consume data task canceled.")
+        if self.channel:
+            await self.channel.close()
+        if self.connection:
+            await self.connection.close()
+        logger.info(f"PongGame for room_id {self.room_id} has been stopped.")
+
+    # async def stop(self):
+    #    self.running = False
+    #    if self.task:
+    #        self.task.cancel()
+    #    await self.channel.close()
+    #    await self.connection.close()
 
     async def publish_game_state(self):
         data = {
@@ -84,9 +107,14 @@ class PongGame:
             },
         }
 
-        await self.exchange.publish(
-            aio_pika.Message(json.dumps(data).encode()), routing_key="players"
-        )
+        # await self.exchange.publish(
+        #    aio_pika.Message(json.dumps(data).encode()), routing_key="players"
+        # )
+        for player_id in [self.player1_id, self.player2_id]:
+            await self.exchange.publish(
+                aio_pika.Message(json.dumps(data).encode()),
+                routing_key=f"player-{player_id}",
+            )
 
     async def consume_data(self):
         async with self.queue.iterator() as iterator:
@@ -138,6 +166,7 @@ class PongGame:
                 response["content"]["ready"] = True
 
         if response["content"]["ready"]:
+            self.running = True
             self.task = asyncio.create_task(self.game_loop())
         await self.exchange.publish(
             aio_pika.Message(json.dumps(response).encode()), routing_key="players"
@@ -150,6 +179,9 @@ class PongGame:
         pad.y = min(max(pad.y + step, 0), 1 - pad.height)
 
     async def update_ball_position(self):
+        if not self.ball:
+            logger.error("Balle non initialisée. Impossible de mettre à jour.")
+            return
         self.ball.x += self.ball.velocity[0]
         self.ball.y += self.ball.velocity[1]
 
@@ -176,6 +208,9 @@ class PongGame:
             self.ball.x -= 0.005
 
     def check_collisions(self):
+        if not self.player1 or not self.player2:
+            logger.error("Player1 or Player2 is not initialized.")
+            return False, False, False, False
         if (
             self.ball.x - self.ball.radius <= self.player1.width
             and self.player1.y <= self.ball.y <= self.player1.y + self.player1.height
@@ -227,9 +262,15 @@ class PongGame:
                 "winner": self.winner,
             },
         }
-        await self.exchange.publish(
-            aio_pika.Message(json.dumps(data).encode()), routing_key="players"
-        )
+        # await self.exchange.publish(
+        #    aio_pika.Message(json.dumps(data).encode()), routing_key="players"
+        # )
+        for player_id in [self.player1_id, self.player2_id]:
+            if player_id:
+                await self.exchange.publish(
+                    aio_pika.Message(json.dumps(data).encode()),
+                    routing_key=f"player-{player_id}",
+                )
         if self.mode == "tournament" and self.tournament_id:
             winner_id = self.player1_id if self.winner == 1 else self.player2_id
             tournament_message = {

@@ -9,7 +9,9 @@ from asgiref.sync import sync_to_async
 from django.conf import settings
 from .models import PongUser
 
+
 logger = logging.getLogger(__name__)
+game_tasks = {}
 
 
 class TournamentManager:
@@ -17,9 +19,6 @@ class TournamentManager:
         self.tournament_id = tournament_id
         self.host_user_id = host_user_id
         self.started = False
-        logger.info(
-            f"TournamentManager instantiated with tournament_id: {self.tournament_id}"
-        )
         self.players = {}
         self.matches = []  # List of matches in the tournament
         self.current_match_index = -1  # Index of the current match
@@ -27,9 +26,11 @@ class TournamentManager:
         self.lock = False
         self.connection = None
         self.channel = None
-        self.exchange = None
         self.queue = None
         self.nb_players = 0
+        logger.info(
+            f"TournamentManager instantiated with tournament_id: {self.tournament_id}"
+        )
 
     async def start(self):
         try:
@@ -125,17 +126,52 @@ class TournamentManager:
 
         logger.info("Exiting setup_tournament")
 
-    async def remove_player(self, player):
-        if player in self.players:
-            del self.players[player]
-            await self.broadcast({"type": "player_left", "content": {"player": player}})
+    async def remove_player(self, player_id):
+        if player_id in self.players:
+            del self.players[player_id]
+            await self.broadcast(
+                {"type": "player_left", "content": {"player": player_id}}
+            )
+            for match in self.matches:
+                if (
+                    match["player1"]["user_id"] == player_id
+                    or match["player2"]["user_id"] == player_id
+                ):
+                    match["winner"] = (
+                        match["player2"]
+                        if match["player1"]["user_id"] == player_id
+                        else match["player1"]
+                    )
+                    await self.end_match(match["winner"]["user_id"], match["room_id"])
 
     ### Lock Tournament ###
     async def lock_tournament(self, content):
         user_id = content["user_id"]
-        self.host_user_id = user_id
+        logger.info(
+            f"Received lock_tournament from user {user_id} for tournament {self.tournament_id}"
+        )
+        # Vérifier si le tournoi est déjà verrouillé
+        if self.lock:
+            logger.warning(f"Tournament {self.tournament_id} is already locked.")
+            await self.send_player(
+                {
+                    "type": "tournament_locked",
+                    "content": {
+                        "ready": True,
+                        "bracket": self.matches,
+                        "message": "Tournament is already locked.",
+                        "host_user_id": self.host_user_id,
+                    },
+                },
+                user_id,
+            )
+            return
+        # self.host_user_id = user_id
+        if not self.host_user_id:
+            self.host_user_id = user_id
         player = self.players[user_id]
         if not player or not player.host:
+            logger.error(f"User {user_id} is not authorized to lock the tournament.")
             # TODO: is not host
             return
         if len(self.players) < 2:
@@ -163,6 +199,7 @@ class TournamentManager:
                 },
             }
         )
+        logger.info(f"Tournament {self.tournament_id} has been successfully locked.")
         # await self.send_player(
         #     {
         #         "type": "tournament_locked",
@@ -179,10 +216,13 @@ class TournamentManager:
         players_list = list(self.players.values())
         random.shuffle(players_list)  # Pour mélanger les joueurs
         self.matches = []
-        for i in range(0, len(players_list), 2):
+        for i in range(0, len(players_list) - 1, 2):
             player1 = players_list[i]
             player2 = players_list[i + 1]
-            # Convertir les objets Player en dictionnaires
+            if not player1 or not player2:
+                logger.error("Un des joueurs n'est pas correctement configuré.")
+                continue
+                # Convertir les objets Player en dictionnaires
             player1_dict = player1.to_dict()
             player2_dict = player2.to_dict()
             # Assigner l'hôte : on définit player1 comme hôte
@@ -195,9 +235,14 @@ class TournamentManager:
                 "room_id": f"match-{player1.user_id}-vs-{player2.user_id}",
             }
             self.matches.append(match)
+        if not self.matches:
+            logger.error("Aucun match n'a été généré. Vérifiez les joueurs.")
 
     async def start_round(self):
         for match in self.matches:
+            if not match["player1"] or not match["player2"]:
+                logger.error(f"Match invalide: {match}")
+                continue
             if match["winner"] is None:
                 match["room_id"] = (
                     f"match-{match['player1']['user_id']}-vs-{match['player2']['user_id']}"
@@ -211,6 +256,7 @@ class TournamentManager:
                         },
                     }
                 )
+        logger.info(f"Round commencé avec {len(self.matches)} matchs.")
 
     async def start_tournament(self):
         if self.started:
@@ -218,7 +264,11 @@ class TournamentManager:
             return
         self.started = True
         if not self.matches:
+            logger.error("Aucun match à démarrer.")
             return
+        logger.info(
+            f"Tournament {self.tournament_id} démarré avec {len(self.matches)} matchs."
+        )
         await self.broadcast(
             {
                 "type": "start_tournament",
@@ -341,13 +391,25 @@ class TournamentManager:
 
     async def broadcast(self, message):
         logger.info(
-            f"[TournamentManager] Broadcasting message: {json.dumps(message, indent=4)}"
+            f"[TournamentManager] Broadcasting to all: {json.dumps(message, indent=4)}"
         )
-        await self.exchange.publish(
-            aio_pika.Message(body=json.dumps(message).encode()), routing_key="players"
+        for player in self.players.values():
+            await self.send_player(message, player.user_id)  # Ordre Correct
+        # await self.exchange.publish(
+        #    aio_pika.Message(body=json.dumps(message).encode()), routing_key="players"
+        # )
+
+    async def send_to_players(self, players, message):
+        logger.info(
+            f"[TournamentManager] Sending to specific players {players}: {json.dumps(message, indent=4)}"
         )
+        for player_id in players:
+            await self.send_player(message, player_id)  # Ordre Correct
 
     async def send_player(self, message, user_id):
+        logger.info(
+            f"Sending message to player {user_id}: {json.dumps(message, indent=4)}"
+        )
         await self.exchange.publish(
             aio_pika.Message(body=json.dumps(message).encode()),
             routing_key=f"player-{user_id}",

@@ -87,6 +87,8 @@ export async function tournament(client, input) {
   const lockTournamentBtn = document.getElementById('lock-tournament')
   client.router.addEvent(lockTournamentBtn, 'click', () => {
     // client.socket.send(JSON.stringify({ type: 'lock_tournament', user_id: state.user_id }))
+    lockTournamentBtn.disabled = true
+    lockTournamentBtn.textContent = 'Locking...'
     client.socket.send(JSON.stringify({
       type: 'lock_tournament',
       content: { user_id: state.user_id },

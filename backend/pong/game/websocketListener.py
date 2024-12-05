@@ -10,10 +10,11 @@ from .pongGame import PongGame
 from .tournament import TournamentManager
 from .queueHandler import QueueHandler
 from .tournamentHandler import TournamentHandler
+from .tournament_registry import tournaments
+from .tournament_factory import get_or_create_tournament
 
 logger = logging.getLogger(__name__)
 game_tasks = {}
-tournaments = {}
 waiting_players = {}
 
 
@@ -46,7 +47,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
 
     async def setup_tournament(self, data):
         user = self.scope["user"]
-        if type(user) == AnonymousUser:
+        if isinstance(user, AnonymousUser):
             data["type"] = "unauthorized"
             await self.send(json.dumps(data))
             await self.close()
@@ -64,13 +65,15 @@ class WebsocketListener(AsyncWebsocketConsumer):
         if not self.tournament_id:
             logger.error("Tournament ID is None!")
             return
-        if self.tournament_id in tournaments:
-            self.tournament = tournaments[self.tournament_id]
-        else:
-            self.tournament = TournamentManager(self.tournament_id, self.user_id)
-            tournaments[self.tournament_id] = self.tournament
-            asyncio.create_task(self.tournament.start())
-
+        # if self.tournament_id in tournaments:
+        #    self.tournament = tournaments[self.tournament_id]
+        # else:
+        #    self.tournament = TournamentManager(self.tournament_id, self.user_id)
+        #    tournaments[self.tournament_id] = self.tournament
+        #    asyncio.create_task(self.tournament.start())
+        self.tournament = await get_or_create_tournament(
+            self.tournament_id, self.user_id
+        )
         self.queue_handler = TournamentHandler(self, self.tournament_id, self.user_id)
         await self.queue_handler.start(data)
         logger.info(
@@ -90,7 +93,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
         else:
             self.user_id = user.id
         self.room_id = content["room_id"]
-        if self.mode != "local" and type(user) is AnonymousUser:
+        if self.mode != "local" and isinstance(user, AnonymousUser):
             data["type"] = "unauthorized"
             await self.send(json.dumps(data))
             await self.close()
@@ -161,4 +164,5 @@ class WebsocketListener(AsyncWebsocketConsumer):
             await self.pong_game.stop()
             if self.room_id in game_tasks:
                 del game_tasks[self.room_id]
-        channels.exceptions.StopConsumer()
+        # channels.exceptions.StopConsumer()
+        await super().disconnect(close_code)

@@ -40,7 +40,7 @@ class TournamentHandler:
                 name=f"tournament-{self.tournament_id}-player-{self.user_id}",
                 auto_delete=False,
             )
-            await self.queue.bind(self.exchange, routing_key="players")
+            # await self.queue.bind(self.exchange, routing_key="players")
             await self.queue.bind(self.exchange, routing_key=f"player-{self.user_id}")
         except Exception as e:
             logger.error(f"Exception in TournamentHandler.setup: {str(e)}")
