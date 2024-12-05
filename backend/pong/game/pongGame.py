@@ -49,7 +49,6 @@ class PongGame:
             self.queue = await self.channel.declare_queue(auto_delete=True)
             await self.queue.bind(self.exchange, "loop")
             self.consume_task = asyncio.create_task(self.consume_data())
-            # self.task = asyncio.create_task(self.game_loop())
         except Exception as e:
             logger.error(f"{str(e)}")
 
@@ -107,14 +106,14 @@ class PongGame:
             },
         }
 
-        # await self.exchange.publish(
-        #    aio_pika.Message(json.dumps(data).encode()), routing_key="players"
-        # )
-        for player_id in [self.player1_id, self.player2_id]:
-            await self.exchange.publish(
-                aio_pika.Message(json.dumps(data).encode()),
-                routing_key=f"player-{player_id}",
-            )
+        await self.exchange.publish(
+            aio_pika.Message(json.dumps(data).encode()), routing_key="players"
+        )
+        # for player_id in [self.player1_id, self.player2_id]:
+        #     await self.exchange.publish(
+        #         aio_pika.Message(json.dumps(data).encode()),
+        #         routing_key=f"player-{player_id}",
+        #     )
 
     async def consume_data(self):
         async with self.queue.iterator() as iterator:
@@ -167,6 +166,7 @@ class PongGame:
 
         if response["content"]["ready"]:
             self.running = True
+            logger.info(f"Launching game {self.room_id}")
             self.task = asyncio.create_task(self.game_loop())
         await self.exchange.publish(
             aio_pika.Message(json.dumps(response).encode()), routing_key="players"
@@ -262,15 +262,15 @@ class PongGame:
                 "winner": self.winner,
             },
         }
-        # await self.exchange.publish(
-        #    aio_pika.Message(json.dumps(data).encode()), routing_key="players"
-        # )
-        for player_id in [self.player1_id, self.player2_id]:
-            if player_id:
-                await self.exchange.publish(
-                    aio_pika.Message(json.dumps(data).encode()),
-                    routing_key=f"player-{player_id}",
-                )
+        await self.exchange.publish(
+            aio_pika.Message(json.dumps(data).encode()), routing_key="players"
+        )
+        # for player_id in [self.player1_id, self.player2_id]:
+        #     if player_id:
+        #         await self.exchange.publish(
+        #             aio_pika.Message(json.dumps(data).encode()),
+        #             routing_key=f"player-{player_id}",
+        #         )
         if self.mode == "tournament" and self.tournament_id:
             winner_id = self.player1_id if self.winner == 1 else self.player2_id
             tournament_message = {

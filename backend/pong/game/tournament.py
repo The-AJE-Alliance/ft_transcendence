@@ -39,11 +39,11 @@ class TournamentManager:
             self.exchange = await self.channel.declare_exchange(
                 f"tournament-{self.tournament_id}",
                 ExchangeType.DIRECT,
-                auto_delete=False,
+                auto_delete=True,
             )
             self.queue = await self.channel.declare_queue(
                 name=f"tournament-{self.tournament_id}-manager",
-                auto_delete=False,
+                auto_delete=True,
             )
             await self.queue.bind(self.exchange, routing_key="tournament")
             asyncio.create_task(self.consume_data())
@@ -150,6 +150,11 @@ class TournamentManager:
         logger.info(
             f"Received lock_tournament from user {user_id} for tournament {self.tournament_id}"
         )
+        player = self.players[user_id]
+        if not player or user_id != self.host_user_id:
+            logger.error(f"User {user_id} is not authorized to lock the tournament.")
+            # TODO: is not host
+            return
         # Vérifier si le tournoi est déjà verrouillé
         if self.lock:
             logger.warning(f"Tournament {self.tournament_id} is already locked.")
@@ -165,14 +170,6 @@ class TournamentManager:
                 },
                 user_id,
             )
-            return
-        # self.host_user_id = user_id
-        if not self.host_user_id:
-            self.host_user_id = user_id
-        player = self.players[user_id]
-        if not player or not player.host:
-            logger.error(f"User {user_id} is not authorized to lock the tournament.")
-            # TODO: is not host
             return
         if len(self.players) < 2:
             await self.send_player(
@@ -200,17 +197,6 @@ class TournamentManager:
             }
         )
         logger.info(f"Tournament {self.tournament_id} has been successfully locked.")
-        # await self.send_player(
-        #     {
-        #         "type": "tournament_locked",
-        #         "content": {
-        #             "ready": True,
-        #             "bracket": self.matches,
-        #             "message": "Tournament is locked and brackets are generated.",
-        #         },
-        #     },
-        #     user_id,
-        # )
 
     def generate_bracket(self):
         players_list = list(self.players.values())
@@ -393,18 +379,9 @@ class TournamentManager:
         logger.info(
             f"[TournamentManager] Broadcasting to all: {json.dumps(message, indent=4)}"
         )
-        for player in self.players.values():
-            await self.send_player(message, player.user_id)  # Ordre Correct
-        # await self.exchange.publish(
-        #    aio_pika.Message(body=json.dumps(message).encode()), routing_key="players"
-        # )
-
-    async def send_to_players(self, players, message):
-        logger.info(
-            f"[TournamentManager] Sending to specific players {players}: {json.dumps(message, indent=4)}"
+        await self.exchange.publish(
+            aio_pika.Message(body=json.dumps(message).encode()), routing_key="players"
         )
-        for player_id in players:
-            await self.send_player(message, player_id)  # Ordre Correct
 
     async def send_player(self, message, user_id):
         logger.info(
