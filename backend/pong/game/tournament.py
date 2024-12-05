@@ -179,7 +179,7 @@ class TournamentManager:
         players_list = list(self.players.values())
         random.shuffle(players_list)  # Pour mélanger les joueurs
         self.matches = []
-        for i in range(0, len(players_list) - 1, 2):
+        for i in range(0, len(players_list), 2):
             player1 = players_list[i]
             player2 = players_list[i + 1]
             # Convertir les objets Player en dictionnaires
@@ -253,20 +253,23 @@ class TournamentManager:
         if len(winners) == 1:
             await self.end_tournament(winners[0])
             return
-        # Générer les nouveaux matchs pour le prochain round
-        self.matches = [
-            {
-                "player1": winners[i],
-                "player2": winners[i + 1],
+        # Générer le match final
+        if len(winners) == 2:
+            player1 = {**winners[0], "host": True}
+            player2 = {**winners[1], "host": False}
+            final_match = {
+                "player1": player1,
+                "player2": player2,
                 "winner": None,
-                "room_id": f"match-{winners[i]['user_id']}-vs-{winners[i + 1]['user_id']}",
+                "room_id": f"match-{player1['user_id']}-vs-{player2['user_id']}",
             }
-            for i in range(0, len(winners) - 1, 2)
-        ]
-        await self.broadcast(
-            {"type": "tournament_update", "content": {"bracket": self.matches}}
-        )
-        await self.start_round()
+            self.matches = [final_match]
+            await self.broadcast(
+                {"type": "tournament_update", "content": {"bracket": self.matches}}
+            )
+            await self.start_round()
+        else:
+            logger.error("Unexpected number of winners. Tournament cannot proceed.")
 
     async def send_match_result(self, match):
         player1_id = match["player1"]["user_id"]
@@ -309,9 +312,6 @@ class TournamentManager:
             logger.error(f"No match found with room_id {match_id}")
             return
         await self.send_match_result(current_match)
-        # Vérifier si tous les matchs du round sont terminés
-        if all(m["winner"] is not None for m in self.matches):
-            await self.prepare_next_round()
         await self.broadcast(
             {
                 "type": "match_ended",
@@ -321,6 +321,9 @@ class TournamentManager:
                 },
             }
         )
+        # Vérifier si tous les matchs du round sont terminés
+        if all(m["winner"] is not None for m in self.matches):
+            await self.prepare_next_round()
         # await self.start_next_match()
 
     async def end_tournament(self, final_winner):
