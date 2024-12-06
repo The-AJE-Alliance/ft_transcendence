@@ -5,18 +5,22 @@ import random
 
 import aio_pika
 from aio_pika import ExchangeType
+from asgiref.sync import sync_to_async
 from django.conf import settings
+
+from game.models import PongUser
 
 logger = logging.getLogger(__name__)
 
 
 class PongGame:
-    def __init__(self, room_id, mode):
+    def __init__(self, room_id, mode, tournament_id=None):
         self.room_id = room_id
         self.mode = mode
         self.timer = 2
         self.running = False
         self.ball = self.Ball()
+        self.tournament_id = tournament_id
         self.player1 = None
         self.player2 = None
         self.max_score = 5
@@ -30,6 +34,9 @@ class PongGame:
         self.exchange = None
         self.queue = None
         self.task = None
+        self.winner = None
+        self.consume_task = None
+        logger.info(f"PongGame initialized for room_id: {self.room_id}")
 
     async def start(self):
         try:
@@ -40,7 +47,7 @@ class PongGame:
             )
             self.queue = await self.channel.declare_queue(auto_delete=True)
             await self.queue.bind(self.exchange, "loop")
-            await self.consume_data()
+            self.consume_task = asyncio.create_task(self.consume_data())
         except Exception as e:
             logger.error(f"{str(e)}")
 
@@ -63,8 +70,21 @@ class PongGame:
         self.running = False
         if self.task:
             self.task.cancel()
-        await self.channel.close()
-        await self.connection.close()
+            try:
+                await self.task
+            except asyncio.CancelledError:
+                logger.info("Game loop task canceled.")
+        if self.consume_task:
+            self.consume_task.cancel()
+            try:
+                await self.consume_task
+            except asyncio.CancelledError:
+                logger.info("Consume data task canceled.")
+        if self.channel:
+            await self.channel.close()
+        if self.connection:
+            await self.connection.close()
+        logger.info(f"PongGame for room_id {self.room_id} has been stopped.")
 
     async def publish_game_state(self):
         data = {
@@ -81,6 +101,11 @@ class PongGame:
         await self.exchange.publish(
             aio_pika.Message(json.dumps(data).encode()), routing_key="players"
         )
+        # for player_id in [self.player1_id, self.player2_id]:
+        #     await self.exchange.publish(
+        #         aio_pika.Message(json.dumps(data).encode()),
+        #         routing_key=f"player-{player_id}",
+        #     )
 
     async def consume_data(self):
         async with self.queue.iterator() as iterator:
@@ -96,26 +121,51 @@ class PongGame:
             self.update_player_position(data["content"])
 
     async def setup(self, content):
+        logger.info(f"Player {content['player']} setup received.")
         response = {"type": "setup", "content": {"ready": False, "timer": self.timer}}
         if self.running or content["mode"] != self.mode:
-            pass  # TODO: problem
+            # pass  # TODO: problem
+            logger.error(
+                f"Cannot start game: running={self.running}, content['mode']={content['mode']}, self.mode={self.mode}"
+            )
+            return
 
-        logger.error(self.mode)
+        logger.info(f"Game mode: {self.mode}")
 
         if self.mode == "local":
-            self.player1 = self.Pad(True)
-            self.player2 = self.Pad(False)
+            self.player1 = await self.Player.create(True)
+            self.player2 = await self.Player.create(False)
             response["content"]["ready"] = True
         else:
             player = content["player"]
+            user_id = content.get("user_id")
             if player in [1, 2]:
                 player_attr = f"player{player}"
-                if not getattr(self, player_attr):
-                    setattr(self, player_attr, self.Pad(player == 1))
+                if getattr(self, player_attr) is None or not isinstance(
+                    getattr(self, player_attr), self.Player
+                ):
+                    setattr(
+                        self,
+                        player_attr,
+                        await self.Player.create(player == 1, user_id=user_id),
+                    )
+            else:
+                # Gérer les numéros de joueur invalides
+                logger.error(f"Invalid player number: {player}")
+                return
             if self.player1 and self.player2:
                 response["content"]["ready"] = True
 
         if response["content"]["ready"]:
+            self.running = True
+            response["content"]["nicks"] = {}
+            response["content"]["nicks"]["player1"] = (
+                self.player1.nickname if self.player1.nickname else "Player 1"
+            )
+            response["content"]["nicks"]["player2"] = (
+                self.player2.nickname if self.player2.nickname else "Player 2"
+            )
+            logger.info(f"Launching game {self.room_id}")
             self.task = asyncio.create_task(self.game_loop())
         await self.exchange.publish(
             aio_pika.Message(json.dumps(response).encode()), routing_key="players"
@@ -128,6 +178,9 @@ class PongGame:
         pad.y = min(max(pad.y + step, 0), 1 - pad.height)
 
     async def update_ball_position(self):
+        if not self.ball:
+            logger.error("Balle non initialisée. Impossible de mettre à jour.")
+            return
         self.ball.x += self.ball.velocity[0]
         self.ball.y += self.ball.velocity[1]
 
@@ -154,6 +207,9 @@ class PongGame:
             self.ball.x -= 0.005
 
     def check_collisions(self):
+        if not self.player1 or not self.player2:
+            logger.error("Player1 or Player2 is not initialized.")
+            return False, False, False, False
         if (
             self.ball.x - self.ball.radius <= self.player1.width
             and self.player1.y <= self.ball.y <= self.player1.y + self.player1.height
@@ -197,17 +253,40 @@ class PongGame:
     async def end_game(self):
         self.running = False
         self.ball.y = 0.5
+        self.winner = 1 if self.player1_score >= self.max_score else 2
+
+        if self.mode == "tournament" and self.tournament_id:
+            winner_id = (
+                self.player1.user_id if self.winner == 1 else self.player2.user_id
+            )
+            tournament_message = {
+                "type": "end_match",
+                "content": {
+                    "winner_id": winner_id,
+                    "match_id": self.room_id,
+                },
+            }
+            # Publier le message au TournamentManager
+            tournament_exchange_name = f"tournament-{self.tournament_id}"
+            tournament_exchange = await self.channel.declare_exchange(
+                tournament_exchange_name, ExchangeType.DIRECT, auto_delete=True
+            )
+            await tournament_exchange.publish(
+                aio_pika.Message(json.dumps(tournament_message).encode()),
+                routing_key="tournament",
+            )
+        # TODO: update to db if remote
+
         await self.publish_game_state()
         data = {
             "type": "end",
             "content": {
-                "winner": 1 if self.player1_score >= self.max_score else 2,
+                "winner": self.winner,
             },
         }
         await self.exchange.publish(
             aio_pika.Message(json.dumps(data).encode()), routing_key="players"
         )
-        # TODO: update to db if remote
 
     async def reset_game(self):
         self.ball.reset()
@@ -215,9 +294,19 @@ class PongGame:
         self.player2.reset()
         await self.queue.purge()
 
-    class Pad:
-        def __init__(self, left, width=0.02, height=0.2, color="white"):
+    class Player:
+        def __init__(
+            self,
+            left,
+            width=0.02,
+            height=0.2,
+            color="white",
+            user_id=None,
+            nickname=None,
+        ):
             self.left = left
+            self.user_id = user_id
+            self.nickname = nickname
             self.color = color
             self.width = width
             self.height = height
@@ -226,6 +315,15 @@ class PongGame:
             self.step = None
             self.move = None
             self.reset(width=width, height=height)
+
+        @classmethod
+        async def create(cls, left, user_id=None):
+            if user_id:
+                user = await sync_to_async(PongUser.objects.get)(id=user_id)
+                nickname = user.nickname
+            else:
+                nickname = None
+            return cls(left, user_id=user_id, nickname=nickname)
 
         def reset(self, width=0.02, height=0.2):
             self.width = width

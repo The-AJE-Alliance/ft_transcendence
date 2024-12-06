@@ -13,7 +13,7 @@ def serialize_user(instance):
     return {
         "id": instance.id,
         "username": instance.username,
-        "nickname": instance.username,
+        "nickname": instance.nickname,
         "is_online": instance.is_online,
         "friends": list(instance.friends.values_list("id", flat=True)),
     }

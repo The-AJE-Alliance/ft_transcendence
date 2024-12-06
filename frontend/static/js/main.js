@@ -13,6 +13,7 @@ import { choosePongMode, joinGame, localGame, remotePong, remoteSetup } from './
 import { profile } from './profile.js'
 import { register } from './register.js'
 import Router from './router.js'
+import { joinTournament, remoteTournament, tournamentSetup } from './tournament-setup.js'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import '../css/styles.css'
@@ -49,6 +50,10 @@ router.get('/pong/remote', remotePong)
 router.get('/pong/remote/setup', remoteSetup)
 router.get('/pong/remote/join/:id', (client, params) => joinGame(client, params.id))
 router.get('/pong/local', localGame)
+
+router.get('/pong/tournament', remoteTournament)
+router.get('/pong/tournament/setup', tournamentSetup)
+router.get('/pong/tournament/join/:id', (client, params) => joinTournament(client, params.id))
 
 router.get('/profile/edit', editProfile)
 router.get('/friends', friends)

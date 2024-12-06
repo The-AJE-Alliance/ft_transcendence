@@ -25,19 +25,22 @@ export async function remoteSetup(client) {
 
   client.app.innerHTML = pongRemotePage
   const createGameBtn = document.getElementById('host-create-btn')
+  const copyLinkBtn = document.getElementById('host-copy-btn')
 
   client.router.addEvent(createGameBtn, 'click', async () => {
-    client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
+    const gameSocket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
 
     const state = {
       mode: 'remote',
       player: 1,
       host: true,
       room_id: globalThis.crypto.randomUUID().split('-')[0],
+      user_id: client.id,
     }
     createGameBtn.classList.add('d-none')
+    copyLinkBtn.classList.remove('d-none')
 
-    await pong(client, state)
+    await pong(client, state, gameSocket)
   })
 }
 
@@ -48,22 +51,23 @@ export async function joinGame(client, uuid) {
     return
   }
 
-  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
+  const gameSocket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
 
   const state = {
     mode: 'remote',
     player: 2,
     host: false,
     room_id: uuid,
+    user_id: client.id,
   }
 
   // TODO: potentially create a waiting page for player2
 
-  await pong(client, state)
+  await pong(client, state, gameSocket)
 }
 
 export async function localGame(client) {
-  client.socket = new WebSocket(`wss://pong.api.transcendence.fr/ws/`)
+  const gameSocket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
 
   const state = {
     mode: 'local',
@@ -72,5 +76,5 @@ export async function localGame(client) {
     room_id: globalThis.crypto.randomUUID(),
   }
 
-  await pong(client, state)
+  await pong(client, state, gameSocket)
 }
