@@ -11,7 +11,6 @@ from .models import PongUser
 
 
 logger = logging.getLogger(__name__)
-game_tasks = {}
 
 
 class TournamentManager:

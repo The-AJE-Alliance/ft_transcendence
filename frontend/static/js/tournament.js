@@ -169,6 +169,9 @@ async function startMatch(match, state, client) {
       isHost = false
     }
   }
+  if (!isHost)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
   console.log(`Starting match: ${match.player1.user_id} vs ${match.player2.user_id}`)
   const gameSocket = new WebSocket(`wss://pong.api.transcendence.fr/ws/?token=${client.token}`)
   await pong(client, {

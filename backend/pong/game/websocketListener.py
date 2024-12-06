@@ -1,21 +1,19 @@
-from email.policy import default
 import json
 import asyncio
-import channels.exceptions
 import logging
+from asyncio import sleep
+
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 
 from .pongGame import PongGame
-from .tournament import TournamentManager
 from .queueHandler import QueueHandler
+from .tournament import TournamentManager
 from .tournamentHandler import TournamentHandler
-from .tournament_registry import tournaments
-from .tournament_factory import get_or_create_tournament
 
 logger = logging.getLogger(__name__)
 game_tasks = {}
-waiting_players = {}
+tournament_tasks = {}
 
 
 class WebsocketListener(AsyncWebsocketConsumer):
@@ -65,15 +63,12 @@ class WebsocketListener(AsyncWebsocketConsumer):
         if not self.tournament_id:
             logger.error("Tournament ID is None!")
             return
-        # if self.tournament_id in tournaments:
-        #    self.tournament = tournaments[self.tournament_id]
-        # else:
-        #    self.tournament = TournamentManager(self.tournament_id, self.user_id)
-        #    tournaments[self.tournament_id] = self.tournament
-        #    asyncio.create_task(self.tournament.start())
-        self.tournament = await get_or_create_tournament(
-            self.tournament_id, self.user_id
-        )
+        if self.tournament_id in tournament_tasks:
+            self.tournament = tournament_tasks[self.tournament_id]
+        else:
+            self.tournament = TournamentManager(self.tournament_id, self.user_id)
+            tournament_tasks[self.tournament_id] = self.tournament
+            asyncio.create_task(self.tournament.start())
         self.queue_handler = TournamentHandler(self, self.tournament_id, self.user_id)
         await self.queue_handler.start(data)
         logger.info(
@@ -93,7 +88,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
         else:
             self.user_id = user.id
         self.room_id = content["room_id"]
-        if self.mode != "local" and isinstance(user, AnonymousUser):
+        if self.mode != "local" and not self.user_id:
             data["type"] = "unauthorized"
             await self.send(json.dumps(data))
             await self.close()
@@ -105,56 +100,12 @@ class WebsocketListener(AsyncWebsocketConsumer):
                     self.room_id,
                     self.mode,
                     tournament_id=content.get("tournament_id"),
-                    player1_id=self.user_id,
                 )
-                game_tasks[self.room_id] = self.pong_game
-                asyncio.create_task(self.pong_game.start())
-                # Vérifier s'il y a des joueurs en attente pour ce room_id
-                if self.room_id in waiting_players:
-                    for waiting_player, waiting_data in waiting_players[self.room_id]:
-                        # Assigner le jeu au joueur en attente
-                        waiting_player.pong_game = self.pong_game
-                        if not self.pong_game.player2_id:
-                            self.pong_game.player2_id = waiting_player.user_id
-                        # Commencer le gestionnaire de queue pour le joueur en attente
-                        waiting_player.queue_handler = QueueHandler(
-                            waiting_player, self.room_id, 2
-                        )
-                        await waiting_player.queue_handler.start(waiting_data)
-                    # Supprimer les joueurs en attente pour ce room_id
-                    del waiting_players[self.room_id]
-                # Commencer le gestionnaire de queue pour le hôte
-                self.queue_handler = QueueHandler(self, self.room_id, 1)
-                await self.queue_handler.start(data)
-            else:
-                logger.warning(f"Game with room_id {self.room_id} already exists.")
-                self.pong_game = game_tasks[self.room_id]
-                self.queue_handler = QueueHandler(self, self.room_id, 1)
-                await self.queue_handler.start(data)
-        else:
-            if self.room_id in game_tasks:
-                self.pong_game = game_tasks[self.room_id]
-                if not self.pong_game.player2_id:
-                    self.pong_game.player2_id = self.user_id
-                self.queue_handler = QueueHandler(self, self.room_id, 2)
-                await self.queue_handler.start(data)
-            else:
-                logger.error(f"No game found with room_id {self.room_id}")
-                if self.room_id not in waiting_players:
-                    waiting_players[self.room_id] = []
-                waiting_players[self.room_id].append((self, data))
-                # Envoyer un message au client pour l'informer d'attendre
-                await self.send(
-                    json.dumps(
-                        {
-                            "type": "waiting_for_host",
-                            "content": {
-                                "message": "Waiting for the host to start the game."
-                            },
-                        }
-                    )
-                )
-                return
+                game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
+
+        self.queue_handler = QueueHandler(self, self.room_id, 1 if self.host else 2)
+        await sleep(1 / 2)
+        await self.queue_handler.start(data)
 
     async def disconnect(self, close_code):
         logger.warning("Client déconnecté")
@@ -164,5 +115,4 @@ class WebsocketListener(AsyncWebsocketConsumer):
             await self.pong_game.stop()
             if self.room_id in game_tasks:
                 del game_tasks[self.room_id]
-        # channels.exceptions.StopConsumer()
         await super().disconnect(close_code)
