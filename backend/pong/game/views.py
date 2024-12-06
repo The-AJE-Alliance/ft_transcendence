@@ -16,5 +16,5 @@ class PongUserViewSet(viewsets.ReadOnlyModelViewSet):
     def history(self, request, pk=None):
         user = self.get_object()
         matchs = user.matchs
-        serializer = MatchSerializer(matchs, many=True, context={"request": request})
+        serializer = MatchSerializer(matchs, many=True, context={"user": user})
         return Response(serializer.data)

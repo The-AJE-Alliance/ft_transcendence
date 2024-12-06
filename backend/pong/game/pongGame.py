@@ -8,7 +8,7 @@ from aio_pika import ExchangeType
 from asgiref.sync import sync_to_async
 from django.conf import settings
 
-from game.models import PongUser
+from game.models import Match, PongUser
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +275,8 @@ class PongGame:
                 aio_pika.Message(json.dumps(tournament_message).encode()),
                 routing_key="tournament",
             )
-        # TODO: update to db if remote
+        if self.mode != "local":
+            await self.update_db()
 
         await self.publish_game_state()
         data = {
@@ -287,6 +288,29 @@ class PongGame:
         await self.exchange.publish(
             aio_pika.Message(json.dumps(data).encode()), routing_key="players"
         )
+
+    async def update_db(self):
+        logger.info("[PONG] updating match database...")
+
+        user1 = await sync_to_async(PongUser.objects.get)(id=self.player1.user_id)
+        user2 = await sync_to_async(PongUser.objects.get)(id=self.player2.user_id)
+        winner = user1 if self.winner == 1 else user2
+        loser = user2 if self.winner == 1 else user1
+
+        setattr(winner, "wins", winner.wins + 1)
+        setattr(loser, "loss", loser.loss + 1)
+        match = Match()
+        match.player1 = user1
+        match.player2 = user2
+        match.winner = winner
+        match.score_player1 = self.player1_score
+        match.score_player2 = self.player2_score
+
+        await sync_to_async(match.save)()
+        await sync_to_async(user1.save)()
+        await sync_to_async(user2.save)()
+
+        logger.info("[PONG] match database updated.")
 
     async def reset_game(self):
         self.ball.reset()
