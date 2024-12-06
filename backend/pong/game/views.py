@@ -1,5 +1,4 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.db.models import Q
 from rest_framework.permissions import IsAuthenticated
 from .serializers import MatchSerializer, PongUserSerializer
 from .models import Match, PongUser
@@ -13,24 +12,10 @@ class PongUserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PongUserSerializer
 
 
-class MatchHistoryView(APIView):
+class MatchHistoryView(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
+    serializer_class = MatchSerializer
 
-    def get(self, request):
-        matches = Match.objects.filter(player1=request.user) | Match.objects.filter(
-            player2=request.user
-        )
-        matches = matches.order_by("-created_at")
-        serializer = MatchSerializer(matches, many=True, context={"request": request})
-        return Response(serializer.data)
-
-    def create_match(player1, player2, winner, score_player1, score_player2):
-        match = Match.objects.create(
-            player1=player1,
-            player2=player2,
-            winner=winner,
-            score_player1=score_player1,
-            score_player2=score_player2,
-        )
-        match.save()
-        return match
+    def get_queryset(self):
+        user = self.request.user
+        return Match.objects.filter(Q(player1=user) | Q(player2=user))

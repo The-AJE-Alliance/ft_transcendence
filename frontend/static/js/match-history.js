@@ -1,10 +1,11 @@
+import ky from 'ky'
 import matchHistoryPage from '../pages/match-history.html?raw'
 
 export async function matchHistory(client) {
   client.app.innerHTML = matchHistoryPage
 
   try {
-    const history = await ky.get(`https://auth.api.transcendence.fr/users/${client.userId}/history/`, {
+    const history = await ky.get(`https://auth.api.transcendence.fr/users/me/history/`, {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
     }).json()
