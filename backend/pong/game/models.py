@@ -47,7 +47,7 @@ class Match(models.Model):
     winner = models.ForeignKey(
         PongUser,
         related_name="matches_won",
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
     )
     score_player1 = models.IntegerField(default=0)
     score_player2 = models.IntegerField(default=0)

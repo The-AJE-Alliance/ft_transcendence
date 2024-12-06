@@ -1,13 +1,17 @@
 import ky from 'ky'
 import matchHistoryPage from '../pages/match-history.html?raw'
+import { updateNavbar } from './navbar'
 
 export async function matchHistory(client) {
   client.app.innerHTML = matchHistoryPage
+  if (!await client.isLoggedIn())
+    client.router.redirect('/sign-in')
+  await updateNavbar(client)
 
   try {
-    const history = await ky.get(`https://auth.api.transcendence.fr/users/me/history/`, {
-      headers: { Authorization: `Bearer ${client.token}` },
-      credentials: 'include',
+    const history = await ky.get(`https://pong.api.transcendence.fr/users/${client.id}/history/`, {
+      // headers: { Authorization: `Bearer ${client.token}` },
+      // credentials: 'include',
     }).json()
 
     const matchHistoryList = document.getElementById('match-history-list')

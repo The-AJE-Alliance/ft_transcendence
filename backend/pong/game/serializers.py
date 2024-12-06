@@ -2,7 +2,6 @@ from rest_framework import serializers
 from .models import Match, PongUser
 
 
-# Serializers define the API representation.
 class PongUserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = PongUser
@@ -32,16 +31,16 @@ class MatchSerializer(serializers.ModelSerializer):
         ]
 
     def get_opponent(self, obj):
-        request_user = self.context["request"].user
-        return (
-            obj.player2.username
-            if obj.player1 == request_user
-            else obj.player1.username
-        )
+        user = self.context.get("user")
+        if not user:
+            return None
+        return obj.player2.nickname if obj.player1 == user else obj.player1.nickname
 
     def get_result(self, obj):
-        request_user = self.context["request"].user
-        if obj.winner == request_user:
+        user = self.context.get("user")
+        if not user:
+            return None
+        if obj.winner == user:
             return "Win"
         elif obj.winner is None:
             return "Draw"
