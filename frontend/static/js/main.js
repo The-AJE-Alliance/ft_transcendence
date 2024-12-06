@@ -7,6 +7,7 @@ import Client from './client.js'
 import { editProfile } from './edit-profile.js'
 import { friendprofile } from './friendprofile'
 import { friends } from './friends.js'
+import { matchHistory } from './match-history.js'
 import { updateNavbar } from './navbar.js'
 import { choosePongMode, joinGame, localGame, remotePong, remoteSetup } from './pong-setup.js'
 import { profile } from './profile.js'
@@ -52,3 +53,4 @@ router.get('/pong/local', localGame)
 router.get('/profile/edit', editProfile)
 router.get('/friends', friends)
 router.get('/settings', settings)
+router.get('/match-history', matchHistory)
