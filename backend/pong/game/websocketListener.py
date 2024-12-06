@@ -67,8 +67,9 @@ class WebsocketListener(AsyncWebsocketConsumer):
             self.tournament = tournament_tasks[self.tournament_id]
         else:
             self.tournament = TournamentManager(self.tournament_id, self.user_id)
-            tournament_tasks[self.tournament_id] = self.tournament
-            asyncio.create_task(self.tournament.start())
+            tournament_tasks[self.tournament_id] = asyncio.create_task(
+                self.tournament.start()
+            )
         self.queue_handler = TournamentHandler(self, self.tournament_id, self.user_id)
         await self.queue_handler.start(data)
         logger.info(
@@ -115,4 +116,8 @@ class WebsocketListener(AsyncWebsocketConsumer):
             await self.pong_game.stop()
             if self.room_id in game_tasks:
                 del game_tasks[self.room_id]
+        if self.tournament:
+            await self.tournament.stop()
+            if self.tournament_id in tournament_tasks:
+                del tournament_tasks[self.tournament_id]
         await super().disconnect(close_code)

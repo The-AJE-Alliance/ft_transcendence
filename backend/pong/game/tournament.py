@@ -26,6 +26,7 @@ class TournamentManager:
         self.connection = None
         self.channel = None
         self.queue = None
+        self.consume_task = None
         self.nb_players = 0
         logger.info(
             f"TournamentManager instantiated with tournament_id: {self.tournament_id}"
@@ -45,9 +46,21 @@ class TournamentManager:
                 auto_delete=True,
             )
             await self.queue.bind(self.exchange, routing_key="tournament")
-            asyncio.create_task(self.consume_data())
+            self.consume_task = asyncio.create_task(self.consume_data())
         except Exception as e:
             logger.error(f"Exception in tournamentManager.start: {e}", exc_info=True)
+
+    async def stop(self):
+        if self.consume_task:
+            self.consume_task.cancel()
+            try:
+                await self.consume_task
+            except asyncio.CancelledError:
+                logger.info("Consume data task canceled.")
+        if self.channel:
+            await self.channel.close()
+        if self.connection:
+            await self.connection.close()
 
     async def consume_data(self):
         try:
@@ -373,6 +386,8 @@ class TournamentManager:
                 },
             }
         )
+
+        await self.stop()
 
     async def broadcast(self, message):
         logger.info(

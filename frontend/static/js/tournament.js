@@ -86,7 +86,6 @@ export async function tournament(client, input) {
   // Lock tournament
   const lockTournamentBtn = document.getElementById('lock-tournament')
   client.router.addEvent(lockTournamentBtn, 'click', () => {
-    // client.socket.send(JSON.stringify({ type: 'lock_tournament', user_id: state.user_id }))
     lockTournamentBtn.disabled = true
     lockTournamentBtn.textContent = 'Locking...'
     client.socket.send(JSON.stringify({
@@ -131,7 +130,6 @@ function handleTournamentLocked(content, state) {
   if (content.ready) {
     content.bracket.forEach((match) => {
       if (!match.player1.host && !match.player2.host) {
-        // Assignons l'hôte au premier joueur
         match.player1.host = true
         match.player2.host = false
       }

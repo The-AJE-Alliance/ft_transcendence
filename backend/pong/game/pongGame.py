@@ -5,7 +5,10 @@ import random
 
 import aio_pika
 from aio_pika import ExchangeType
+from asgiref.sync import sync_to_async
 from django.conf import settings
+
+from game.models import PongUser
 
 logger = logging.getLogger(__name__)
 
@@ -83,13 +86,6 @@ class PongGame:
             await self.connection.close()
         logger.info(f"PongGame for room_id {self.room_id} has been stopped.")
 
-    # async def stop(self):
-    #    self.running = False
-    #    if self.task:
-    #        self.task.cancel()
-    #    await self.channel.close()
-    #    await self.connection.close()
-
     async def publish_game_state(self):
         data = {
             "type": "state",
@@ -137,8 +133,8 @@ class PongGame:
         logger.info(f"Game mode: {self.mode}")
 
         if self.mode == "local":
-            self.player1 = self.Pad(True)
-            self.player2 = self.Pad(False)
+            self.player1 = await self.Player.create(True)
+            self.player2 = await self.Player.create(False)
             response["content"]["ready"] = True
         else:
             player = content["player"]
@@ -146,9 +142,13 @@ class PongGame:
             if player in [1, 2]:
                 player_attr = f"player{player}"
                 if getattr(self, player_attr) is None or not isinstance(
-                    getattr(self, player_attr), self.Pad
+                    getattr(self, player_attr), self.Player
                 ):
-                    setattr(self, player_attr, self.Pad(player == 1, user_id=user_id))
+                    setattr(
+                        self,
+                        player_attr,
+                        await self.Player.create(player == 1, user_id=user_id),
+                    )
             else:
                 # Gérer les numéros de joueur invalides
                 logger.error(f"Invalid player number: {player}")
@@ -158,6 +158,13 @@ class PongGame:
 
         if response["content"]["ready"]:
             self.running = True
+            response["content"]["nicks"] = {}
+            response["content"]["nicks"]["player1"] = (
+                self.player1.nickname if self.player1.nickname else "Player 1"
+            )
+            response["content"]["nicks"]["player2"] = (
+                self.player2.nickname if self.player2.nickname else "Player 2"
+            )
             logger.info(f"Launching game {self.room_id}")
             self.task = asyncio.create_task(self.game_loop())
         await self.exchange.publish(
@@ -287,10 +294,19 @@ class PongGame:
         self.player2.reset()
         await self.queue.purge()
 
-    class Pad:
-        def __init__(self, left, width=0.02, height=0.2, color="white", user_id=None):
+    class Player:
+        def __init__(
+            self,
+            left,
+            width=0.02,
+            height=0.2,
+            color="white",
+            user_id=None,
+            nickname=None,
+        ):
             self.left = left
             self.user_id = user_id
+            self.nickname = nickname
             self.color = color
             self.width = width
             self.height = height
@@ -299,6 +315,15 @@ class PongGame:
             self.step = None
             self.move = None
             self.reset(width=width, height=height)
+
+        @classmethod
+        async def create(cls, left, user_id=None):
+            if user_id:
+                user = await sync_to_async(PongUser.objects.get)(id=user_id)
+                nickname = user.nickname
+            else:
+                nickname = None
+            return cls(left, user_id=user_id, nickname=nickname)
 
         def reset(self, width=0.02, height=0.2):
             self.width = width
