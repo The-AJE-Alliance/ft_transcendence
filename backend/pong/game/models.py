@@ -45,17 +45,17 @@ class PongUser(models.Model):
 
 class Match(models.Model):
     player1 = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        PongUser,
         related_name="matches_as_player1",
         on_delete=models.CASCADE,
     )
     player2 = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        PongUser,
         related_name="matches_as_player2",
         on_delete=models.CASCADE,
     )
     winner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        PongUser,
         related_name="matches_won",
         null=True,
         blank=True,
