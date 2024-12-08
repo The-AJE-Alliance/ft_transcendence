@@ -28,6 +28,7 @@ class TournamentManager:
         self.queue = None
         self.consume_task = None
         self.nb_players = 0
+        self.ended = False
         logger.info(
             f"TournamentManager instantiated with tournament_id: {self.tournament_id}"
         )
@@ -51,16 +52,20 @@ class TournamentManager:
             logger.error(f"Exception in tournamentManager.start: {e}", exc_info=True)
 
     async def stop(self):
+        logger.info(
+            f"Stopping TournamentManager for tournament_id: {self.tournament_id}"
+        )
         if self.consume_task:
             self.consume_task.cancel()
             try:
                 await self.consume_task
             except asyncio.CancelledError:
-                logger.info("Consume data task canceled.")
+                logger.info("Consume task cancelled successfully.")
         if self.channel:
             await self.channel.close()
         if self.connection:
             await self.connection.close()
+        logger.info("TournamentManager stopped.")
 
     async def consume_data(self):
         try:
@@ -95,6 +100,45 @@ class TournamentManager:
                     logger.warning(f"Unhandled message type: {data.get('type')}")
         except Exception as e:
             logger.error(f"Exception in dispatch: {str(e)}")
+
+    async def handle_game_setup(self, content):
+        user_id = content["user_id"]
+        player = self.players.get(user_id)
+
+        if not player:
+            logger.error(f"No player found with user_id {user_id} for setup.")
+            # Envoyer un message setup avec ready=false
+            await self.send_player(
+                {"type": "setup", "content": {"ready": False}}, user_id
+            )
+            return
+
+        # Trouver le match actuel du joueur (celui auquel il participe sans vainqueur encore)
+        current_match = None
+        for match in self.matches:
+            if match["winner"] is None and (
+                match["player1"]["user_id"] == user_id
+                or match["player2"]["user_id"] == user_id
+            ):
+                current_match = match
+                break
+
+        if not current_match:
+            logger.warning(f"No ongoing match for user_id {user_id}")
+            await self.send_player(
+                {"type": "setup", "content": {"ready": False}}, user_id
+            )
+            return
+
+        # Construire le dictionnaire des pseudos
+        nicks = {
+            "player1": current_match["player1"]["nickname"],
+            "player2": current_match["player2"]["nickname"],
+        }
+
+        # Envoyer le message setup avec ready=true
+        setup_msg = {"type": "setup", "content": {"ready": True, "nicks": nicks}}
+        await self.send_player(setup_msg, user_id)
 
     async def add_player(self, user_id, content):
         if user_id in self.players:
@@ -377,6 +421,9 @@ class TournamentManager:
     async def end_tournament(self, final_winner):
         # winners = [match["winner"] for match in self.matches if match["winner"]]
         # final_winner = winners[0] if len(winners) == 1 else "TBD"  # Simplified logic
+        if self.ended:  # éviter d’envoyer plusieurs fois
+            return
+        self.ended = True
         await self.broadcast(
             {
                 "type": "tournament_end",
@@ -386,7 +433,6 @@ class TournamentManager:
                 },
             }
         )
-
         await self.stop()
 
     async def broadcast(self, message):

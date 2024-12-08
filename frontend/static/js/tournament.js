@@ -3,7 +3,7 @@ import { pong } from './pong.js'
 
 export async function tournament(client, input) {
   client.app.innerHTML = tournamentPage
-  // State to track the tournament
+
   const state = {
     players: [],
     isLocked: false,
@@ -14,7 +14,6 @@ export async function tournament(client, input) {
     user_id: input.user_id,
     tournament_id: input.tournament_id,
   }
-  console.log(state)
   const controls = document.querySelector('.tournament-controls')
   if (state.host) {
     controls.style.display = 'block'
@@ -28,19 +27,14 @@ export async function tournament(client, input) {
       type: 'setup_tournament',
       content: { ...input },
     }
-    console.log(initMessage)
     client.socket.send(JSON.stringify(initMessage))
   }
   client.socket.onmessage = (event) => {
-    console.log('Message received:', event.data)
     const data = JSON.parse(event.data)
-
     switch (data.type) {
       case 'setup_tournament':
-        console.log('Handling setup_tournament:', data)
         greetTournament(client, state, data.content)
         break
-
       case 'player_joined':
         updatePlayerList(state, data.content.players)
         break
@@ -49,7 +43,6 @@ export async function tournament(client, input) {
         state.tournamentHostId = data.content.host_user_id
         handleTournamentLocked(data.content, state)
         break
-
       case 'match_ready':
         startMatch(data.content.match, state, client)
         break
@@ -59,11 +52,16 @@ export async function tournament(client, input) {
         break
 
       case 'tournament_update':
-        updateTournamentBracket(data.content.bracket)
+        if (document.getElementById('tournamentBracket')) {
+          updateTournamentBracket(data.content.bracket)
+        }
+        else {
+          console.warn('tournamentBracket element not found, skipping update.')
+        }
         break
 
       case 'tournament_end':
-        handleTournamentEnd(data.content)
+        handleTournamentEnd(data.content, client, client.socket, state)
         break
 
       case 'start_tournament':
@@ -86,8 +84,8 @@ export async function tournament(client, input) {
   // Lock tournament
   const lockTournamentBtn = document.getElementById('lock-tournament')
   client.router.addEvent(lockTournamentBtn, 'click', () => {
-    lockTournamentBtn.disabled = true
-    lockTournamentBtn.textContent = 'Locking...'
+    if (lockTournamentBtn.disabled)
+      return
     client.socket.send(JSON.stringify({
       type: 'lock_tournament',
       content: { user_id: state.user_id },
@@ -101,7 +99,6 @@ export async function tournament(client, input) {
       return
     }
     client.socket.send(JSON.stringify({ type: 'start_tournament' }))
-    startTournamentBtn.disabled = true
   })
 }
 
@@ -125,6 +122,10 @@ function handleStartTournament() {
 }
 
 function handleTournamentLocked(content, state) {
+  if (!content.ready) {
+    alert(content.message)
+    return
+  }
   state.isLocked = true
   console.log('Tournament locked! Ready to start.')
   if (content.ready) {
@@ -135,11 +136,9 @@ function handleTournamentLocked(content, state) {
       }
     })
     updateTournamentBracket(content.bracket)
-    document.getElementById('lock-tournament').disabled = true
-    document.getElementById('start-tournament').disabled = false
-  }
-  else {
-    alert(content.message)
+    const lockTournamentBtn = document.getElementById('lock-tournament')
+    lockTournamentBtn.disabled = true
+    lockTournamentBtn.textContent = 'Locked'
   }
 }
 
@@ -184,15 +183,21 @@ async function startMatch(match, state, client) {
 
 function handleMatchEnded(content, state, client) {
   const { match } = content
-  // Mettre à jour le match correspondant dans state.matches
+  const winner = match.winner
+  const loser = match.player1.user_id === winner.user_id ? match.player2 : match.player1
   const matchIndex = state.matches.findIndex(m => m.room_id === match.room_id)
   if (matchIndex !== -1) {
     state.matches[matchIndex].winner = match.winner
     updateTournamentBracket(state.matches)
   }
-  client.app.innerHTML = tournamentPage
-  // Réafficher le bracket mis à jour
-  updateTournamentBracket(state.matches)
+  if (state.user_id === loser.user_id) {
+    alert(`You lost this round. The winner is: ${winner.nickname}`)
+    client.router.redirect('/match-history')
+    return
+  }
+  if (state.user_id === winner.user_id) {
+    alert('Congratulations! You won this round and are advancing to the next match.')
+  }
 }
 
 function updateTournamentBracket(bracket) {
@@ -201,23 +206,35 @@ function updateTournamentBracket(bracket) {
   bracket.forEach((match, index) => {
     const matchElement = document.createElement('div')
     matchElement.innerHTML = `
-        <p>Match ${index + 1}:</p>
-        <p>${match.player1.nickname} vs ${match.player2.nickname}</p>
-        <p>Gagnant: ${match.winner ? match.winner.nickname : 'En attente'}</p>
+        <div class="match">
+          <p>Match ${index + 1}:</p>
+          <p>${match.player1.nickname} vs ${match.player2.nickname}</p>
+          <p>Winner: ${match.winner ? match.winner.nickname : 'Waiting'}</p>
+        </div>
       `
     bracketElement.appendChild(matchElement)
   })
 }
 
-function handleTournamentEnd(content) {
-  alert(`${content.winner} a gagné le tournoi !`)
+function handleTournamentEnd(content, client, gameSocket, state) {
+  if (state.tournamentComplete) {
+    return
+  }
+  state.tournamentComplete = true
+  alert(`${content.winner} won the tournament !`)
+  if (gameSocket && gameSocket.readyState === WebSocket.OPEN) {
+    gameSocket.close()
+    console.log('Game WebSocket closed after tournament completion.')
+  }
+  setTimeout(() => {
+    client.router.redirect('/match-history')
+  }, 2000)
 }
 
 function greetTournament(client, state, data) {
   console.log('Greet tournament called with data:', data)
   updatePlayerList(state, data.players)
   if (state.host) {
-    // client.app.innerHTML = tournamentSetupPage
     const copyLinkBtn = document.getElementById('host-copy-btn')
     copyLinkBtn.classList.remove('d-none')
     if (copyLinkBtn) {
@@ -237,7 +254,6 @@ function greetTournament(client, state, data) {
     state.player = data.player
     const localPlayer = data.players.find(player => player.user_id === state.user_id)
     state.host = localPlayer ? localPlayer.host : false
-    // TODO: waiting for blabla, waiting page
     updatePlayerList(state, data.players)
   }
 }

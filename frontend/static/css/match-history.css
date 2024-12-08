@@ -1,0 +1,32 @@
+table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 10px;
+  border: 1px solid #dee2e6;
+}
+
+h4 {
+  margin-top: 20px;
+  color: #343a40;
+}
+
+tbody tr td:last-child {
+  font-weight: bold;
+}
+
+tr {
+  background-color: #1a1a1a;
+}
+.table-perso {
+  background-color: #1a1a1a; /* Vert clair pour les victoires */
+  color: #00cc99; /* Texte vert foncé */
+  border: 1px solid #00cc99;
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
