@@ -1,15 +1,32 @@
-<div class="game-container">
-  <h1 class="game-title">Pong</h1>
-  <p class="game-instructions">Use the arrow keys to control the right paddle, and W/S to control the left paddle.</p>
+<div class="container d-flex flex-column align-items-center justify-content-center vh-100">
+    <div class="game-container text-center">
+      <h1 class="game-title">Pong</h1>
+      <p class="game-instructions">Use the arrow keys to control the right paddle, and W/S to control the left paddle.</p>
 
-  <!-- Conteneur du canvas pour le pong -->
-  <div class="canvas-container">
-    <canvas id="pongCanvas" width="800" height="400"></canvas>
-  </div>
+      <!-- Canvas Container -->
+      <div class="canvas-container">
+        <canvas id="pongCanvas" width="800" height="400" tabindex="0"></canvas>
+      </div>
+    </div>
 
-  <!-- Tableau de score -->
-  <div class="scoreboard">
-    <div>Player 1 Score: <span id="player1Score">0</span></div>
-    <div>Player 2 Score: <span id="player2Score">0</span></div>
+    <!-- Countdown Timer -->
+    <div id="countdownTimer" class="text-center mt-4 d-none">
+      <h2>The game starts in <span id="timerSeconds">3</span> seconds...</h2>
+    </div>
+
+    <!-- Waiting for Player 2 -->
+    <div id="waitingForPlayer2" class="text-center mt-4 d-none">
+      <h3>Waiting for Player 2...</h3>
+      <button id="host-copy-btn" class="btn btn-primary mt-3 d-none">Copy Invitation Link</button>
+    </div>
+
+    <!-- Waiting for Host -->
+    <div id="waitingForHost" class="text-center mt-4 d-none">
+      <h3>Waiting for the host to start the game...</h3>
+    </div>
+
+    <!-- Waiting for Tournament -->
+    <div id="waitingForTournament" class="text-center mt-4 d-none">
+      <h3>Waiting for the other player to join the tournament...</h3>
+    </div>
   </div>
-</div>

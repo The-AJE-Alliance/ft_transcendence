@@ -1,6 +1,7 @@
 import pongPage from '../pages/pong.html?raw'
-import tournamentPage from '../pages/tournament.html?raw'
 import '../css/pong.css'
+
+let gameInitialized = false
 
 export async function pong(client, state, gameSocket) {
   gameSocket.onopen = () => {
@@ -9,35 +10,33 @@ export async function pong(client, state, gameSocket) {
       type: 'setup',
       content: { ...state },
     }
-    console.log(initMessage)
     gameSocket.send(JSON.stringify(initMessage))
   }
-
   gameSocket.onmessage = async (event) => {
     const data = JSON.parse(event.data)
-    console.log(data)
-
     if (data.type === 'setup') {
       const { ready } = data.content
       if (ready) {
         client.app.innerHTML = pongPage
         state.canvas = document.getElementById('pongCanvas')
+        state.nicks = data.content.nicks
+        gameInitialized = true
         client.router.addEvent(document, 'keyup', async (event) => {
           await handleKeyPress(event, gameSocket, state)
         })
-        state.nicks = data.content.nicks
         // TODO: Game starting in timer.seconds
       }
       else {
         if (state.host) {
           if (state.mode === 'remote') {
+            console.log('End game event received:', data)
             // TODO: Waiting for player 2, create a button to copy link
             const copyLinkBtn = document.getElementById('host-copy-btn')
             if (copyLinkBtn) {
               client.router.addEvent(copyLinkBtn, 'click', async () => {
                 const link = `https://transcendence.fr/pong/remote/join/${state.room_id}`
                 console.log('Link to copy:', link)
-                await navigator.clipboard.writeText(`https://transcendence.fr/pong/remote/join/${state.room_id}`)
+                await navigator.clipboard.writeText(link)
                 alert('Link copied!')
               })
             }
@@ -47,7 +46,6 @@ export async function pong(client, state, gameSocket) {
           }
           else if (state.mode === 'tournament') {
             console.log('Waiting for the other player to join...')
-            // Vous pouvez afficher un message ou mettre à jour l'interface utilisateur ici
           }
         }
         else {
@@ -56,20 +54,22 @@ export async function pong(client, state, gameSocket) {
         }
       }
     }
-
     else if (data.type === 'state') {
+      if (!gameInitialized || !state.canvas) {
+        console.warn('Received state before game initialized, ignoring.')
+        return
+      }
       await renderGame(data.content, state.canvas, state.nicks)
     }
 
     else if (data.type === 'end') {
-      gameSocket.close()
       const { winner } = data.content
-      console.log(`Le gagnant est : Joueur ${winner}`)
-      if (state.mode === 'tournament')
-        client.app.innerHTML = tournamentPage
-      // TODO: winner is blabla
+      console.log(`The winner is: Player ${winner}`)
+      if (state.mode !== 'tournament') {
+        gameSocket.close()
+        client.router.redirect('/')
+      }
     }
-
     else if (data.type === 'unauthorized') {
       gameSocket.close()
       client.router.redirect('/sign-in')
@@ -79,10 +79,8 @@ export async function pong(client, state, gameSocket) {
   gameSocket.onclose = () => {
     console.log('Game WebSocket disconnected.')
     document.removeEventListener('keyup', handleKeyPress)
-    // TODO: Handle disconnection if necessary
   }
 }
-
 // function canvasResize(canvas) {
 //   // console.log('canvasResize called')
 //   // const style = getComputedStyle(canvas)
@@ -92,8 +90,11 @@ export async function pong(client, state, gameSocket) {
 // }
 
 async function renderGame(gameState, canvas, nicks) {
+  if (!canvas) {
+    console.warn('Canvas is not defined yet, skipping render.')
+    return
+  }
   const ctx = canvas.getContext('2d')
-
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   ctx.fillStyle = 'black'
@@ -152,8 +153,9 @@ async function handleKeyPress(event, socket, state) {
   const { action, defaultPlayer } = keyMap[event.key] ?? {}
   if (!socket || !action)
     return
-
-  console.log(`Key pressed: ${event.key}`)
+  if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+    event.preventDefault()
+  }
   const player = state.mode === 'local' ? defaultPlayer : state.player
 
   const data = {
