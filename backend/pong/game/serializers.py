@@ -45,3 +45,24 @@ class MatchSerializer(serializers.ModelSerializer):
         elif obj.winner is None:
             return "Draw"
         return "Loss"
+
+
+class FinalRankingPlayerSerializer(serializers.Serializer):
+    player_id = serializers.IntegerField()
+    nickname = serializers.CharField()
+    position = serializers.IntegerField()
+
+
+class FinalRankingMatchSerializer(serializers.Serializer):
+    match_id = serializers.IntegerField(source="id")
+    player1 = serializers.CharField(source="player1__nickname")
+    player2 = serializers.CharField(source="player2__nickname")
+    winner = serializers.CharField(source="winner__nickname", allow_null=True)
+    score_player1 = serializers.IntegerField()
+    score_player2 = serializers.IntegerField()
+    created_at = serializers.DateTimeField()
+
+
+class TournamentFinalRankingSerializer(serializers.Serializer):
+    ranking = FinalRankingPlayerSerializer(many=True)
+    matches = FinalRankingMatchSerializer(many=True)

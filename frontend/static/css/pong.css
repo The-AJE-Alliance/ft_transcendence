@@ -33,6 +33,9 @@ body {
 
 /* Style du canvas et de son conteneur */
 #pongCanvas {
+  max-width: 1200px; /* Limite maximale pour la largeur */
+  width: 100%; /* Utilise toute la largeur disponible jusqu'à max-width */
+  height: auto; /* Garde le ratio */
   border: 2px solid #00ffcc;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 255, 204, 0.3);
@@ -50,5 +53,10 @@ body {
 
 .scoreboard span {
   font-weight: bold;
+  color: #00ffcc;
+}
+
+.pongCanvas {
+  background-color: #1a1a1a;
   color: #00ffcc;
 }
