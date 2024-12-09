@@ -81,7 +81,6 @@ export async function tournament(client, input) {
         console.log('Unknown message:', data.type)
     }
   }
-  // Lock tournament
   const lockTournamentBtn = document.getElementById('lock-tournament')
   client.router.addEvent(lockTournamentBtn, 'click', () => {
     if (lockTournamentBtn.disabled)
@@ -91,7 +90,6 @@ export async function tournament(client, input) {
       content: { user_id: state.user_id },
     }))
   })
-  // Start tournament
   const startTournamentBtn = document.getElementById('start-tournament')
   client.router.addEvent(startTournamentBtn, 'click', () => {
     if (!state.isLocked) {
@@ -192,7 +190,7 @@ function handleMatchEnded(content, state, client) {
   }
   if (state.user_id === loser.user_id) {
     alert(`You lost this round. The winner is: ${winner.nickname}`)
-    client.router.redirect('/match-history')
+    client.router.redirect(`/tournament/${state.tournament_id}`)
     return
   }
   if (state.user_id === winner.user_id) {
@@ -200,7 +198,7 @@ function handleMatchEnded(content, state, client) {
   }
 }
 
-function updateTournamentBracket(bracket) {
+export function updateTournamentBracket(bracket) {
   const bracketElement = document.getElementById('tournamentBracket')
   bracketElement.innerHTML = ''
   bracket.forEach((match, index) => {
@@ -226,9 +224,7 @@ function handleTournamentEnd(content, client, gameSocket, state) {
     gameSocket.close()
     console.log('Game WebSocket closed after tournament completion.')
   }
-  setTimeout(() => {
-    client.router.redirect('/match-history')
-  }, 2000)
+  client.router.redirect(`/tournaments/${state.tournament_id}/final-ranking`)
 }
 
 function greetTournament(client, state, data) {
@@ -270,5 +266,30 @@ function updatePlayerList(state, players) {
     const newPlayer = document.createElement('li')
     newPlayer.textContent = `Player ${player.player_num}: ${player.nickname}${player.host ? ' (Host)' : ''}`
     playerList.appendChild(newPlayer)
+  })
+}
+
+export async function updateTournament(client) {
+  const tournamentId = client.state.tournament_id
+  try {
+    const data = await ky.get(`https://pong.api.transcendence.fr/tournaments/${tournamentId}/final-ranking/`).json()
+    renderTournamentData(data)
+  }
+  catch (error) {
+    console.error('Error updating tournament:', error)
+  }
+}
+
+function renderTournamentData(data) {
+  const tournamentBracket = document.getElementById('tournamentBracket')
+  tournamentBracket.innerHTML = ''
+  data.ranking.forEach((player, index) => {
+    const playerElement = document.createElement('div')
+    playerElement.innerHTML = `
+      <div class="player">
+        <p>${index + 1}. ${player.nickname}</p>
+      </div>
+    `
+    tournamentBracket.appendChild(playerElement)
   })
 }

@@ -1,0 +1,15 @@
+.winner {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+.winner h3 {
+  color: #ffd700;
+  margin: 0;
+}
+
+.table-summary {
+  background-color: #1a1a1a; /* Vert clair pour les victoires */
+  color: #00cc99; /* Texte vert foncé */
+  border: 1px solid #00cc99;
+}

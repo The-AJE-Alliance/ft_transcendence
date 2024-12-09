@@ -30,7 +30,6 @@ export async function pong(client, state, gameSocket) {
         if (state.host) {
           if (state.mode === 'remote') {
             console.log('End game event received:', data)
-            // TODO: Waiting for player 2, create a button to copy link
             const copyLinkBtn = document.getElementById('host-copy-btn')
             if (copyLinkBtn) {
               client.router.addEvent(copyLinkBtn, 'click', async () => {
