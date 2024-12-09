@@ -108,11 +108,11 @@ export async function chat(client) {
     messages.forEach((message) => {
       const div = document.createElement('div')
       if (message.sentFromUser.nickname !== friendNickname) {
-        div.textContent = `Me: ${message.messageContent}`
+        div.innerHTML = `Me: ${message.messageContent}`
         div.classList.add('sent-by-me')
       }
       else {
-        div.textContent = `${message.sentFromUser.nickname}: ${message.messageContent}`
+        div.innerHTML = `${message.sentFromUser.nickname}: ${message.messageContent}`
       }
       chatMessages.appendChild(div)
     })
@@ -136,10 +136,10 @@ export async function chat(client) {
         const div = document.createElement('div')
         senderNickname = friendIdToNickname.get(Number.parseInt(data.sender_id))
         if (senderNickname) {
-          div.textContent = `${senderNickname}: ${data.messageContent}`
+          div.innerHTML = `${senderNickname}: ${data.messageContent}`
         }
         else {
-          div.textContent = `Me: ${data.messageContent}`
+          div.innerHTML = `Me: ${data.messageContent}`
         }
         if (senderNickname !== friendNickname) {
           div.classList.add('sent-by-me')
@@ -252,7 +252,10 @@ export async function chat(client) {
       return
     }
     const holder = messageInput.value
-    messageInput.value = `Join me at Pong party! Here\'s the link: ${invite}`
+    const url = new URL(invite)
+    const path = url.pathname
+    const clickableInvite = `<a href="${path}" target="_blank">link</a>`
+    messageInput.value = `Join me at Pong party! Click on this ${clickableInvite}`
     const messageContent = messageInput.value.trim()
     if (messageContent && client.socket) {
       client.socket.send(JSON.stringify({ messageContent }))
