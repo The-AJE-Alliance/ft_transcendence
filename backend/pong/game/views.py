@@ -8,9 +8,10 @@ from .serializers import (
     TournamentFinalRankingSerializer,
 )
 from .models import PongUser, Match
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from django.db.models import Q
 
 
 # ViewSets define the view behavior.
@@ -74,3 +75,27 @@ class FinalRankingView(APIView):
 
         serializer = TournamentFinalRankingSerializer(data)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserRequiringReminder(APIView):
+    def get(self, request, log_user_id=None):
+        try:
+            player = PongUser.objects.filter(id=log_user_id).first()
+            if not player:
+                return Response(
+                    {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Check if the player has a scheduled match that hasn't started yet
+            has_upcoming_game = Match.objects.filter(
+                (Q(player1=player) | Q(player2=player)) & Q(winner=None)
+            ).exists()
+
+            return Response(
+                {"has_upcoming_game": has_upcoming_game}, status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An unexpected error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

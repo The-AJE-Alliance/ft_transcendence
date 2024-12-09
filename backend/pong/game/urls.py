@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views import PongUserViewSet, FinalRankingView
+from .views import PongUserViewSet, FinalRankingView, UserRequiringReminder
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
@@ -14,5 +14,10 @@ urlpatterns = [
         "tournaments/<str:tournament_id>/final-ranking/",
         FinalRankingView.as_view(),
         name="final-ranking",
+    ),
+    path(
+        "player/<int:log_user_id>/upcoming-game/",
+        UserRequiringReminder.as_view(),
+        name="user-reminder",
     ),
 ]

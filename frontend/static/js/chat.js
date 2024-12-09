@@ -14,6 +14,7 @@ export async function chat(client) {
   const getProfileButton = document.getElementById('profile-user')
   const inviteToGameButton = document.getElementById('invite-game')
   let selectedFriendId = null
+  let tournament = null
   let senderNickname = null
   let selectedFriendNickname = null
   const friendNicknameToId = new Map()
@@ -28,9 +29,19 @@ export async function chat(client) {
       headers: { Authorization: `Bearer ${client.token}` },
       credentials: 'include',
     }).json()
-    const tournament = {
-      nickname: 'Tournament',
-      message: 'Hello, this is a kind reminder to attend your tournament game',
+    const hasUpcomingGames = await ky.get(`https://pong.api.transcendence.fr/player/${client.id}/upcoming-game/`, {
+      // headers: { Authorization: `Bearer ${client.token}` },
+      // credentials: 'include',
+    }).json()
+    console.error('hasUpcomingGames:', hasUpcomingGames)
+    if (hasUpcomingGames && hasUpcomingGames.has_upcoming_game) {
+      tournament = {
+        nickname: 'Tournament',
+        message: 'Hello, this is a kind reminder to attend your tournament game',
+      }
+    }
+    else {
+      tournament = null
     }
     friends.forEach((friend) => {
       friendNicknameToId.set(friend.nickname, friend.id)

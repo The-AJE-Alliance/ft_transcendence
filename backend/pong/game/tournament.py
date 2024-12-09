@@ -7,7 +7,7 @@ import random
 from aio_pika import ExchangeType
 from asgiref.sync import sync_to_async
 from django.conf import settings
-from .models import PongUser
+from .models import PongUser, Match
 
 
 logger = logging.getLogger(__name__)
@@ -355,6 +355,15 @@ class TournamentManager:
                 "winner": None,
                 "room_id": f"match-{player1['user_id']}-vs-{player2['user_id']}",
             }
+            # save game
+            # match = Match()
+            # match.player1 = winners[0]
+            # match.player2 = winners[1]
+            # match.winner = None
+            # match.tournament_id = self.tournament_id
+            # match.score_player1 = None
+            # match.score_player2 = None
+
             self.matches = [final_match]
             await self.broadcast(
                 {"type": "tournament_update", "content": {"bracket": self.matches}}
@@ -367,6 +376,8 @@ class TournamentManager:
         player1_id = match["player1"]["user_id"]
         player2_id = match["player2"]["user_id"]
         winner_id = match["winner"]["user_id"]
+        # update winner and score
+        # game = Match.objects.filter((Q(player1_id=) | Q(player2=)) & Q(winner=None)).first()
 
         # Envoyer le résultat au joueur 1
         await self.send_player(

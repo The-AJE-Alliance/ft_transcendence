@@ -51,6 +51,7 @@ class Match(models.Model):
         null=True,
         blank=True,
     )
+    tournament_id = models.IntegerField(default=0)
     score_player1 = models.IntegerField(default=0)
     score_player2 = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
