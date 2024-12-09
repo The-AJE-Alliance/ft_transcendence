@@ -60,14 +60,17 @@ class WebsocketListener(AsyncWebsocketConsumer):
         logger.info(
             f"TournamentManager started for tournament_id: {self.tournament_id}"
         )
-        if not self.tournament_id or self.tournament_id not in tournament_tasks:
-            logger.error("Tournament ID is None!")
-            return
-        else:
+
+        if self.host:
             self.tournament = TournamentManager(self.tournament_id, self.user_id)
             tournament_tasks[self.tournament_id] = asyncio.create_task(
                 self.tournament.start()
             )
+
+        if not self.tournament_id or self.tournament_id not in tournament_tasks:
+            logger.error("Tournament ID is None!")
+            return
+
         self.queue_handler = TournamentHandler(self, self.tournament_id, self.user_id)
         await self.queue_handler.start(data)
         logger.info(
