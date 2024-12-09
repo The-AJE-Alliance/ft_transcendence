@@ -1,10 +1,12 @@
 import authPage from '../pages/auth.html?raw'
 import homePage from '../pages/home.html?raw'
+import tournamentPage from '../pages/tournament.html?raw'
 import { settings } from './2FA.js'
 import { login, login42, logout } from './auth.js'
 import { chat } from './chat.js'
 import Client from './client.js'
 import { editProfile } from './edit-profile.js'
+import { finalRanking } from './finalRanking.js'
 import { friendprofile } from './friendprofile'
 import { friends } from './friends.js'
 import { matchHistory } from './match-history.js'
@@ -13,6 +15,7 @@ import { choosePongMode, joinGame, localGame, remotePong, remoteSetup } from './
 import { profile } from './profile.js'
 import { register } from './register.js'
 import Router from './router.js'
+import { updateTournament } from './tournament.js'
 import { joinTournament, remoteTournament, tournamentSetup } from './tournament-setup.js'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
@@ -59,3 +62,9 @@ router.get('/profile/edit', editProfile)
 router.get('/friends', friends)
 router.get('/settings', settings)
 router.get('/match-history', matchHistory)
+router.get('/tournaments/:tournamentId/final-ranking', (client, params) => finalRanking(client, params.tournamentId))
+router.get('/tournament/:id', (client, params) => {
+  client.app.innerHTML = tournamentPage
+  client.state.tournament_id = params.id
+  updateTournament(client)
+})

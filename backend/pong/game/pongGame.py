@@ -305,6 +305,7 @@ class PongGame:
         match.winner = winner
         match.score_player1 = self.player1_score
         match.score_player2 = self.player2_score
+        match.tournament_id = self.tournament_id
 
         await sync_to_async(match.save)()
         await sync_to_async(user1.save)()

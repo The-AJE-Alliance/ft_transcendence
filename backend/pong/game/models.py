@@ -48,13 +48,52 @@ class Match(models.Model):
         PongUser,
         related_name="matches_won",
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     score_player1 = models.IntegerField(default=0)
     score_player2 = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    tournament_id = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         ordering = ["created_at"]
 
     def __str__(self):
         return f"Match: {self.player1.username} vs {self.player2.username}"
+
+
+class Tournament(models.Model):
+    tournament_id = models.CharField(max_length=50, unique=True)
+
+    matches = models.ManyToManyField("Match", related_name="tournaments", blank=True)
+
+    def get_final_ranking(self):
+        ranking = []
+        return ranking
+
+    def get_all_matches_data(self):
+        data = []
+        for match in self.matches.all():
+            data.append(
+                {
+                    "match_id": match.id,
+                    "player1": {
+                        "id": match.player1.id,
+                        "nickname": match.player1.nickname,
+                    },
+                    "player2": {
+                        "id": match.player2.id,
+                        "nickname": match.player2.nickname,
+                    },
+                    "winner": (
+                        {"id": match.winner.id, "nickname": match.winner.nickname}
+                        if match.winner
+                        else None
+                    ),
+                    "score_player1": match.score_player1,
+                    "score_player2": match.score_player2,
+                    "created_at": match.created_at,
+                }
+            )
+        return data
