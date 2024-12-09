@@ -66,6 +66,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
             tournament_tasks[self.tournament_id] = asyncio.create_task(
                 self.tournament.start()
             )
+            await sleep(1)
 
         if not self.tournament_id or self.tournament_id not in tournament_tasks:
             logger.error("Tournament ID is None!")
@@ -106,7 +107,7 @@ class WebsocketListener(AsyncWebsocketConsumer):
                 game_tasks[self.room_id] = asyncio.create_task(self.pong_game.start())
 
         self.queue_handler = QueueHandler(self, self.room_id, 1 if self.host else 2)
-        await sleep(1 / 2)
+        await sleep(1)
         await self.queue_handler.start(data)
 
     async def disconnect(self, close_code):

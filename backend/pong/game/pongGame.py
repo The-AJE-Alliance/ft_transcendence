@@ -7,6 +7,7 @@ import aio_pika
 from aio_pika import ExchangeType
 from asgiref.sync import sync_to_async
 from django.conf import settings
+from django.db.models import Q
 
 from game.models import Match, PongUser
 
@@ -36,6 +37,7 @@ class PongGame:
         self.task = None
         self.winner = None
         self.consume_task = None
+        self.match_id = None
         logger.info(f"PongGame initialized for room_id: {self.room_id}")
 
     async def start(self):
@@ -166,6 +168,8 @@ class PongGame:
                 self.player2.nickname if self.player2.nickname else "Player 2"
             )
             logger.info(f"Launching game {self.room_id}")
+            if self.mode != "local":
+                await self.create_db()
             self.task = asyncio.create_task(self.game_loop())
         await self.exchange.publish(
             aio_pika.Message(json.dumps(response).encode()), routing_key="players"
@@ -289,6 +293,25 @@ class PongGame:
             aio_pika.Message(json.dumps(data).encode()), routing_key="players"
         )
 
+    async def create_db(self):
+        logger.info("[PONG] creating match database...")
+        logger.info(f"{self.player1.user_id} vs {self.player2.user_id}")
+
+        user1 = await sync_to_async(PongUser.objects.get)(id=self.player1.user_id)
+        user2 = await sync_to_async(PongUser.objects.get)(id=self.player2.user_id)
+        match = Match()
+        match.player1 = user1
+        match.player2 = user2
+        match.winner = None
+        match.tournament_id = self.tournament_id
+
+        await sync_to_async(match.save)()
+        self.match_id = match.id
+        await sync_to_async(user1.save)()
+        await sync_to_async(user2.save)()
+
+        logger.info("[PONG] match database created.")
+
     async def update_db(self):
         logger.info("[PONG] updating match database...")
 
@@ -299,9 +322,7 @@ class PongGame:
 
         setattr(winner, "wins", winner.wins + 1)
         setattr(loser, "loss", loser.loss + 1)
-        match = Match()
-        match.player1 = user1
-        match.player2 = user2
+        match = await sync_to_async(Match.objects.get)(id=self.match_id)
         match.winner = winner
         match.score_player1 = self.player1_score
         match.score_player2 = self.player2_score

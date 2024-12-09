@@ -1,13 +1,23 @@
 import ky from 'ky'
 import finalRankingPage from '../pages/finalRanking.html?raw'
+import { updateNavbar } from './navbar'
 import '../css/finalRanking.css'
 
 export async function finalRanking(client, tournamentId) {
   client.app.innerHTML = finalRankingPage
+  if (!await client.isLoggedIn()) {
+    client.router.redirect('/sign-in')
+  }
+  else {
+    await updateNavbar(client)
+  }
 
   try {
     // Récupérer les données du classement final et des matchs
-    const data = await ky.get(`https://pong.api.transcendence.fr/tournaments/${tournamentId}/final-ranking/`).json()
+    const data = await ky.get(`https://pong.api.transcendence.fr/tournaments/${tournamentId}/final-ranking/`, {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${client.token}` },
+    }).json()
 
     const finalRankingEl = document.getElementById('finalRanking')
     const tournamentSummaryEl = document.getElementById('tournamentSummary')

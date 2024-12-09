@@ -65,6 +65,5 @@ router.get('/match-history', matchHistory)
 router.get('/tournaments/:tournamentId/final-ranking', (client, params) => finalRanking(client, params.tournamentId))
 router.get('/tournament/:id', (client, params) => {
   client.app.innerHTML = tournamentPage
-  client.state.tournament_id = params.id
-  updateTournament(client)
+  updateTournament(client, params.id)
 })

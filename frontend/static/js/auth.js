@@ -71,6 +71,7 @@ async function checkForAccessToken(client) {
       }).json()
       client.avatarUrl = userData.avatar_url
       window.history.replaceState({}, document.title, '/')
+      client.refresh()
       client.router.redirect('/')
     }
     catch (error) {

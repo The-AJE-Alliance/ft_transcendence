@@ -10,7 +10,10 @@ export async function matchHistory(client) {
   await updateNavbar(client)
 
   try {
-    const history = await ky.get(`https://pong.api.transcendence.fr/users/${client.id}/history/`, {}).json()
+    const history = await ky.get(`https://pong.api.transcendence.fr/users/${client.id}/history/`, {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${client.token}` },
+    }).json()
     const matchHistoryList = document.getElementById('match-history-list')
     if (!matchHistoryList) {
       console.error('match-history-list element not found in the DOM')

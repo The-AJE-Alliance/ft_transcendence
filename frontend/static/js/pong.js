@@ -1,4 +1,5 @@
 import pongPage from '../pages/pong.html?raw'
+import { showAlert } from './utils'
 import '../css/pong.css'
 
 let gameInitialized = false
@@ -36,7 +37,7 @@ export async function pong(client, state, gameSocket) {
                 const link = `https://transcendence.fr/pong/remote/join/${state.room_id}`
                 console.log('Link to copy:', link)
                 await navigator.clipboard.writeText(link)
-                alert('Link copied!')
+                showAlert('Link copied!', 'success')
               })
             }
             else {
@@ -63,10 +64,10 @@ export async function pong(client, state, gameSocket) {
 
     else if (data.type === 'end') {
       const { winner } = data.content
-      console.log(`The winner is: Player ${winner}`)
+      showAlert(`The winner is: Player ${winner}`, 'success')
       if (state.mode !== 'tournament') {
         gameSocket.close()
-        client.router.redirect('/')
+        client.router.redirect('/match-history')
       }
     }
     else if (data.type === 'unauthorized') {

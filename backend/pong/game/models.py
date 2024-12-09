@@ -1,8 +1,9 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import Q
 
 
-class PongUser(models.Model):
+class PongUser(AbstractUser):
     username = models.CharField(
         max_length=15,
         unique=True,
@@ -51,7 +52,6 @@ class Match(models.Model):
         null=True,
         blank=True,
     )
-    tournament_id = models.IntegerField(default=0)
     score_player1 = models.IntegerField(default=0)
     score_player2 = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

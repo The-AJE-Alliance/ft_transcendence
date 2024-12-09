@@ -1,5 +1,7 @@
+import ky from 'ky'
 import tournamentPage from '../pages/tournament.html?raw'
 import { pong } from './pong.js'
+import { showAlert } from './utils'
 
 export async function tournament(client, input) {
   client.app.innerHTML = tournamentPage
@@ -93,7 +95,7 @@ export async function tournament(client, input) {
   const startTournamentBtn = document.getElementById('start-tournament')
   client.router.addEvent(startTournamentBtn, 'click', () => {
     if (!state.isLocked) {
-      alert('The tournament must be locked before starting.')
+      showAlert('The tournament must be locked before starting.', 'danger')
       return
     }
     client.socket.send(JSON.stringify({ type: 'start_tournament' }))
@@ -102,10 +104,10 @@ export async function tournament(client, input) {
 
 function handleMatchResult(content) {
   if (content.result === 'win') {
-    alert(`You won against ${content.opponent} !`)
+    showAlert(`You won against ${content.opponent} !`, 'success')
   }
   else {
-    alert(`You lost to ${content.opponent}.`)
+    showAlert(`You lost to ${content.opponent}.`, 'danger')
   }
 }
 
@@ -189,12 +191,12 @@ function handleMatchEnded(content, state, client) {
     updateTournamentBracket(state.matches)
   }
   if (state.user_id === loser.user_id) {
-    alert(`You lost this round. The winner is: ${winner.nickname}`)
+    showAlert(`You lost this round. The winner is: ${winner.nickname}`, 'danger')
     client.router.redirect(`/tournament/${state.tournament_id}`)
     return
   }
   if (state.user_id === winner.user_id) {
-    alert('Congratulations! You won this round and are advancing to the next match.')
+    showAlert('Congratulations! You won this round and are advancing to the next match.', 'success')
   }
 }
 
@@ -219,7 +221,7 @@ function handleTournamentEnd(content, client, gameSocket, state) {
     return
   }
   state.tournamentComplete = true
-  alert(`${content.winner} won the tournament !`)
+  showAlert(`${content.winner} won the tournament !`, 'success')
   if (gameSocket && gameSocket.readyState === WebSocket.OPEN) {
     gameSocket.close()
     console.log('Game WebSocket closed after tournament completion.')
@@ -239,7 +241,7 @@ function greetTournament(client, state, data) {
         const link = `https://transcendence.fr/pong/tournament/join/${state.tournament_id}`
         console.log('Link to copy:', link)
         await navigator.clipboard.writeText(`https://transcendence.fr/pong/tournament/join/${state.tournament_id}`)
-        alert('Link copied!')
+        showAlert('Link copied!', 'success')
       })
     }
     else {
@@ -269,10 +271,12 @@ function updatePlayerList(state, players) {
   })
 }
 
-export async function updateTournament(client) {
-  const tournamentId = client.state.tournament_id
+export async function updateTournament(client, tournament_id) {
   try {
-    const data = await ky.get(`https://pong.api.transcendence.fr/tournaments/${tournamentId}/final-ranking/`).json()
+    const data = await ky.get(`https://pong.api.transcendence.fr/tournaments/${tournament_id}/final-ranking/`, {
+      credentials: 'include',
+      headers: { Authorization: `Bearer ${client.token}` },
+    }).json()
     renderTournamentData(data)
   }
   catch (error) {

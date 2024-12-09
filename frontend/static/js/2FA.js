@@ -3,7 +3,7 @@ import settingsPage from '../pages/settings.html?raw'
 import { setupPasswordChange } from './change-password.js'
 import { updateNavbar } from './navbar.js'
 import { getUserProfile } from './profile.js'
-import { loadPageStyle } from './utils.js'
+import { loadPageStyle, showAlert } from './utils.js'
 import '../css/settings.css'
 
 async function enableTwoFactor(client) {
@@ -75,21 +75,6 @@ export async function settings(client) {
   }
   await setupPasswordChange(client)
   await updateNavbar(client)
-}
-
-export function showAlert(message, type = 'success') {
-  const alertContainer = document.getElementById('alert-settings')
-  if (!alertContainer)
-    return
-  alertContainer.innerHTML = ''
-  const wrapper = document.createElement('div')
-  wrapper.innerHTML = `
-    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  `
-  alertContainer.appendChild(wrapper)
 }
 
 export async function disableTwoFactor(client) {

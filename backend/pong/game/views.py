@@ -16,7 +16,7 @@ from django.db.models import Q
 
 # ViewSets define the view behavior.
 class PongUserViewSet(viewsets.ReadOnlyModelViewSet):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     queryset = PongUser.objects.all()
     serializer_class = PongUserSerializer
 
@@ -29,7 +29,7 @@ class PongUserViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class FinalRankingView(APIView):
-    permission_classes = [AllowAny]  # Modifier selon vos besoins
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request, tournament_id):
         matches = Match.objects.filter(tournament_id=tournament_id)
@@ -78,6 +78,8 @@ class FinalRankingView(APIView):
 
 
 class UserRequiringReminder(APIView):
+    # permission_classes = [IsAuthenticated]
+
     def get(self, request, log_user_id=None):
         try:
             player = PongUser.objects.filter(id=log_user_id).first()

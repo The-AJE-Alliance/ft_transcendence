@@ -1,6 +1,7 @@
 import ky from 'ky'
 import chatPage from '../pages/chat.html?raw'
 import { updateNavbar } from './navbar.js'
+import { showAlert } from './utils'
 import '../css/chat.css'
 
 export async function chat(client) {
@@ -30,8 +31,8 @@ export async function chat(client) {
       credentials: 'include',
     }).json()
     const hasUpcomingGames = await ky.get(`https://pong.api.transcendence.fr/player/${client.id}/upcoming-game/`, {
-      // headers: { Authorization: `Bearer ${client.token}` },
-      // credentials: 'include',
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
     }).json()
     console.error('hasUpcomingGames:', hasUpcomingGames)
     if (hasUpcomingGames && hasUpcomingGames.has_upcoming_game) {
@@ -258,8 +259,7 @@ export async function chat(client) {
     }
     const invite = await navigator.clipboard.readText()
     if (!/^https:\/\/transcendence\.fr\/pong\/remote\/join\/.+$/.test(invite)) {
-      // eslint-disable-next-line no-alert
-      alert('Please create a game before')
+      showAlert('Please create a game before', 'danger ')
       return
     }
     const holder = messageInput.value

@@ -13,9 +13,8 @@ export async function checkNicknameExistsForRegister(client, nickname) {
   }
   try {
     const response = await ky.get(`https://auth.api.transcendence.fr/users/check-nickname/?nickname=${encodeURIComponent(nickname)}`, {
-      headers: {
-        Authorization: `Bearer ${client.token}`,
-      },
+      headers: { Authorization: `Bearer ${client.token}` },
+      credentials: 'include',
     }).json()
     return response.exists
   }

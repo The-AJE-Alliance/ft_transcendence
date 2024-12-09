@@ -3,7 +3,6 @@ from django.core.validators import MinLengthValidator
 from django.contrib.auth.models import AbstractUser
 from .validators import validate_alnum
 from django.conf import settings
-from asgiref.sync import sync_to_async
 
 
 class ChatUser(AbstractUser):
